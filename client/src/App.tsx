@@ -5,6 +5,10 @@ interface Leo {
   name: string;
 }
 
+interface data {
+  message: string;
+}
+
 function App() {
   const [test, setTest] = useState<Leo>({ name: "hey" });
 
@@ -12,7 +16,8 @@ function App() {
     console.log("hey");
     fetch("/test")
       .then((res) => res.json())
-      .then((data) => setTest({ name: data.message }));
+      .then((data: data) => setTest({ name: data.message }))
+      .catch((err) => console.log(err));
   });
 
   return <div>{test.name}</div>;
