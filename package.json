@@ -1,0 +1,26 @@
+{
+  "name": "ein-haus-am-see-ba",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/MatthiasDobiosz/ein-haus-am-see-ba.git",
+  "author": "MatthiasDobiosz <matthido98@web.de>",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "server",
+    "client"
+  ],
+  "scripts": {
+    "start": "concurrently \"yarn workspace server start\" \" yarn workspace client start\"",
+    "dev": "concurrently \"yarn workspace server dev\" \" yarn workspace client dev\"",
+    "build": "concurrently \"yarn workspace server build\" \" yarn workspace client build\""
+  },
+  "devDependencies": {
+    "concurrently": "^7.6.0",
+    "prettier": "^2.8.0",
+    "rimraf": "^3.0.2",
+    "typescript": "^4.9.3"
+  },
+  "dependencies": {}
+}
