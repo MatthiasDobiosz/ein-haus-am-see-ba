@@ -14,7 +14,6 @@ function App() {
       .then((res) => res.json())
       .then((data) => setTest({ name: data.message }));
   });
-  let i = 1;
 
   return <div>{test.name}</div>;
 }
