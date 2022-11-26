@@ -14,13 +14,20 @@
   "scripts": {
     "start": "concurrently \"yarn workspace server start\" \" yarn workspace client start\"",
     "dev": "concurrently \"yarn workspace server dev\" \" yarn workspace client dev\"",
-    "build": "concurrently \"yarn workspace server build\" \" yarn workspace client build\""
+    "build": "concurrently \"yarn workspace server build\" \" yarn workspace client build\"",
+    "format": "concurrently \"yarn workspace server format\"  \"yarn workspace client format\"",
+    "prepare": "husky install"
   },
   "devDependencies": {
     "concurrently": "^7.6.0",
+    "husky": "^8.0.2",
+    "lint-staged": "^13.0.4",
     "prettier": "^2.8.0",
     "rimraf": "^3.0.2",
     "typescript": "^4.9.3"
   },
-  "dependencies": {}
+  "dependencies": {},
+  "lint-staged": {
+    "*": "prettier --ignore-unknown --write"
+  }
 }

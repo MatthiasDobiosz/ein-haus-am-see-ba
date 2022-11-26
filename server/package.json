@@ -8,7 +8,8 @@
     "prestart": "yarn build",
     "start": " cd ../dist & node server/index.js",
     "predev": "yarn build",
-    "dev": "npx tsc & cd ../dist & nodemon server/index.js"
+    "dev": "npx tsc & cd ../dist & nodemon server/index.js",
+    "format": "yarn prettier --write ./*.ts"
   },
   "dependencies": {
     "express": "^4.18.2"
