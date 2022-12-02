@@ -1,4 +1,4 @@
-name: Benchmark.js Example
+name: Benchmarking
 on:
   push:
     branches:
@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: ./.github/actions/prepare
       - name: Run benchmark
-        run: cd ../../shared && node benchmark.js | tee output.txt
+        run: node ../../shared/benchmark.js | tee output.txt
       - name: Store benchmark result
         uses: benchmark-action/github-action-benchmark@v1
         with:
