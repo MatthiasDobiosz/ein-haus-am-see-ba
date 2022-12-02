@@ -8,7 +8,5 @@ runs:
       with:
         node-version: "18"
         cache: "yarn"
-      env:
-        MAPBOX_TOKEN: ${{ secrets.MAPBOX_TOKEN }}
     - run: yarn install --frozen-lockfile
       shell: bash
