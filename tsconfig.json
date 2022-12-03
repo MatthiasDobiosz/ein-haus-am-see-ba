@@ -21,6 +21,6 @@
     "jsx": "react-jsx"
   },
 
-  "include": ["./client/src/**/*.tsx", "./server/**/*.ts"],
+  "include": ["./client/src/**/*.tsx", "./server/**/*.ts", "./shared/**/*.ts"],
   "references": [{ "path": "./client/tsconfig.node.json" }]
 }
