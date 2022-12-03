@@ -1,13 +1,23 @@
+import { useContext } from "react";
+import { AppContext } from "./AppContext";
+
 export const Heading = (): JSX.Element => {
+  const { isSidebarOpen, setSidebarState } = useContext(AppContext);
+
+  const handleSidebarOpen = () => {
+    setSidebarState(!isSidebarOpen);
+  };
+
   return (
     <nav
       role="navigation"
       aria-label="Main"
-      className="bg-lavender z-2 h-[50px] shadow flex justify-around items-center"
+      className="bg-lavender z-2 h-navHeight shadow flex justify-around items-center"
     >
       <h1 className="font-normal text-[2em]"> Ein Haus am See </h1>
       <button
         type="button"
+        onClick={() => handleSidebarOpen()}
         className=" p-[0.6em] cursor-pointer overflow-hidden border-0 rounded-[2px] outline-none shadow bg-lightgreen text-whitesmoke hover:bg-darkgreen active:bg-darkgreen"
       >
         Wähle Filter
@@ -16,13 +26,12 @@ export const Heading = (): JSX.Element => {
         <label className="inline text-[16px] ml-[10px] mr-[10px]">
           Darstellungsart:
         </label>
-        <select className="italic opacity-[0.7] leading-[24px] pl-[2px] pr-[2px] pt-[3px] pb-[3px] cursor-pointer rounded-[4px] inline w-[100%]">
-          <option value="Overlay" selected>
-            Gebiete
-          </option>
-          <option value="Normal" selected>
-            Orte
-          </option>
+        <select
+          className="italic opacity-[0.7] leading-[24px] pl-[2px] pr-[2px] pt-[3px] pb-[3px] cursor-pointer rounded-[4px] inline w-[100%]"
+          defaultValue={"Overlay"}
+        >
+          <option value="Overlay">Gebiete</option>
+          <option value="Normal">Orte</option>
         </select>
       </div>
       <button

@@ -16,7 +16,14 @@ module.exports = {
       whitesmoke: "#f5f5f5",
       lavender: "#e6e6fa",
     },
-    extend: {},
+    extend: {
+      height: {
+        navHeight: "50px",
+      },
+      transitionProperty: {
+        width: "width",
+      },
+    },
   },
   plugins: [],
 };
