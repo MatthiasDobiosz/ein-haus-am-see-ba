@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1670059257794,
+  "lastUpdate": 1670059661829,
   "repoUrl": "https://github.com/MatthiasDobiosz/ein-haus-am-see-ba",
   "entries": {
     "Benchmark.js Benchmark": [
@@ -83,6 +83,58 @@ window.BENCHMARK_DATA = {
             "range": "±0.04%",
             "unit": "ops/sec",
             "extra": "100 samples"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "matthido98@web.de",
+            "name": "MatthiasDobiosz",
+            "username": "MatthiasDobiosz"
+          },
+          "committer": {
+            "email": "matthido98@web.de",
+            "name": "MatthiasDobiosz",
+            "username": "MatthiasDobiosz"
+          },
+          "distinct": true,
+          "id": "82edf64874288ef548448174267fc57c8e6127fa",
+          "message": "redeploy page",
+          "timestamp": "2022-12-03T10:26:45+01:00",
+          "tree_id": "9a5ae76cd11865f43db71de16a3765fee4c7896d",
+          "url": "https://github.com/MatthiasDobiosz/ein-haus-am-see-ba/commit/82edf64874288ef548448174267fc57c8e6127fa"
+        },
+        "date": 1670059661423,
+        "tool": "benchmarkjs",
+        "benches": [
+          {
+            "name": "Test1",
+            "value": 40068636,
+            "range": "±0.52%",
+            "unit": "ops/sec",
+            "extra": "95 samples"
+          },
+          {
+            "name": "Test1",
+            "value": 40068636,
+            "range": "±0.52%",
+            "unit": "ops/sec",
+            "extra": "95 samples"
+          },
+          {
+            "name": "for-schleife",
+            "value": 33104,
+            "range": "±0.01%",
+            "unit": "ops/sec",
+            "extra": "99 samples"
+          },
+          {
+            "name": "for-schleife",
+            "value": 33104,
+            "range": "±0.01%",
+            "unit": "ops/sec",
+            "extra": "99 samples"
           }
         ]
       }
