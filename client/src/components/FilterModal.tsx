@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction } from "react";
+import { Dispatch, SetStateAction, useState } from "react";
 import { createPortal } from "react-dom";
 import { Filter } from "./Sidebar/Filters";
 
@@ -11,10 +11,19 @@ interface FilterModalProps {
 
 export const FilterModal = (props: FilterModalProps): JSX.Element | null => {
   const { value, open, onClose, addFilter } = props;
+  const [distance, setDistance] = useState("500");
+  const [measure, setMeasure] = useState("m");
+  const [relevance, setRelevance] = useState("wichtig");
+  const [polarity, setPolarity] = useState("erwünscht");
   const portalDiv = document.getElementById("portal");
 
   const handleAddFilter = () => {
-    addFilter({ name: value, distance: "500m" });
+    addFilter({
+      name: value,
+      distance: distance + " " + measure,
+      relevance: relevance,
+      polarity: polarity,
+    });
     onClose(false);
   };
 
@@ -34,9 +43,17 @@ export const FilterModal = (props: FilterModalProps): JSX.Element | null => {
           <form action="javascript:void(0);">
             <div>
               <p>Entfernung: </p>
-              <input type="text" defaultValue="500" pattern="\d" />
+              <input
+                type="text"
+                defaultValue="500"
+                pattern="\d"
+                onChange={(e) => setDistance(e.target.value)}
+              />
               <div>
-                <select defaultValue={"m"}>
+                <select
+                  defaultValue={"m"}
+                  onChange={(e) => setMeasure(e.target.value)}
+                >
                   <option value="m">m</option>
                   <option value="km">km</option>
                 </select>
@@ -48,7 +65,10 @@ export const FilterModal = (props: FilterModalProps): JSX.Element | null => {
             <div>
               <p>Relevanz</p>
               <div>
-                <select defaultValue={"optional"}>
+                <select
+                  defaultValue={"optional"}
+                  onChange={(e) => setRelevance(e.target.value)}
+                >
                   <option value="optional">optional</option>
                   <option value="wichtig">wichtig</option>
                   <option value="sehr wichtig">sehr wichtig</option>
@@ -64,8 +84,18 @@ export const FilterModal = (props: FilterModalProps): JSX.Element | null => {
                   defaultChecked={true}
                   name="polarity"
                   defaultValue="true"
+                  onChange={() => setPolarity("erwünscht")}
                 />
-                <span />
+              </label>
+              <label>
+                möglichst weit entfernt sein
+                <input
+                  type="radio"
+                  defaultChecked={false}
+                  name="polarity"
+                  defaultValue="false"
+                  onChange={() => setPolarity("nicht erwünscht")}
+                />
               </label>
             </div>
           </form>

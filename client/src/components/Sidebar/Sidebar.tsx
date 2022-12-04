@@ -24,7 +24,13 @@ export const Sidebar = (props: SidebarProps): JSX.Element => {
     ]);
   };
 
-  console.log(activeFilters);
+  const removeFilter = (filterValue: Filter) => {
+    setActiveFilters((prevActiveFilters) =>
+      prevActiveFilters.filter((filter) => {
+        return filter != filterValue;
+      })
+    );
+  };
 
   return (
     <div
@@ -76,7 +82,7 @@ export const Sidebar = (props: SidebarProps): JSX.Element => {
         />
       </div>
       <hr className="border-t-[3px] border-solid border-[#bbb]" />
-      <Filters activeFilters={activeFilters} />
+      <Filters activeFilters={activeFilters} removeFilter={removeFilter} />
     </div>
   );
 };

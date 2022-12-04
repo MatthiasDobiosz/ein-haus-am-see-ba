@@ -1,27 +1,28 @@
+import { FilterItem } from "./FilterItem";
+
 export interface Filter {
   name: string;
   distance: string;
+  relevance: string;
+  polarity: string;
 }
 
 interface FiltersProps {
   activeFilters: Filter[];
+  removeFilter: (filterValue: Filter) => void;
 }
 
 export const Filters = (props: FiltersProps): JSX.Element => {
-  const { activeFilters } = props;
+  const { activeFilters, removeFilter } = props;
 
   return (
     <div>
       {activeFilters.length > 0 ? (
-        <div>
+        <ul className="text-[0.9em] list-none pt-0 pr-[5px] pb-[10px] pl-[5px]">
           {activeFilters.map((filter) => {
-            return (
-              <p>
-                {filter.name} {filter.distance}
-              </p>
-            );
+            return <FilterItem filter={filter} removeFilter={removeFilter} />;
           })}
-        </div>
+        </ul>
       ) : (
         <div className="p-[20px]">
           <p className="m-[14px]">Keine Filter sind im Moment aktiv.</p>
