@@ -12,7 +12,6 @@ export const MapOverlay = (props: MapOverlayProps) => {
     latitude: 49.013432,
     zoom: 12,
   });
-  console.log(isSidebarOpen);
 
   return (
     <div

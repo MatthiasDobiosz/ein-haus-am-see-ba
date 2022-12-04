@@ -36,7 +36,7 @@ export const Heading = (): JSX.Element => {
       </div>
       <button
         type="button"
-        className=" p-[0.6em] cursor-pointer overflow-hidden border-0 rounded-[2px] shadow bg-lightgreen text-whitesmoke hover:bg-darkgreen active:bg-darkgreen"
+        className=" p-[0.6em] cursor-pointer overflow-hidden border-0 rounded-[2px] shadow bg-lightgreen text-whitesmoke hover:bg-darkgreen active:bg-darkgreen button-disabled"
         disabled
       >
         Lade Daten manuell
