@@ -2,11 +2,16 @@ import { useState } from "react";
 import Map, { AttributionControl, NavigationControl } from "react-map-gl";
 
 interface MapOverlayProps {
+  /* dynamically change width depending on sidebarState */
   isSidebarOpen: boolean;
 }
 
+/**
+ * Component that returns Mapbox Map with specified settings
+ */
 export const MapOverlay = (props: MapOverlayProps) => {
   const { isSidebarOpen } = props;
+  // define initial Viewport state
   const [viewport, setViewport] = useState({
     longitude: 12.101624,
     latitude: 49.013432,

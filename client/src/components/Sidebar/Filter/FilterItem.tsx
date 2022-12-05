@@ -1,10 +1,15 @@
 import { Filter } from "./Filters";
 
 interface FilterItemProps {
+  /** filter object that contains relevant filter properties */
   filter: Filter;
+  /** Function to remove a filter from the array of currently active filters*/
   removeFilter: (filterValue: Filter) => void;
 }
 
+/**
+ * FilterItem Component that shows a single filter
+ */
 export const FilterItem = (props: FilterItemProps) => {
   const { filter, removeFilter } = props;
 

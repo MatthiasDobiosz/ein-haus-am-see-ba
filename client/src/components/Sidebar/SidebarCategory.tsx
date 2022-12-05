@@ -1,14 +1,20 @@
 import { useState } from "react";
 import { AiFillCaretDown, AiFillCaretUp } from "react-icons/ai";
-import { Filter } from "./Filters";
+import { Filter } from "./Filter/Filters";
 import { SidebarItem } from "./SidebarItem";
 
 interface SidebarCategoryProps {
+  /** title of a node category */
   title: string;
+  /** array of subcategories */
   items: string[];
+  /** function to add a filter of specified category */
   addFilterFunction: (filterValue: Filter) => void;
 }
 
+/**
+ * SidebarCategory Component that handles the visibility of subcategories
+ */
 export const SidebarCategory = (props: SidebarCategoryProps): JSX.Element => {
   const { title, items, addFilterFunction } = props;
   const [isActive, setIsActive] = useState(false);

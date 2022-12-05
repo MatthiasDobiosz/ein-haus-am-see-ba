@@ -1,22 +1,30 @@
 import { HiOutlineArrowNarrowLeft } from "react-icons/hi";
-import { AppContext } from "../AppContext";
+import { SidebarContext } from "./SidebarContext";
 import { useContext, useState } from "react";
 import { SidebarCategory } from "./SidebarCategory";
-import { Filter, Filters } from "./Filters";
+import { Filter, Filters } from "./Filter/Filters";
 
 interface SidebarProps {
+  /** determines whether sidebar is currently active */
   isSidebarOpen: boolean;
 }
 
+/**
+ * Sidebar Component that renders categories and controls all category and filter states
+ */
 export const Sidebar = (props: SidebarProps): JSX.Element => {
-  const { setSidebarState } = useContext(AppContext);
+  const { setSidebarState } = useContext(SidebarContext);
   const { isSidebarOpen } = props;
   const [activeFilters, setActiveFilters] = useState<Filter[]>([]);
 
-  const handleSidebarOpen = () => {
+  const toggleSidebar = () => {
     setSidebarState(!isSidebarOpen);
   };
 
+  /**
+   * updates the filter array
+   * @param filterValue - single filter to add to array
+   */
   const handleFilterUpdate = (filterValue: Filter) => {
     setActiveFilters((prevActiveFilters) => [
       filterValue,
@@ -24,6 +32,10 @@ export const Sidebar = (props: SidebarProps): JSX.Element => {
     ]);
   };
 
+  /**
+   * updates the filter array
+   * @param filterValue - single filter to remove from array
+   */
   const removeFilter = (filterValue: Filter) => {
     setActiveFilters((prevActiveFilters) =>
       prevActiveFilters.filter((filter) => {
@@ -41,7 +53,7 @@ export const Sidebar = (props: SidebarProps): JSX.Element => {
         <HiOutlineArrowNarrowLeft
           size={40}
           className="text-[#fff] hover:text-[#cccccc] cursor-pointer"
-          onClick={() => handleSidebarOpen()}
+          onClick={() => toggleSidebar()}
         />
         <h2 className="text-[22px] m-0 font-normal pl-6  text-[#fff]">
           Filterauswahl

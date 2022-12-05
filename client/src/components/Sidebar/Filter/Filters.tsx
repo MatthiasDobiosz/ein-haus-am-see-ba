@@ -1,5 +1,14 @@
 import { FilterItem } from "./FilterItem";
 
+/**
+ * Filter Interface
+ *
+ * @interface Filter
+ * @param name - category of the filter
+ * @param distance - specified distance (m/km) of the filter
+ * @param relevance - importance of the filter
+ * @param polarity - whether the filter is to exclude or include nodes
+ */
 export interface Filter {
   name: string;
   distance: string;
@@ -8,10 +17,15 @@ export interface Filter {
 }
 
 interface FiltersProps {
+  /** filterArray of currently active filters */
   activeFilters: Filter[];
+  /** Function to remove a filter from the array of currently active filters*/
   removeFilter: (filterValue: Filter) => void;
 }
 
+/**
+ * Filters Component that maps the list of currently active filters
+ */
 export const Filters = (props: FiltersProps): JSX.Element => {
   const { activeFilters, removeFilter } = props;
 

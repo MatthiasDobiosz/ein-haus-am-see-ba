@@ -1,11 +1,21 @@
 import { useContext } from "react";
-import { AppContext } from "./AppContext";
+import { SidebarContext } from "./Sidebar/SidebarContext";
+import { SnackbarType } from "./Snackbar/Snackbar";
+import { SnackbarContext } from "./Snackbar/SnackbarContext";
 
+/**
+ * Heading Component that render Navbar with buttons
+ */
 export const Heading = (): JSX.Element => {
-  const { isSidebarOpen, setSidebarState } = useContext(AppContext);
+  const { isSidebarOpen, setSidebarState } = useContext(SidebarContext);
+  const snackbarContext = useContext(SnackbarContext);
 
   const handleSidebarOpen = () => {
     setSidebarState(!isSidebarOpen);
+  };
+
+  const openSnackbar = () => {
+    snackbarContext.displayMessage("TestSnackbar", 3000, SnackbarType.SUCCESS);
   };
 
   return (
@@ -44,6 +54,7 @@ export const Heading = (): JSX.Element => {
       <button
         type="button"
         className=" p-[0.6em] cursor-pointer overflow-hidden border-0 rounded-[6px]  bg-[#be150f] text-whitesmoke focus:ring-transparent hover:bg-[#a30d08] active:bg-[#a30d08]"
+        onClick={() => openSnackbar()}
       >
         Karte zurücksetzen
       </button>
