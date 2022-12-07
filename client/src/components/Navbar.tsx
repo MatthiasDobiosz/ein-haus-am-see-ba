@@ -1,28 +1,4 @@
-import axios from "axios";
-import {
-  endPerformanceMeasure,
-  evaluateMeasure,
-  startPerformanceMeasure,
-} from "../../../shared/benchmarking.js";
-
 export const Navbar = () => {
-  const fetchPerformanceServer = () => {
-    axios
-      .get("/test")
-      .then((resp) => console.log(resp.data))
-      .catch((err) => console.log(err));
-  };
-
-  const fetchPerformanceClient = () => {
-    console.log("hey");
-    startPerformanceMeasure("client");
-    let j = 0;
-    for (let i = 0; i < 1000000; i++) {
-      j += i;
-    }
-    console.log(j);
-    endPerformanceMeasure("client"), evaluateMeasure();
-  };
   return (
     <nav className="bg-gray-800 h-16">
       <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
@@ -70,23 +46,13 @@ export const Navbar = () => {
             </button>
           </div>
           <div className="flex flex-1 items-center justify-center sm:items-stretch sm:justify-center">
-            <div className="hidden sm:mr-50 sm:block">
+            <div className="sm:mr-50 sm:block">
               <div className="flex space-x-4">
-                <p className="text-fuchsia-200">lul</p>
+                <p className="text-orange-500">lul</p>
               </div>
             </div>
-            <button
-              className="bg-orange-500 ml-11"
-              onClick={() => fetchPerformanceServer()}
-            >
-              server
-            </button>
-            <button
-              className="bg-orange-500 ml-11"
-              onClick={() => fetchPerformanceClient()}
-            >
-              client
-            </button>
+            <button className="bg-orange-500 ml-11">server</button>
+            <button className="bg-orange-500 ml-11">client</button>
           </div>
         </div>
       </div>

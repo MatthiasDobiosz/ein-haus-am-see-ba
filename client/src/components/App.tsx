@@ -1,13 +1,20 @@
+import { useState } from "react";
 import "./App.css";
-import { Navbar } from "./Navbar";
-import { MapOverlay } from "./Map/MapOverlay";
+import { SidebarContext } from "./Sidebar/SidebarContext";
+import { Heading } from "./Heading";
+import { MainSection } from "./MainSection";
+import { SnackbarContextProvider } from "./Snackbar/SnackbarContextProvider";
 
 function App() {
+  const [isSidebarOpen, setSidebarState] = useState(false);
+
   return (
-    <div className=" w-screen h-screen box-border mt-0 ml-0">
-      <Navbar />
-      <MapOverlay />
-    </div>
+    <SnackbarContextProvider>
+      <SidebarContext.Provider value={{ isSidebarOpen, setSidebarState }}>
+        <Heading />
+        <MainSection isSidebarOpen={isSidebarOpen} />
+      </SidebarContext.Provider>
+    </SnackbarContextProvider>
   );
 }
 
