@@ -1,4 +1,4 @@
-import { ReactNode, useState } from "react";
+import { ReactNode, useContext, useState } from "react";
 import { SnackbarType } from "./Snackbar";
 import { SnackbarContext } from "./SnackbarContext";
 
@@ -56,3 +56,13 @@ export const SnackbarContextProvider = (
     </SnackbarContext.Provider>
   );
 };
+
+// expose a helper hook to easily grab the state anywhere in your app
+// wary of how you can optimise it:
+// https://kentcdodds.com/blog/how-to-optimize-your-context-value
+export function useSnackbar() {
+  const context = useContext(SnackbarContext);
+  if (context === undefined)
+    throw Error("You forgot to wrap your app with <SnackbarContextProvider />");
+  return context;
+}

@@ -1,8 +1,8 @@
 import { HiOutlineArrowNarrowLeft } from "react-icons/hi";
 import { SidebarContext } from "./SidebarContext";
-import { useContext, useState } from "react";
+import { useContext } from "react";
 import { SidebarCategory } from "./SidebarCategory";
-import { Filter, Filters } from "./Filter/Filters";
+import { Filters } from "./Filter/Filters";
 
 interface SidebarProps {
   /** determines whether sidebar is currently active */
@@ -15,33 +15,9 @@ interface SidebarProps {
 export const Sidebar = (props: SidebarProps): JSX.Element => {
   const { setSidebarState } = useContext(SidebarContext);
   const { isSidebarOpen } = props;
-  const [activeFilters, setActiveFilters] = useState<Filter[]>([]);
 
   const toggleSidebar = () => {
     setSidebarState(!isSidebarOpen);
-  };
-
-  /**
-   * updates the filter array
-   * @param filterValue - single filter to add to array
-   */
-  const handleFilterUpdate = (filterValue: Filter) => {
-    setActiveFilters((prevActiveFilters) => [
-      filterValue,
-      ...prevActiveFilters,
-    ]);
-  };
-
-  /**
-   * updates the filter array
-   * @param filterValue - single filter to remove from array
-   */
-  const removeFilter = (filterValue: Filter) => {
-    setActiveFilters((prevActiveFilters) =>
-      prevActiveFilters.filter((filter) => {
-        return filter != filterValue;
-      })
-    );
   };
 
   return (
@@ -63,38 +39,32 @@ export const Sidebar = (props: SidebarProps): JSX.Element => {
         <SidebarCategory
           title={"Natur"}
           items={["Parks und Grünflächen", "Wald", "Fluss"]}
-          addFilterFunction={handleFilterUpdate}
         />
         <SidebarCategory
           title={"Gastronomie"}
           items={["Restaurant", "Cafe", "Bar"]}
-          addFilterFunction={handleFilterUpdate}
         />
         <SidebarCategory
           title={"Öffentliche Verkehrsmittel"}
           items={["Bushaltestelle", "Bahnhof"]}
-          addFilterFunction={handleFilterUpdate}
         />
         <SidebarCategory
           title={"Einkaufsmöglichkeiten"}
           items={["Supermarkt", "Einkaufszentrum"]}
-          addFilterFunction={handleFilterUpdate}
         />
 
         <SidebarCategory
           title={"Bildung"}
           items={["Universtität und Hochschule", "Schule"]}
-          addFilterFunction={handleFilterUpdate}
         />
 
         <SidebarCategory
           title={"Sonstiges"}
           items={["Autobahn", "Parkplatz"]}
-          addFilterFunction={handleFilterUpdate}
         />
       </div>
       <hr className="border-t-[3px] border-solid border-[#bbb]" />
-      <Filters activeFilters={activeFilters} removeFilter={removeFilter} />
+      <Filters />
     </div>
   );
 };

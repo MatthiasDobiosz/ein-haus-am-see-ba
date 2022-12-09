@@ -1,21 +1,21 @@
 import { useContext } from "react";
 import { SidebarContext } from "./Sidebar/SidebarContext";
 import { SnackbarType } from "./Snackbar/Snackbar";
-import { SnackbarContext } from "./Snackbar/SnackbarContext";
+import { useSnackbar } from "./Snackbar/SnackbarContextProvider";
 
 /**
  * Heading Component that render Navbar with buttons
  */
 export const Heading = (): JSX.Element => {
   const { isSidebarOpen, setSidebarState } = useContext(SidebarContext);
-  const snackbarContext = useContext(SnackbarContext);
+  const { displayMessage } = useSnackbar();
 
   const handleSidebarOpen = () => {
     setSidebarState(!isSidebarOpen);
   };
 
   const openSnackbar = () => {
-    snackbarContext.displayMessage("TestSnackbar", 3000, SnackbarType.SUCCESS);
+    displayMessage("TestSnackbar", 10000, SnackbarType.SUCCESS);
   };
 
   return (

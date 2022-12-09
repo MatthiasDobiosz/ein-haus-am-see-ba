@@ -1,6 +1,7 @@
 import { Dispatch, SetStateAction, useState } from "react";
 import { createPortal } from "react-dom";
-import { Filter } from "./Filters";
+import { Filter, FilterRelevance } from "./Filters";
+import { useFilterLayers } from "./FiltersContextProvider";
 
 interface FilterModalProps {
   /** name of the category to show modal for */
@@ -9,26 +10,45 @@ interface FilterModalProps {
   open: boolean;
   /** function to trigger closing of the modal */
   onClose: Dispatch<SetStateAction<boolean>>;
-  /** function to add single Filter to active filters and close modal */
-  addFilter: (filterValue: Filter) => void;
 }
 
 export const FilterModal = (props: FilterModalProps): JSX.Element | null => {
-  const { value, open, onClose, addFilter } = props;
-  const [distance, setDistance] = useState("500");
+  const { value, open, onClose } = props;
+
+  const { addFilter } = useFilterLayers();
+  const [distance, setDistance] = useState(500);
   const [measure, setMeasure] = useState("m");
-  const [relevance, setRelevance] = useState("wichtig");
-  const [polarity, setPolarity] = useState("erwünscht");
+  const [relevance, setRelevance] = useState(FilterRelevance.important);
+  const [wanted, setWanted] = useState(true);
+
   const portalDiv = document.getElementById("portal");
 
+  /**
+   * createse new FilterLayer object based on current chosen values and adds it to the global context
+   */
   const handleAddFilter = () => {
-    addFilter({
-      name: value,
-      distance: distance + " " + measure,
-      relevance: relevance,
-      polarity: polarity,
-    });
+    const newFilter: Filter = {
+      layername: value,
+      distance: distance,
+      measurement: measure,
+      relevanceValue: relevance,
+      wanted: wanted,
+      points: [],
+      features: [],
+      originalData: null,
+    };
+    addFilter(newFilter);
     onClose(false);
+  };
+
+  const setRelevanceValue = (value: string) => {
+    if (value === "optional") {
+      setRelevance(FilterRelevance.notVeryImportant);
+    } else if (value === "wichtig") {
+      setRelevance(FilterRelevance.important);
+    } else {
+      setRelevance(FilterRelevance.veryImportant);
+    }
   };
 
   if (!portalDiv) {
@@ -53,7 +73,7 @@ export const FilterModal = (props: FilterModalProps): JSX.Element | null => {
                 type="text"
                 defaultValue="500"
                 pattern="\d"
-                onChange={(e) => setDistance(e.target.value)}
+                onChange={(e) => setDistance(Number(e.target.value))}
                 className="p-[6px] mr-[8px] w-[8vw] h-[4vh] border-[1px] border-solid border-[#808080] rounded-[2px]"
               />
               <div>
@@ -75,7 +95,7 @@ export const FilterModal = (props: FilterModalProps): JSX.Element | null => {
               <div>
                 <select
                   defaultValue={"optional"}
-                  onChange={(e) => setRelevance(e.target.value)}
+                  onChange={(e) => setRelevanceValue(e.target.value)}
                   className="border-[1px] border-solid border-[#000000]"
                 >
                   <option value="optional">optional</option>
@@ -96,7 +116,7 @@ export const FilterModal = (props: FilterModalProps): JSX.Element | null => {
                   name="polarity"
                   defaultValue="true"
                   className="absolute opacity-0 cursor-pointer"
-                  onChange={() => setPolarity("erwünscht")}
+                  onChange={() => setWanted(true)}
                 />
                 <span className="absolute top-0 left-0 h-[18px] w-[18px] bg-[#eee] rounded-[50%] checkmark"></span>
               </label>
@@ -108,7 +128,7 @@ export const FilterModal = (props: FilterModalProps): JSX.Element | null => {
                   name="polarity"
                   defaultValue="false"
                   className="absolute opacity-0 cursor-pointer"
-                  onChange={() => setPolarity("nicht erwünscht")}
+                  onChange={() => setWanted(false)}
                 />
                 <span className="absolute top-0 left-0 h-[18px] w-[18px] bg-[#eee] rounded-[50%] checkmark"></span>
               </label>

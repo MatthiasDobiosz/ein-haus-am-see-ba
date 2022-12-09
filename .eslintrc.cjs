@@ -13,6 +13,7 @@ module.exports = {
   },
   rules: {
     "unused-imports/no-unused-imports": "error",
+    "@typescript-eslint/no-misused-promises": "warn",
     "unused-imports/no-unused-vars": [
       "warn",
       {

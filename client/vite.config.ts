@@ -25,6 +25,11 @@ export default defineConfig({
           });
         },*/
       },
+      "/osmRequestCache": {
+        target: "http://localhost:3200",
+        changeOrigin: true,
+        secure: false,
+      },
     },
   },
 });

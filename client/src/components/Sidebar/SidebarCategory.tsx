@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { AiFillCaretDown, AiFillCaretUp } from "react-icons/ai";
-import { Filter } from "./Filter/Filters";
 import { SidebarItem } from "./SidebarItem";
 
 interface SidebarCategoryProps {
@@ -8,15 +7,13 @@ interface SidebarCategoryProps {
   title: string;
   /** array of subcategories */
   items: string[];
-  /** function to add a filter of specified category */
-  addFilterFunction: (filterValue: Filter) => void;
 }
 
 /**
  * SidebarCategory Component that handles the visibility of subcategories
  */
 export const SidebarCategory = (props: SidebarCategoryProps): JSX.Element => {
-  const { title, items, addFilterFunction } = props;
+  const { title, items } = props;
   const [isActive, setIsActive] = useState(false);
 
   const handleOpen = () => {
@@ -45,13 +42,7 @@ export const SidebarCategory = (props: SidebarCategoryProps): JSX.Element => {
       {isActive && (
         <div>
           {items.map((item) => {
-            return (
-              <SidebarItem
-                name={item}
-                addFilterFunction={addFilterFunction}
-                key={item}
-              />
-            );
+            return <SidebarItem name={item} key={item} />;
           })}
         </div>
       )}
