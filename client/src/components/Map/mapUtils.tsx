@@ -83,7 +83,7 @@ export function getViewportBoundsString(
 /**
  * Util-Function to convert LngLat coordinates to pixel coordinates on the screen.
  */
-function convertToPixelCoord(
+export function convertToPixelCoord(
   map: MapboxMap,
   coord: LngLatLike
 ): mapboxgl.Point {

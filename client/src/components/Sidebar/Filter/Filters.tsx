@@ -38,7 +38,7 @@ export interface Filter {
   wanted: boolean;
   points: (Point | null)[][];
   features: Feature<Polygon | MultiPolygon, GeoJsonProperties>[];
-  originalData: FeatureCollection<Geometry, any> | null;
+  originalData: FeatureCollection<Geometry> | null;
 }
 
 /**
