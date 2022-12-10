@@ -33,6 +33,9 @@ export const FiltersContextProvider = (props: FiltersContextProviderProps) => {
         !(prevFilterLayer.layername === filterLayer.layername);
       })
     );
+    const newActiveFilters = activeFilters;
+    newActiveFilters.delete(filterLayer.layername);
+    setActiveFilters(newActiveFilters);
   };
 
   const getFilterLayer = (name: string): Filter | null => {

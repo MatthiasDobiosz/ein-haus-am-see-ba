@@ -2,11 +2,13 @@ import { useContext } from "react";
 import { SidebarContext } from "./Sidebar/SidebarContext";
 import { SnackbarType } from "./Snackbar/Snackbar";
 import { useSnackbar } from "./Snackbar/SnackbarContextProvider";
+import { VisualType, useMap } from "./Map/MapProvider";
 
 /**
  * Heading Component that render Navbar with buttons
  */
 export const Heading = (): JSX.Element => {
+  const { setSelectedVisualType } = useMap();
   const { isSidebarOpen, setSidebarState } = useContext(SidebarContext);
   const { displayMessage } = useSnackbar();
 
@@ -39,6 +41,13 @@ export const Heading = (): JSX.Element => {
         <select
           className="italic opacity-[0.7] leading-[24px] pl-[2px] pr-[2px] pt-[3px] pb-[3px] cursor-pointer rounded-[4px] inline w-[100%]"
           defaultValue={"Overlay"}
+          onChange={(e) =>
+            setSelectedVisualType(
+              e.target.value === "Overlay"
+                ? VisualType.OVERLAY
+                : VisualType.NORMAL
+            )
+          }
         >
           <option value="Overlay">Gebiete</option>
           <option value="Normal">Orte</option>

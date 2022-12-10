@@ -1,7 +1,10 @@
 import mapboxgl from "mapbox-gl";
-import { useState } from "react";
+import { memo, useEffect, useState } from "react";
 import Map, { AttributionControl, NavigationControl } from "react-map-gl";
-import { useMap } from "./MapProvider";
+import { useFilterLayers } from "../Sidebar/Filter/FiltersContextProvider";
+import { SnackbarType } from "../Snackbar/Snackbar";
+import { useSnackbar } from "../Snackbar/SnackbarContextProvider";
+import { VisualType, useMap } from "./MapProvider";
 
 interface MapOverlayProps {
   /* dynamically change width depending on sidebarState */
@@ -11,8 +14,11 @@ interface MapOverlayProps {
 /**
  * Component that returns Mapbox Map with specified settings
  */
-export const MapOverlay = (props: MapOverlayProps) => {
-  const { setMap } = useMap();
+export const MapOverlay = memo((props: MapOverlayProps) => {
+  const [firstRender, setFirstRender] = useState(true);
+  const { setMap, selectedVisualType } = useMap();
+  const { activeFilters } = useFilterLayers();
+  const { displayMessage } = useSnackbar();
   const { isSidebarOpen } = props;
   // define initial Viewport state
   const [viewport, setViewport] = useState({
@@ -20,6 +26,26 @@ export const MapOverlay = (props: MapOverlayProps) => {
     latitude: 49.013432,
     zoom: 12,
   });
+
+  useEffect(() => {
+    if (firstRender) {
+      setFirstRender(false);
+    } else {
+      if (activeFilters.size > 0) {
+        if (selectedVisualType === VisualType.OVERLAY) {
+          console.log("loadMapData");
+        } else {
+          console.log("showPOI");
+        }
+      } else {
+        displayMessage(
+          "Aktive Filter müssen vorhanden sein, um Informationen anzuzeigen!",
+          3000,
+          SnackbarType.WARNING
+        );
+      }
+    }
+  }, [selectedVisualType]);
 
   // make sure that MapboxGl (and WebGL) are supported in the browser
   // TODO: show custom error component
@@ -56,4 +82,4 @@ export const MapOverlay = (props: MapOverlayProps) => {
       </div>
     </div>
   );
-};
+});

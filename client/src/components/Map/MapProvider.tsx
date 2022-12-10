@@ -19,11 +19,31 @@ export function MapContextProvider(
   props: MapContextProviderProps
 ): JSX.Element {
   const [map, setMap] = useState<MapboxMap | null>(null);
-  // tresholds to prevent reloading when small movements are made (performance optimization)
-  //const zoomTreshold = 0.7; // zoom level difference -> update if a map zoom event changed more than this
-  //const moveTreshold = 1000; // map center difference in meters
-  //const currentZoom = map?.getZoom();
-  return <MapContext.Provider value={{ map, setMap }} {...props} />;
+  const [selectedVisualType, setSelectedVisualType] = useState(
+    VisualType.OVERLAY
+  );
+  //tresholds to prevent reloading when small movements are made (performance optimization)
+  const zoomTreshold = 0.7; // zoom level difference -> update if a map zoom event changed more than this
+  const moveTreshold = 1000; // map center difference in meters
+  const currentZoom = map?.getZoom();
+
+  const setSelectedVisualTypeWhenDifferent = (visualType: VisualType) => {
+    if (visualType !== selectedVisualType) {
+      setSelectedVisualType(visualType);
+    }
+  };
+
+  return (
+    <MapContext.Provider
+      value={{
+        map,
+        setMap,
+        selectedVisualType,
+        setSelectedVisualType: setSelectedVisualTypeWhenDifferent,
+      }}
+      {...props}
+    />
+  );
 }
 
 // expose a helper hook to easily grab the state anywhere in your app

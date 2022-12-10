@@ -1,5 +1,6 @@
 import { createContext } from "react";
 import { MapboxMap } from "react-map-gl";
+import { VisualType } from "./MapProvider";
 
 // TODO: maybe allow components to get certain features of the map instead of the map as a whole
 interface MapContextState {
@@ -7,6 +8,8 @@ interface MapContextState {
   map: MapboxMap | null;
   // set new map-object (e.g. on viewport change)
   setMap: (map: MapboxMap) => void;
+  selectedVisualType: VisualType;
+  setSelectedVisualType: (visualType: VisualType) => void;
 }
 
 export const MapContext = createContext({} as MapContextState);

@@ -15,6 +15,7 @@ module.exports = {
       darkgreen: "#058f3e",
       whitesmoke: "#f5f5f5",
       lavender: "#e6e6fa",
+      red: "#b61919",
     },
     extend: {
       height: {
