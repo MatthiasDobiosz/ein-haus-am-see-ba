@@ -30,7 +30,7 @@ export const endPerformanceMeasure = (name: string): void => {
 };
 
 /**
- * Starts the measuring timer
+ * logs all measured processes
  */
 export const evaluateMeasure = (): void => {
   const measures = avergageMeasures(performance.getEntriesByType("measure"));

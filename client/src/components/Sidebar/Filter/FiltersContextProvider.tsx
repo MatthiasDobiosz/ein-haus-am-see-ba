@@ -1,4 +1,11 @@
 import { ReactNode, useContext, useState } from "react";
+import { MapboxMap } from "react-map-gl";
+import {
+  endPerformanceMeasure,
+  evaluateMeasure,
+  startPerformanceMeasure,
+} from "../../../../../shared/benchmarking";
+import { convertPolygonCoordsToPixelCoords } from "../../Map/mapUtils";
 import { Filter } from "./Filters";
 import { FiltersContext } from "./FiltersContext";
 
@@ -52,6 +59,34 @@ export const FiltersContextProvider = (props: FiltersContextProviderProps) => {
     setAllFilterLayers([]);
     setActiveFilters(new Set());
   };
+
+  /**
+   * ! Has to be called on every overlay update to recalculate the geojson polygons in point/screen coords.
+   * ! Otherwise they would not be in sync with the map!!
+   */
+  const recalculateScreenCoords = (map: MapboxMap): void => {
+    startPerformanceMeasure("recalculateAllScreenCoords");
+    allFilterLayers.forEach((filterLayer) => {
+      calculatePointCoordsForFeatures(filterLayer, map);
+    });
+    endPerformanceMeasure("recalculateAllScreenCoords");
+    evaluateMeasure();
+  };
+
+  const calculatePointCoordsForFeatures = (
+    filterLayer: Filter,
+    map: MapboxMap
+  ): void => {
+    filterLayer.points.length = 0;
+    for (let i = 0; i < filterLayer.features.length; i++) {
+      convertPolygonCoordsToPixelCoords(
+        map,
+        filterLayer.features[i],
+        filterLayer
+      );
+    }
+  };
+
   return (
     <FiltersContext.Provider
       value={{
@@ -61,6 +96,7 @@ export const FiltersContextProvider = (props: FiltersContextProviderProps) => {
         removeFilter: removeFilter,
         getFilterLayer: getFilterLayer,
         clearAllFilters: clearAllFilters,
+        recalculateScreenCoords: recalculateScreenCoords,
       }}
     >
       {props.children}

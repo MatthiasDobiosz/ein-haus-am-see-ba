@@ -3,6 +3,7 @@ import { SidebarContext } from "./Sidebar/SidebarContext";
 import { SnackbarType } from "./Snackbar/Snackbar";
 import { useSnackbar } from "./Snackbar/SnackbarContextProvider";
 import { VisualType, useMap } from "./Map/MapProvider";
+import { useFilterLayers } from "./Sidebar/Filter/FiltersContextProvider";
 
 /**
  * Heading Component that render Navbar with buttons
@@ -10,6 +11,7 @@ import { VisualType, useMap } from "./Map/MapProvider";
 export const Heading = (): JSX.Element => {
   const { setSelectedVisualType } = useMap();
   const { isSidebarOpen, setSidebarState } = useContext(SidebarContext);
+  const { activeFilters } = useFilterLayers();
   const { displayMessage } = useSnackbar();
 
   const handleSidebarOpen = () => {
@@ -55,8 +57,9 @@ export const Heading = (): JSX.Element => {
       </div>
       <button
         type="button"
-        className=" p-[0.6em] cursor-pointer overflow-hidden border-0 rounded-[2px] shadow bg-lightgreen text-whitesmoke hover:bg-darkgreen active:bg-darkgreen button-disabled"
-        disabled
+        className={`p-[0.6em] cursor-pointer overflow-hidden border-0 rounded-[2px] shadow bg-lightgreen text-whitesmoke hover:bg-darkgreen active:bg-darkgreen ${
+          activeFilters.size > 0 ? "" : "button-disabled"
+        }`}
       >
         Lade Daten manuell
       </button>

@@ -1,4 +1,5 @@
 import { createContext } from "react";
+import { MapboxMap } from "react-map-gl";
 import { Filter } from "./Filters";
 
 interface FiltersContextState {
@@ -14,6 +15,8 @@ interface FiltersContextState {
   getFilterLayer: (name: string) => Filter | null;
   // clears all filterLayers
   clearAllFilters: () => void;
+  // recalculates screen coordinats
+  recalculateScreenCoords: (map: MapboxMap) => void;
 }
 
 export const FiltersContext = createContext({} as FiltersContextState);

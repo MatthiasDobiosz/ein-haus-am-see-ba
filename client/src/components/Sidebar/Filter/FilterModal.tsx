@@ -1,5 +1,7 @@
 import { Dispatch, SetStateAction, useState } from "react";
 import { createPortal } from "react-dom";
+import { SnackbarType } from "../../Snackbar/Snackbar";
+import { useSnackbar } from "../../Snackbar/SnackbarContextProvider";
 import { Filter, FilterRelevance } from "./Filters";
 import { useFilterLayers } from "./FiltersContextProvider";
 
@@ -14,8 +16,8 @@ interface FilterModalProps {
 
 export const FilterModal = (props: FilterModalProps): JSX.Element | null => {
   const { value, open, onClose } = props;
-
-  const { addFilter } = useFilterLayers();
+  const { displayMessage } = useSnackbar();
+  const { addFilter, activeFilters } = useFilterLayers();
   const [distance, setDistance] = useState(500);
   const [measure, setMeasure] = useState("m");
   const [relevance, setRelevance] = useState(FilterRelevance.important);
@@ -37,9 +39,40 @@ export const FilterModal = (props: FilterModalProps): JSX.Element | null => {
       features: [],
       originalData: null,
     };
+
     addFilter(newFilter);
+
+    displayMessage(
+      "Filter wurde erfolgreich hinzugefügt!",
+      1000,
+      SnackbarType.SUCCESS
+    );
+
+    //closes Modal
     onClose(false);
+
+    // load map data automatically after 800ms (timeout so the snackbars wont overlap)
+    /*setTimeout(() => {
+      performOsmQuery();
+    }, 800);*/
   };
+
+  /*
+  async function performOsmQuery(): Promise<void> {
+    if (activeFilters.size === 0) {
+      displayMessage(
+        "Es können keine Daten geladen werden, da keine Filter aktiv sind!",
+        2000,
+        SnackbarType.WARNING
+      );
+      return;
+    }
+    // TODO: loadMapData();
+    /*
+    const data = await testGuide("restaurant");
+    console.log(data);
+    
+  } */
 
   const setRelevanceValue = (value: string) => {
     if (value === "optional") {
