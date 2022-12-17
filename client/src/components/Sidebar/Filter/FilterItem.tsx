@@ -1,5 +1,6 @@
+import { observer } from "mobx-react";
+import rootStore from "../../../stores/RootStore";
 import { Filter } from "./Filters";
-import { useFilterLayers } from "./FiltersContextProvider";
 
 interface FilterItemProps {
   /** filter object that contains relevant filter properties */
@@ -9,9 +10,8 @@ interface FilterItemProps {
 /**
  * FilterItem Component that shows a single filter
  */
-export const FilterItem = (props: FilterItemProps) => {
+export const FilterItem = observer((props: FilterItemProps) => {
   const { filter } = props;
-  const { removeFilter } = useFilterLayers();
 
   const getRelevanceString = (relevanceValue: number) => {
     return relevanceValue === 0.2
@@ -26,7 +26,7 @@ export const FilterItem = (props: FilterItemProps) => {
       <h4 className="my-[4px] mx-0">{filter.layername}</h4>
       <button
         className=" py-[0.2] px-[0.4em] mt-0 mr-[6px] mb-[1px] ml-[2px] cursor-pointer overflow-hidden border-0 outline-none float-right rounded-[15px] bg-[#e20f00] text-[#fff]"
-        onClick={() => removeFilter(filter)}
+        onClick={() => rootStore.filterStore.removeFilter(filter)}
       >
         Löschen
       </button>
@@ -35,4 +35,4 @@ export const FilterItem = (props: FilterItemProps) => {
       {filter.wanted ? "erwünscht" : "nicht erwünscht"}
     </li>
   );
-};
+});

@@ -1,5 +1,5 @@
 import { createContext } from "react";
-import { SnackbarType } from "./Snackbar";
+import { SnackbarType } from "../../stores/SnackbarStore";
 
 interface SnackbarContextState {
   /** message to display */

@@ -1,25 +1,28 @@
 import { useContext } from "react";
 import { SidebarContext } from "./Sidebar/SidebarContext";
-import { SnackbarType } from "./Snackbar/Snackbar";
-import { useSnackbar } from "./Snackbar/SnackbarContextProvider";
-import { VisualType, useMap } from "./Map/MapProvider";
-import { useFilterLayers } from "./Sidebar/Filter/FiltersContextProvider";
+import { observer } from "mobx-react";
+import { SnackbarType } from "./../stores/SnackbarStore";
+
+import { VisualType } from "../stores/MapStore";
+import rootStore from "../stores/RootStore";
 
 /**
  * Heading Component that render Navbar with buttons
  */
-export const Heading = (): JSX.Element => {
-  const { setSelectedVisualType } = useMap();
+export const Heading = observer((): JSX.Element => {
   const { isSidebarOpen, setSidebarState } = useContext(SidebarContext);
-  const { activeFilters } = useFilterLayers();
-  const { displayMessage } = useSnackbar();
 
   const handleSidebarOpen = () => {
     setSidebarState(!isSidebarOpen);
   };
 
   const openSnackbar = () => {
-    displayMessage("TestSnackbar", 10000, SnackbarType.SUCCESS);
+    rootStore.mapStore.resetMapData();
+    rootStore.snackbarStore.displayHandler(
+      "TestSnackbar",
+      10000,
+      SnackbarType.SUCCESS
+    );
   };
 
   return (
@@ -44,7 +47,7 @@ export const Heading = (): JSX.Element => {
           className="italic opacity-[0.7] leading-[24px] pl-[2px] pr-[2px] pt-[3px] pb-[3px] cursor-pointer rounded-[4px] inline w-[100%]"
           defaultValue={"Overlay"}
           onChange={(e) =>
-            setSelectedVisualType(
+            rootStore.mapStore.setVisualType(
               e.target.value === "Overlay"
                 ? VisualType.OVERLAY
                 : VisualType.NORMAL
@@ -58,7 +61,7 @@ export const Heading = (): JSX.Element => {
       <button
         type="button"
         className={`p-[0.6em] cursor-pointer overflow-hidden border-0 rounded-[2px] shadow bg-lightgreen text-whitesmoke hover:bg-darkgreen active:bg-darkgreen ${
-          activeFilters.size > 0 ? "" : "button-disabled"
+          rootStore.filterStore.activeFilters.size > 0 ? "" : "button-disabled"
         }`}
       >
         Lade Daten manuell
@@ -72,4 +75,4 @@ export const Heading = (): JSX.Element => {
       </button>
     </nav>
   );
-};
+});

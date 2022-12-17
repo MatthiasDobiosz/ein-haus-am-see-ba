@@ -23,6 +23,8 @@ export const FiltersContextProvider = (props: FiltersContextProviderProps) => {
   const addFilter = (filterLayer: Filter): void => {
     //dont add if filter with that name already exists
     //TODO: show error message to user that he cant create more than one filter of the same category
+    console.log("filter:");
+    console.log(filterLayer);
     if (!activeFilters.has(filterLayer.layername)) {
       setAllFilterLayers((prevFilterLayers) => [
         filterLayer,
@@ -45,7 +47,9 @@ export const FiltersContextProvider = (props: FiltersContextProviderProps) => {
     setActiveFilters(newActiveFilters);
   };
 
-  const getFilterLayer = (name: string): Filter | null => {
+  function getFilterLayer(name: string): Filter | null {
+    console.log("get: ", name);
+    console.log(allFilterLayers);
     const filter = allFilterLayers.find((filterLayer) => {
       return filterLayer.layername === name;
     });
@@ -53,7 +57,7 @@ export const FiltersContextProvider = (props: FiltersContextProviderProps) => {
       return filter;
     }
     return null;
-  };
+  }
 
   const clearAllFilters = (): void => {
     setAllFilterLayers([]);

@@ -4,7 +4,6 @@ import type {
   GeoJsonProperties,
   GeometryObject,
   LineString,
-  MultiPolygon,
   Point,
   Polygon,
 } from "geojson";
@@ -12,7 +11,6 @@ import { LngLatLike, MapboxMap, PointLike } from "react-map-gl";
 import bbox from "@turf/bbox";
 import { addBufferToFeature } from "./turfUtils";
 import bboxPolygon from "@turf/bbox-polygon";
-import { Filter } from "../Sidebar/Filter/Filters";
 
 // Utility functions to use for the map
 
@@ -174,46 +172,4 @@ export function flattenMultiGeometry(
   const allFeatures = [...currentPoints, ...currentWays, ...currentPolygons];
   //console.log("allFeatures: ", allFeatures);
   return allFeatures;
-}
-
-export function convertPolygonCoordsToPixelCoords(
-  map: MapboxMap,
-  polygon: Feature<Polygon | MultiPolygon, GeoJsonProperties>,
-  layer: Filter
-): void {
-  const coords = polygon.geometry.coordinates;
-
-  // check if this is a multidimensional array (i.e. a multipolygon or a normal one)
-  if (coords.length > 1) {
-    //console.log("Multipolygon: ", coords);
-
-    //const flattened: mapboxgl.Point[] = [];
-    for (const coordPart of coords) {
-      layer.points.push(
-        //@ts-expect-error idk
-        coordPart.map((coord: number[]) => {
-          try {
-            return map.project(coord as LngLatLike);
-          } catch (error) {
-            console.log("Error in projecting coord: ", error);
-            return null;
-          }
-        })
-      );
-      //flattened.push(coordPart.map((coord: number[]) => mapboxUtils.convertToPixelCoord(coord)));
-    }
-    // layer.Points.push(flattened);
-  } else {
-    //@ts-expect-error idk
-    const pointData = coords[0].map((coord: number[]) => {
-      try {
-        return map.project(coord as LngLatLike);
-      } catch (error) {
-        console.log("Error in projecting coord: ", error);
-        return null;
-      }
-    });
-
-    layer.points.push(pointData);
-  }
 }

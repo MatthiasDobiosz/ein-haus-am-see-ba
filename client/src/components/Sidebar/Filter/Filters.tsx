@@ -6,9 +6,10 @@ import {
   MultiPolygon,
   Polygon,
 } from "geojson";
+import { observer } from "mobx-react";
 import { Point } from "react-map-gl";
+import rootStore from "../../../stores/RootStore";
 import { FilterItem } from "./FilterItem";
-import { useFilterLayers } from "./FiltersContextProvider";
 
 // every relevance has a specific weight
 export enum FilterRelevance {
@@ -36,7 +37,7 @@ export interface Filter {
   measurement: string;
   relevanceValue: number;
   wanted: boolean;
-  points: (Point | null)[][];
+  points: Point[][];
   features: Feature<Polygon | MultiPolygon, GeoJsonProperties>[];
   originalData: FeatureCollection<Geometry> | null;
 }
@@ -44,13 +45,12 @@ export interface Filter {
 /**
  * Filters Component that maps the list of currently active filters
  */
-export const Filters = (): JSX.Element => {
-  const { allFilterLayers } = useFilterLayers();
+export const Filters = observer((): JSX.Element => {
   return (
     <div>
-      {allFilterLayers.length > 0 ? (
+      {rootStore.filterStore.allFilterLayers.length > 0 ? (
         <ul className="text-[0.9em] list-none pt-0 pr-[5px] pb-[10px] pl-[5px]">
-          {allFilterLayers.map((filterLayer) => {
+          {rootStore.filterStore.allFilterLayers.map((filterLayer) => {
             return (
               <FilterItem key={filterLayer.layername} filter={filterLayer} />
             );
@@ -66,4 +66,4 @@ export const Filters = (): JSX.Element => {
       )}
     </div>
   );
-};
+});

@@ -1,3 +1,4 @@
+import { observer } from "mobx-react";
 import { useState } from "react";
 import { FilterModal } from "./Filter/FilterModal";
 
@@ -9,7 +10,7 @@ interface SidebarItemProps {
 /**
  * SidebarItem Component that renders a single subcategory
  */
-export const SidebarItem = (props: SidebarItemProps): JSX.Element => {
+export const SidebarItem = observer((props: SidebarItemProps): JSX.Element => {
   const { name } = props;
   const [showFilterModal, setShowFilterModal] = useState(false);
 
@@ -30,4 +31,4 @@ export const SidebarItem = (props: SidebarItemProps): JSX.Element => {
       )}
     </>
   );
-};
+});

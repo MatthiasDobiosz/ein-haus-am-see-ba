@@ -3,6 +3,7 @@ import { SidebarContext } from "./SidebarContext";
 import { useContext } from "react";
 import { SidebarCategory } from "./SidebarCategory";
 import { Filters } from "./Filter/Filters";
+import { observer } from "mobx-react";
 
 interface SidebarProps {
   /** determines whether sidebar is currently active */
@@ -12,7 +13,7 @@ interface SidebarProps {
 /**
  * Sidebar Component that renders categories and controls all category and filter states
  */
-export const Sidebar = (props: SidebarProps): JSX.Element => {
+export const Sidebar = observer((props: SidebarProps): JSX.Element => {
   const { setSidebarState } = useContext(SidebarContext);
   const { isSidebarOpen } = props;
 
@@ -67,4 +68,4 @@ export const Sidebar = (props: SidebarProps): JSX.Element => {
       <Filters />
     </div>
   );
-};
+});

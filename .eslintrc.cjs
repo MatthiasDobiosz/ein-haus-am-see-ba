@@ -3,9 +3,10 @@ module.exports = {
     "eslint:recommended",
     "plugin:@typescript-eslint/recommended",
     "plugin:@typescript-eslint/recommended-requiring-type-checking",
+    "plugin:mobx/recommended",
   ],
   parser: "@typescript-eslint/parser",
-  plugins: ["@typescript-eslint", "unused-imports"],
+  plugins: ["@typescript-eslint", "unused-imports", "mobx"],
   root: true,
   parserOptions: {
     tsconfigRootDir: __dirname,
@@ -14,6 +15,11 @@ module.exports = {
   rules: {
     "unused-imports/no-unused-imports": "error",
     "@typescript-eslint/no-misused-promises": "off",
+    "@typescript-eslint/no-unsafe-argument": "warn",
+    "@typescript-eslint/no-unsafe-assignment": "warn",
+    "@typescript-eslint/no-floating-promises": "warn",
+    "@typescript-eslint/no-unsafe-call": "warn",
+    "@typescript-eslint/require-await": "warn",
     "unused-imports/no-unused-vars": [
       "warn",
       {

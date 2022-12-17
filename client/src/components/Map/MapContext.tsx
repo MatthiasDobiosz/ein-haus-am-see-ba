@@ -10,6 +10,7 @@ interface MapContextState {
   setMap: (map: MapboxMap) => void;
   selectedVisualType: VisualType;
   setSelectedVisualType: (visualType: VisualType) => void;
+  loadMapData: () => Promise<void>;
 }
 
 export const MapContext = createContext({} as MapContextState);

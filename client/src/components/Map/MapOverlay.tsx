@@ -1,11 +1,10 @@
 import mapboxgl, { LngLat } from "mapbox-gl";
 import { memo, useEffect, useState } from "react";
 import Map, { AttributionControl, NavigationControl } from "react-map-gl";
-import { useFilterLayers } from "../Sidebar/Filter/FiltersContextProvider";
-import { SnackbarType } from "../Snackbar/Snackbar";
-import { useSnackbar } from "../Snackbar/SnackbarContextProvider";
 import { initialZoomLevel } from "./mapboxConfig";
-import { VisualType, useMap } from "./MapProvider";
+import { SnackbarType } from "./../../stores/SnackbarStore";
+import rootStore from "../../stores/RootStore";
+import { VisualType } from "../../stores/MapStore";
 
 interface MapOverlayProps {
   /* dynamically change width depending on sidebarState */
@@ -25,12 +24,10 @@ export const MapOverlay = memo((props: MapOverlayProps) => {
     new LngLat(12.101624, 49.013432)
   );
   const [currentMapZoom, setCurrentMapZoom] = useState(initialZoomLevel);
-  const { map, setMap, selectedVisualType } = useMap();
-  const { activeFilters, recalculateScreenCoords } = useFilterLayers();
-  const { displayMessage } = useSnackbar();
   const { isSidebarOpen } = props;
   const minRequiredZoomLevel = 7;
-
+  const map = rootStore.mapStore.map;
+  const visualType = rootStore.mapStore.visualType;
   /*
   const setViewPortOnThreshold = (viewState: ViewState) => {
     if (
@@ -52,21 +49,21 @@ export const MapOverlay = memo((props: MapOverlayProps) => {
     if (firstRender) {
       setFirstRender(false);
     } else {
-      if (activeFilters.size > 0) {
-        if (selectedVisualType === VisualType.OVERLAY) {
+      if (rootStore.filterStore.activeFilters.size > 0) {
+        if (visualType === VisualType.OVERLAY) {
           console.log("loadMapData");
         } else {
           console.log("showPOI");
         }
       } else {
-        displayMessage(
+        rootStore.snackbarStore.displayHandler(
           "Aktive Filter müssen vorhanden sein, um Informationen anzuzeigen!",
           3000,
           SnackbarType.WARNING
         );
       }
     }
-  }, [selectedVisualType]);
+  }, [visualType]);
 
   const onMapDragEnd = () => {
     if (map) {
@@ -76,8 +73,8 @@ export const MapOverlay = memo((props: MapOverlayProps) => {
       //! overlay needs to be updated all the time unfortunately as long as i can't find a way
       //! to draw the canvas bigger than the screen and also retain correct pixel corrdinates :(
       //!  -> would probably require view matrix transformations
-      if (selectedVisualType === VisualType.OVERLAY) {
-        recalculateScreenCoords(map);
+      if (visualType === VisualType.OVERLAY) {
+        rootStore.filterStore.recalculateScreenCoords();
         // this is a threshold to avoid firing events with small moves
         if (distance < moveTreshold) {
           // if below the treshold only update overlay
@@ -100,13 +97,14 @@ export const MapOverlay = memo((props: MapOverlayProps) => {
     if (map) {
       const newZoom = map.getZoom();
 
-      if (selectedVisualType === VisualType.OVERLAY) {
-        recalculateScreenCoords(map);
+      if (visualType === VisualType.OVERLAY) {
+        rootStore.filterStore.recalculateScreenCoords();
         console.log(newZoom);
 
         if (newZoom <= minRequiredZoomLevel) {
           // performance optimization - dont show/update overlay below a certain zoomlevel
-          displayMessage(
+
+          rootStore.snackbarStore.displayHandler(
             "Die aktuelle Zoomstufe ist zu niedrig, um Daten zu aktualisieren!",
             2000,
             SnackbarType.WARNING
@@ -120,7 +118,7 @@ export const MapOverlay = memo((props: MapOverlayProps) => {
         // TODO: loadMapData();
       } else {
         if (newZoom <= minRequiredZoomLevel) {
-          displayMessage(
+          rootStore.snackbarStore.displayHandler(
             "Die aktuelle Zoomstufe ist zu niedrig, um Daten zu aktualisieren!",
             2000,
             SnackbarType.WARNING
@@ -149,7 +147,7 @@ export const MapOverlay = memo((props: MapOverlayProps) => {
     >
       <div className="w-[100%] h-[100%]">
         <Map
-          ref={(ref) => ref && setMap(ref.getMap())}
+          ref={(ref) => ref && rootStore.mapStore.setMap(ref.getMap())}
           mapboxAccessToken={process.env.MAPBOX_TOKEN}
           reuseMaps={true}
           initialViewState={{
@@ -181,6 +179,9 @@ export const MapOverlay = memo((props: MapOverlayProps) => {
           <NavigationControl position={"top-left"} visualizePitch={true} />
           <AttributionControl position={"bottom-right"} />
         </Map>
+        <canvas id="texture_canvas">
+          Your browser does not seem to support HTML5 canvas.
+        </canvas>
       </div>
     </div>
   );

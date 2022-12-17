@@ -1,5 +1,5 @@
 import { ReactNode, useContext, useState } from "react";
-import { SnackbarType } from "./Snackbar";
+import { SnackbarType } from "../../stores/SnackbarStore";
 import { SnackbarContext } from "./SnackbarContext";
 
 interface SnackbarContextProviderProps {
