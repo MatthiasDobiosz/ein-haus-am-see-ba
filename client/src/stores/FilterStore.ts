@@ -94,7 +94,7 @@ class FilterStore {
 
     // check if this is a multidimensional array (i.e. a multipolygon or a normal one)
     if (coords.length > 1) {
-      console.log("Multipolygon: ", coords);
+      //console.log("Multipolygon: ", coords);
       //const flattened: mapboxgl.Point[] = [];
       for (let i = 0; i < coords.length; i++) {
         layer.points.push(

@@ -45,15 +45,17 @@ class SnackbarStore {
    */
   displayHandler(
     message: string,
-    displayTime: number,
+    displayTime: number | undefined,
     snackbarColor: SnackbarType
   ) {
     this.message = message;
     this.snackbarColor = snackbarColor;
     this.isDisplayed = true;
-    this.timer = setTimeout(() => {
-      this.closeHandler();
-    }, displayTime);
+    if (displayTime) {
+      this.timer = setTimeout(() => {
+        this.closeHandler();
+      }, displayTime);
+    }
   }
 
   /** clears SnackbarTimer and removes visiblity */

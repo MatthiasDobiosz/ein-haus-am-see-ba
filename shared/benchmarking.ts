@@ -36,9 +36,7 @@ export const evaluateMeasure = (): void => {
   const measures = avergageMeasures(performance.getEntriesByType("measure"));
   for (let i = 0; i < measures.length; i++) {
     console.log(
-      `Average Time meassured for the process "${measures[i].name}": ${
-        measures[i].duration * 1000
-      }ms over ${measures[i].count} iterations`
+      `Average Time meassured for the process "${measures[i].name}": ${measures[i].duration}ms over ${measures[i].count} iterations`
     );
   }
 };

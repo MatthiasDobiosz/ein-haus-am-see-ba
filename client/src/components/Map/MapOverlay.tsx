@@ -1,10 +1,11 @@
 import mapboxgl, { LngLat } from "mapbox-gl";
-import { memo, useEffect, useState } from "react";
+import { useState } from "react";
 import Map, { AttributionControl, NavigationControl } from "react-map-gl";
 import { initialZoomLevel } from "./mapboxConfig";
 import { SnackbarType } from "./../../stores/SnackbarStore";
 import rootStore from "../../stores/RootStore";
 import { VisualType } from "../../stores/MapStore";
+import { observer } from "mobx-react";
 
 interface MapOverlayProps {
   /* dynamically change width depending on sidebarState */
@@ -18,8 +19,7 @@ const moveTreshold = 1000; // map center difference in meters
 /**
  * Component that returns Mapbox Map with specified settings
  */
-export const MapOverlay = memo((props: MapOverlayProps) => {
-  const [firstRender, setFirstRender] = useState(true);
+export const MapOverlay = observer((props: MapOverlayProps) => {
   const [currentMapCenter, setCurrentMapCenter] = useState<LngLat>(
     new LngLat(12.101624, 49.013432)
   );
@@ -42,29 +42,6 @@ export const MapOverlay = memo((props: MapOverlayProps) => {
     }
   };*/
 
-  /**
-   * UseEffect to trigger area/locations loading, whenever user changes the form of view and only when filters are active
-   */
-  useEffect(() => {
-    if (firstRender) {
-      setFirstRender(false);
-    } else {
-      if (rootStore.filterStore.activeFilters.size > 0) {
-        if (visualType === VisualType.OVERLAY) {
-          console.log("loadMapData");
-        } else {
-          console.log("showPOI");
-        }
-      } else {
-        rootStore.snackbarStore.displayHandler(
-          "Aktive Filter müssen vorhanden sein, um Informationen anzuzeigen!",
-          3000,
-          SnackbarType.WARNING
-        );
-      }
-    }
-  }, [visualType]);
-
   const onMapDragEnd = () => {
     if (map) {
       // Uses the Haversine Formula to calculate difference between tow latLng coords in meters
@@ -78,17 +55,17 @@ export const MapOverlay = memo((props: MapOverlayProps) => {
         // this is a threshold to avoid firing events with small moves
         if (distance < moveTreshold) {
           // if below the treshold only update overlay
-          // TODO: addAreaOverlay();
+          rootStore.mapStore.addAreaOverlay();
         } else {
           // if greater than the treshold load new data from the internet as well
-          // TODO: loadMapData()
+          rootStore.mapStore.loadMapData();
         }
       } else {
         if (distance < moveTreshold) {
           return;
         }
         //console.log("Distance greater than treshold - updating");
-        // TODO: loadMapData();
+        rootStore.mapStore.loadMapData();
       }
     }
   };
@@ -99,7 +76,6 @@ export const MapOverlay = memo((props: MapOverlayProps) => {
 
       if (visualType === VisualType.OVERLAY) {
         rootStore.filterStore.recalculateScreenCoords();
-        console.log(newZoom);
 
         if (newZoom <= minRequiredZoomLevel) {
           // performance optimization - dont show/update overlay below a certain zoomlevel
@@ -111,11 +87,10 @@ export const MapOverlay = memo((props: MapOverlayProps) => {
           );
           return;
         } else if (Math.abs(newZoom - currentMapZoom) <= zoomTreshold) {
-          // TODO: addAreaOverlay()
+          rootStore.mapStore.addAreaOverlay();
           return;
         }
-        console.log("new zoom is different enough - updating ...");
-        // TODO: loadMapData();
+        rootStore.mapStore.loadMapData();
       } else {
         if (newZoom <= minRequiredZoomLevel) {
           rootStore.snackbarStore.displayHandler(
@@ -128,8 +103,7 @@ export const MapOverlay = memo((props: MapOverlayProps) => {
           // don't update data if the zoom level change is below the treshold
           return;
         }
-        console.log("new zoom is different enough - updating ...");
-        // TODO: loadMapData();
+        rootStore.mapStore.loadMapData();
       }
     }
   };

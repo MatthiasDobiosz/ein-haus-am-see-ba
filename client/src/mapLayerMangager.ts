@@ -107,10 +107,8 @@ class MapLayerManager {
         },
       };
     }
-
     this.map.addSource(tagName, { type: "geojson", ...sourceOptions });
     this.geojsonSourceActive = true;
-
     //this.updateLegend(tagName);
 
     /*
@@ -425,7 +423,6 @@ class MapLayerManager {
         }
       }
     }
-
     this.geojsonSourceActive = false;
 
     //clear local lists

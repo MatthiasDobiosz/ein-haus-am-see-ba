@@ -10,6 +10,11 @@ import truncate from "@turf/truncate";
 import { addBufferToFeature } from "../components/Map/turfUtils";
 import { createOverlay } from "../overlayCreation/canvasRenderer";
 import { getViewportBoundsString } from "../components/Map/mapUtils";
+import {
+  endPerformanceMeasure,
+  startPerformanceMeasure,
+} from "../../../shared/benchmarking";
+import { SnackbarType } from "./SnackbarStore";
 
 export const enum VisualType {
   NORMAL,
@@ -49,12 +54,28 @@ class MapStore {
 
   setMap(map: MapboxMap) {
     this.map = map;
-    this.mapLayerManager = new MapLayerManager(map);
+    if (this.mapLayerManager === null) {
+      this.mapLayerManager = new MapLayerManager(map);
+    }
   }
 
   setVisualType(visualType: VisualType) {
     if (visualType !== this.visualType) {
       this.visualType = visualType;
+
+      if (this.rootStore.filterStore.activeFilters.size > 0) {
+        if (this.visualType === VisualType.OVERLAY) {
+          this.loadMapData();
+        } else {
+          this.showPOILocations();
+        }
+      } else {
+        this.rootStore.snackbarStore.displayHandler(
+          "Aktive Filter müssen vorhanden sein, um Informationen anzuzeigen!",
+          2000,
+          SnackbarType.WARNING
+        );
+      }
     }
   }
 
@@ -66,9 +87,15 @@ class MapStore {
     // give feedback to the user
     // FIXME: Do that in component to get snackbarContext
     //showSnackbar("Daten werden geladen...", SnackbarType.INFO, undefined, true);
-
+    this.rootStore.snackbarStore.displayHandler(
+      "Daten werden geladen...",
+      undefined,
+      SnackbarType.INFO
+    );
     if (this.map) {
-      const bounds = getViewportBoundsString(this.map);
+      const bounds = getViewportBoundsString(this.map, 500);
+
+      startPerformanceMeasure("Loading data for all active filters");
       const allResults = await Promise.allSettled(
         Array.from(this.rootStore.filterStore.activeFilters).map(
           async (tag) => {
@@ -91,8 +118,6 @@ class MapStore {
             // request data from osm
 
             const data = await fetchOsmDataFromServer(bounds, query);
-            console.log("data fetched");
-            console.log(data);
             //Benchmark.stopMeasure("Fetching data from osm");
 
             //console.log("data from server:", data);
@@ -109,16 +134,21 @@ class MapStore {
               if (this.visualType === VisualType.NORMAL) {
                 this.showDataOnMap(data, tag);
               } else {
-                console.log("preprocess");
+                startPerformanceMeasure(
+                  "Preprocessing geo data for one filter"
+                );
                 this.preprocessGeoData(data, tag);
+                endPerformanceMeasure("Preprocessing geo data for one filter");
               }
             }
           }
         )
       );
 
+      endPerformanceMeasure("Loading data for all active filters");
+      this.rootStore.snackbarStore.closeHandler();
       let success = true;
-      console.log(allResults);
+      //console.log(allResults);
       for (const res of allResults) {
         if (res.status === "rejected") {
           success = false;
@@ -126,7 +156,11 @@ class MapStore {
         }
       }
       if (!success) {
-        // show snackbar
+        this.rootStore.snackbarStore.displayHandler(
+          "Nicht alle Daten konnten erfolgreich geladen werden",
+          1500,
+          SnackbarType.ERROR
+        );
       }
     }
     this.showAreasOnMap();
@@ -164,15 +198,23 @@ class MapStore {
   resetMapData(): void {
     this.rootStore.filterStore.clearAllFilters();
     this.mapLayerManager?.removeAllDataFromMap();
-    // show Snackbar
+    this.rootStore.snackbarStore.displayHandler(
+      "Filter wurden vollständig zurückgesetzt!",
+      2000,
+      SnackbarType.SUCCESS
+    );
   }
 
   showDataOnMap(data: any, tagName: string): void {
+    startPerformanceMeasure("remove existing layers");
     if (this.map?.getSource("overlaySource")) {
       this.mapLayerManager?.removeCanvasSource("overlaySource");
     }
     this.mapLayerManager?.removeAllLayersForSource(tagName);
 
+    endPerformanceMeasure("remove existing layers");
+
+    startPerformanceMeasure("add new geo data");
     if (this.map?.getSource(tagName)) {
       // the source already exists, only update the data
       //console.log(`Source ${tagName} is already used! Updating it!`);
@@ -183,6 +225,8 @@ class MapStore {
     }
     //show the source data on the map
     this.mapLayerManager?.addLayersForSource(tagName);
+
+    endPerformanceMeasure("add new geo data");
   }
 
   //! most of the data preprocessing could (and probably should) already happen on the server!

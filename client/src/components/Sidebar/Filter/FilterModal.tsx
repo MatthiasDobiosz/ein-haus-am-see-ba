@@ -28,7 +28,7 @@ export const FilterModal = observer(
     async function performOsmQuery(): Promise<void> {
       if (rootStore.filterStore.activeFilters.size === 0) {
         rootStore.snackbarStore.displayHandler(
-          "Es können keine Daten geladen werden, da keine Filter aktive sind",
+          "Es können keine Daten geladen werden, da keine Filter aktiv sind",
           2500,
           SnackbarType.WARNING
         );

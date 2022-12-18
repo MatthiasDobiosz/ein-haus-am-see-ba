@@ -1,7 +1,6 @@
 import { useContext } from "react";
 import { SidebarContext } from "./Sidebar/SidebarContext";
 import { observer } from "mobx-react";
-import { SnackbarType } from "./../stores/SnackbarStore";
 
 import { VisualType } from "../stores/MapStore";
 import rootStore from "../stores/RootStore";
@@ -18,11 +17,6 @@ export const Heading = observer((): JSX.Element => {
 
   const openSnackbar = () => {
     rootStore.mapStore.resetMapData();
-    rootStore.snackbarStore.displayHandler(
-      "TestSnackbar",
-      10000,
-      SnackbarType.SUCCESS
-    );
   };
 
   return (

@@ -1,6 +1,10 @@
 import axios from "./axiosInterceptor";
 import osmtogeojson from "osmtogeojson";
 import { FeatureCollection, GeometryObject } from "geojson";
+import {
+  endPerformanceMeasure,
+  startPerformanceMeasure,
+} from "../../../shared/benchmarking";
 
 export async function uploadLogs(logs: any): Promise<void> {
   try {
@@ -73,10 +77,13 @@ export async function fetchOsmDataFromServer(
     const url = "/osmRequestCache?" + params.toString();
     console.log(url);
 
+    startPerformanceMeasure("Request client side");
     // set a timeout of 7 seconds
     const response = await axios.get(url, { timeout: 7000 });
+    endPerformanceMeasure("Request client side");
+    startPerformanceMeasure("o2geo client");
     const geoJson = osmtogeojson(response.data);
-    console.log(geoJson);
+    endPerformanceMeasure("o2geo client");
     return geoJson as FeatureCollection<GeometryObject, any>;
   } catch (error) {
     console.error(error);
