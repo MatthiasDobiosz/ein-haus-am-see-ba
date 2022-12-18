@@ -26,6 +26,8 @@ import {
   endPerformanceMeasure,
   startPerformanceMeasure,
 } from "../../../shared/benchmarking";
+import MapStore from "../stores/MapStore";
+import LegendStore from "../stores/LegendStore";
 
 //import WebWorker from "worker-loader!../worker";
 
@@ -419,7 +421,9 @@ class CanvasRenderer {
 
 export async function createOverlay(
   data: Filter[],
-  map: MapboxMap
+  map: MapboxMap,
+  mapStore: MapStore,
+  legendStore: LegendStore
 ): Promise<void> {
   const renderer = new CanvasRenderer(map);
 
@@ -435,7 +439,7 @@ export async function createOverlay(
   const resultCanvas = renderer.createOverlay(renderer.allTextures);
   endPerformanceMeasure("creating canvas overlay overall");
 
-  applyAlphaMask(resultCanvas, map, new MapLayerManager(map));
+  applyAlphaMask(resultCanvas, map, new MapLayerManager(mapStore, legendStore));
 
   //Reset state for next rendering
   renderer.reset();

@@ -55,7 +55,10 @@ class MapStore {
   setMap(map: MapboxMap) {
     this.map = map;
     if (this.mapLayerManager === null) {
-      this.mapLayerManager = new MapLayerManager(map);
+      this.mapLayerManager = new MapLayerManager(
+        this,
+        this.rootStore.legendStore
+      );
     }
   }
 
@@ -325,7 +328,12 @@ class MapStore {
     // check that there is data to create an overlay for the map
     if (this.rootStore.filterStore.allFilterLayers.length > 0) {
       if (this.map) {
-        createOverlay(this.rootStore.filterStore.allFilterLayers, this.map);
+        createOverlay(
+          this.rootStore.filterStore.allFilterLayers,
+          this.map,
+          this,
+          this.rootStore.legendStore
+        );
       }
     } else {
       console.warn(

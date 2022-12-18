@@ -3,6 +3,7 @@ import { MapOverlay } from "./Map/MapOverlay";
 import { Snackbar } from "./Snackbar/Snackbar";
 import { observer } from "mobx-react";
 import rootStore from "../stores/RootStore";
+import { Legend } from "./Map/Legend";
 
 interface MainSectionProps {
   isSidebarOpen: boolean;
@@ -19,6 +20,7 @@ export const MainSection = observer((props: MainSectionProps) => {
       <Sidebar isSidebarOpen={isSidebarOpen} />
       <MapOverlay isSidebarOpen={isSidebarOpen} />
       {rootStore.snackbarStore.isDisplayed && <Snackbar />}
+      {rootStore.legendStore.isLegendActive && <Legend />}
     </div>
   );
 });

@@ -6,9 +6,10 @@ import type {
   Geometry,
   GeometryObject,
 } from "geojson";
-import { MapboxMap } from "react-map-gl";
 import { AnyLayer } from "react-map-gl/dist/esm/types";
 import { TagColors } from "./osmTagCollection";
+import LegendStore from "./stores/LegendStore";
+import MapStore from "./stores/MapStore";
 //import ClusterManager from "../map/clusterManager";
 
 type mapboxLayerType =
@@ -48,13 +49,15 @@ class MapLayerManager {
   private minZoom = 6; // Bavaria can be seen as a whole on this level
   private maxZoom = 20;
 
-  private map: MapboxMap;
+  private mapStore: MapStore;
+  private legendStore: LegendStore;
   //private legendIsShown = false;
 
   geojsonSourceActive = false; // keep track of the type of shown mapbox layer (i.e. geojson or canvas)
 
-  constructor(map: MapboxMap) {
-    this.map = map;
+  constructor(mapStore: MapStore, legendStore: LegendStore) {
+    this.mapStore = mapStore;
+    this.legendStore = legendStore;
   }
 
   get currentVisibleLayers(): AnyLayer[] {
@@ -107,9 +110,12 @@ class MapLayerManager {
         },
       };
     }
-    this.map.addSource(tagName, { type: "geojson", ...sourceOptions });
+    this.mapStore.map?.addSource(tagName, {
+      type: "geojson",
+      ...sourceOptions,
+    });
     this.geojsonSourceActive = true;
-    //this.updateLegend(tagName);
+    this.updateLegend(tagName);
 
     /*
       if (clusteringEnabled) {
@@ -122,15 +128,15 @@ class MapLayerManager {
   }
 
   removeGeojsonSource(sourceName: string): void {
-    if (!this.map.getSource(sourceName)) {
+    if (!this.mapStore.map?.getSource(sourceName)) {
       console.log(`Couldn't remove source ${sourceName}`);
       return;
     }
     this.removeAllLayersForSource(sourceName);
-    this.map.removeSource(sourceName);
+    this.mapStore.map?.removeSource(sourceName);
 
     //remove from legend
-    //this.removeSourceFromLegend(sourceName);
+    this.removeSourceFromLegend(sourceName);
   }
 
   /**
@@ -140,8 +146,8 @@ class MapLayerManager {
     id: string,
     data: FeatureCollection<GeometryObject, GeoJsonProperties>
   ): boolean {
-    const source = this.map.getSource(id);
-    if (source.type === "geojson") {
+    const source = this.mapStore.map?.getSource(id);
+    if (source?.type === "geojson") {
       const result = source.setData(data);
       return result ? true : false;
     }
@@ -158,19 +164,19 @@ class MapLayerManager {
       animate: false, //static canvas for better performance
       coordinates: bounds,
     };
-    this.map.addSource(sourceName, {
+    this.mapStore.map?.addSource(sourceName, {
       type: "canvas",
       ...sourceOptions,
     });
   }
 
   removeCanvasSource(sourceID: string): void {
-    if (!this.map.getSource(sourceID)) {
+    if (!this.mapStore.map?.getSource(sourceID)) {
       console.log(`Source ${sourceID} doesnt exist!`);
       return;
     }
     this.removeCanvasLayer("overlay");
-    this.map.removeSource(sourceID);
+    this.mapStore.map?.removeSource(sourceID);
   }
 
   /*
@@ -190,7 +196,7 @@ class MapLayerManager {
    * ####################################
    * Methods related to the legend (based on the sources above)
    * ####################################
-   
+   */
 
   //add item to legend and show it if it isn't shown already
   private updateLegend(tagName: string): void {
@@ -201,23 +207,20 @@ class MapLayerManager {
       return;
     }
 
-    if (!this.legendIsShown) {
-      this.legend.show(tagName, color);
-      this.legendIsShown = true;
+    if (!this.legendStore.isLegendActive) {
+      this.legendStore.addItem(tagName, color);
+      this.legendStore.showLegend();
     } else {
-      this.legend.addItem(tagName, color);
+      this.legendStore.addItem(tagName, color);
     }
   }
 
   private removeSourceFromLegend(sourceId: string): void {
-    const wasLast = this.legend.removeItem(sourceId);
+    const wasLast = this.legendStore.removeItem(sourceId);
     if (wasLast) {
-      // if this was the only legend item, hide the legend
-      this.legend.hide();
-      this.legendIsShown = false;
       this.geojsonSourceActive = false;
     }
-  } */
+  }
 
   /**
    * ####################################
@@ -233,12 +236,12 @@ class MapLayerManager {
    */
   addNewGeojsonLayerBefore(layer: AnyLayer): void {
     //console.log("add new layer: ", layer);
-    this.map.addLayer(layer, "waterway-label");
+    this.mapStore.map?.addLayer(layer, "waterway-label");
     this.visibleLayers.push(layer);
   }
 
   addNewGeojsonLayer(layer: AnyLayer): void {
-    this.map.addLayer(layer);
+    this.mapStore.map?.addLayer(layer);
     this.visibleLayers.push(layer);
   }
 
@@ -247,7 +250,7 @@ class MapLayerManager {
     //console.log("hiding layer: ", layer);
 
     //hide layer on map
-    this.map.setLayoutProperty(layer.id, "visibility", "none");
+    this.mapStore.map?.setLayoutProperty(layer.id, "visibility", "none");
 
     //switch layer to the local hidden layers list
     this.visibleLayers = this.visibleLayers.filter((el) => el.id !== layer.id);
@@ -261,7 +264,7 @@ class MapLayerManager {
 
   removeGeojsonLayerFromMap(layerId: string): void {
     //remove it from the map
-    this.map.removeLayer(layerId);
+    this.mapStore.map?.removeLayer(layerId);
 
     // remove it from the local lists by filtering it out
     this.visibleLayers = this.visibleLayers.filter((el) => el.id !== layerId);
@@ -273,7 +276,7 @@ class MapLayerManager {
    */
   removeAllLayersForSource(sourceID: string): void {
     // eslint-disable-next-line no-unused-expressions
-    this.map.getStyle().layers.forEach((layer) => {
+    this.mapStore.map?.getStyle().layers.forEach((layer) => {
       if (layer.id.includes(sourceID)) {
         //console.log("deleting layer:" + JSON.stringify(layer));
 
@@ -283,7 +286,7 @@ class MapLayerManager {
   }
 
   removeCanvasLayer(layerID: string): void {
-    this.map.removeLayer(layerID);
+    this.mapStore.map?.removeLayer(layerID);
     // remove it from the local list
     this.visibleLayers = this.visibleLayers.filter((el) => el.id !== layerID);
   }
@@ -370,6 +373,8 @@ class MapLayerManager {
       };
       */
 
+    console.log(polygonFillLayer);
+
     //! add the layers to the map and show them below the map symbols so they don't hide labels and names
     this.addNewGeojsonLayerBefore(pointLayer);
     this.addNewGeojsonLayerBefore(lineLayer);
@@ -386,7 +391,7 @@ class MapLayerManager {
       },
     };
 
-    this.map.addLayer(overlayLayer);
+    this.mapStore.map?.addLayer(overlayLayer);
 
     // add to local list
     this.visibleLayers.push(overlayLayer);
@@ -396,7 +401,7 @@ class MapLayerManager {
    * Find the first layer with the given type and return its id (or undefined if no layer with that type exists).
    */
   findLayerByType(layerType: mapboxLayerType): string | undefined {
-    const layers = this.map.getStyle().layers;
+    const layers = this.mapStore.map?.getStyle().layers;
 
     if (layers) {
       for (let i = 0; i < layers.length; i++) {
@@ -412,9 +417,10 @@ class MapLayerManager {
     //console.log("Sources: ", map.getStyle().sources);
 
     //clear all sources on map
-    const allSources = this.map.getStyle().sources;
+    const allSources = this.mapStore.map?.getStyle().sources;
     for (const source in allSources) {
       //! "composite" is the default vector layer of mapbox-streets; don't delete this!
+      console.log(source);
       if (source !== "composite") {
         if (source === "overlaySource") {
           this.removeCanvasSource(source);
@@ -430,10 +436,9 @@ class MapLayerManager {
     this.hiddenLayers.length = 0;
 
     //hide legend
-    /*if (this.legendIsShown) {
-      this.legend.hide();
-      this.legendIsShown = false;
-    }*/
+    if (this.legendStore.isLegendActive) {
+      this.legendStore.hideLegend();
+    }
   }
 
   //! Classic Heatmap does work, but isn't selectable as a visual type in the UI yet
