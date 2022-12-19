@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1670059661829,
+  "lastUpdate": 1671468581031,
   "repoUrl": "https://github.com/MatthiasDobiosz/ein-haus-am-see-ba",
   "entries": {
     "Benchmark.js Benchmark": [
@@ -135,6 +135,93 @@ window.BENCHMARK_DATA = {
             "range": "±0.01%",
             "unit": "ops/sec",
             "extra": "99 samples"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "matthido98@web.de",
+            "name": "MatthiasDobiosz",
+            "username": "MatthiasDobiosz"
+          },
+          "committer": {
+            "email": "matthido98@web.de",
+            "name": "MatthiasDobiosz",
+            "username": "MatthiasDobiosz"
+          },
+          "distinct": true,
+          "id": "4f007f97ac009554725f9c8d25107ea13474a051",
+          "message": "try benchmarking overpass api request",
+          "timestamp": "2022-12-19T17:48:41+01:00",
+          "tree_id": "b1d47acaa28559e8969215b62970a7c8d0cf8657",
+          "url": "https://github.com/MatthiasDobiosz/ein-haus-am-see-ba/commit/4f007f97ac009554725f9c8d25107ea13474a051"
+        },
+        "date": 1671468580489,
+        "tool": "benchmarkjs",
+        "benches": [
+          {
+            "name": "Test1",
+            "value": 40721364,
+            "range": "±0.61%",
+            "unit": "ops/sec",
+            "extra": "95 samples"
+          },
+          {
+            "name": "Test1",
+            "value": 40721364,
+            "range": "±0.61%",
+            "unit": "ops/sec",
+            "extra": "95 samples"
+          },
+          {
+            "name": "Test1",
+            "value": 40721364,
+            "range": "±0.61%",
+            "unit": "ops/sec",
+            "extra": "95 samples"
+          },
+          {
+            "name": "for-schleife",
+            "value": 33092,
+            "range": "±0.02%",
+            "unit": "ops/sec",
+            "extra": "99 samples"
+          },
+          {
+            "name": "for-schleife",
+            "value": 33092,
+            "range": "±0.02%",
+            "unit": "ops/sec",
+            "extra": "99 samples"
+          },
+          {
+            "name": "for-schleife",
+            "value": 33092,
+            "range": "±0.02%",
+            "unit": "ops/sec",
+            "extra": "99 samples"
+          },
+          {
+            "name": "basic overpass API request test1",
+            "value": 75509,
+            "range": "±12.72%",
+            "unit": "ops/sec",
+            "extra": "76 samples"
+          },
+          {
+            "name": "basic overpass API request test1",
+            "value": 75509,
+            "range": "±12.72%",
+            "unit": "ops/sec",
+            "extra": "76 samples"
+          },
+          {
+            "name": "basic overpass API request test1",
+            "value": 75509,
+            "range": "±12.72%",
+            "unit": "ops/sec",
+            "extra": "76 samples"
           }
         ]
       }
