@@ -188,12 +188,15 @@ class MapStore {
   }
 
   removeData(filter: Filter): void {
-    this.rootStore.filterStore.removeFilter(filter);
+    this.rootStore.filterStore.removeFilter(filter.layername);
 
     if (this.visualType === VisualType.OVERLAY) {
       this.mapLayerManager?.removeCanvasSource("overlaySource");
-      this.addAreaOverlay();
+      if (this.rootStore.filterStore.activeFilters.size > 0) {
+        this.addAreaOverlay();
+      }
     } else {
+      console.log("removeGeojson");
       this.mapLayerManager?.removeGeojsonSource(filter.layername);
     }
   }
@@ -269,7 +272,6 @@ class MapStore {
         layer.distance,
         "meters"
       );
-
       layer.features.push(bufferedPoly);
 
       this.rootStore.filterStore.convertPolygonCoordsToPixelCoords(

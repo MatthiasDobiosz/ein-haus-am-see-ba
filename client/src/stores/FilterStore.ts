@@ -42,12 +42,13 @@ class FilterStore {
   };
 
   // function to remove single filter from context array
-  removeFilter(filterLayer: Filter): void {
-    this.allFilterLayers = this.allFilterLayers.filter((prevFilterLayer) => {
-      !(prevFilterLayer.layername === filterLayer.layername);
-    });
+  removeFilter(layerName: string): void {
+    this.allFilterLayers = this.allFilterLayers.filter(
+      (prevFilterLayer) => !(prevFilterLayer.layername === layerName)
+    );
+
     const newActiveFilters = this.activeFilters;
-    newActiveFilters.delete(filterLayer.layername);
+    newActiveFilters.delete(layerName);
     this.activeFilters = newActiveFilters;
   }
 
@@ -100,15 +101,11 @@ class FilterStore {
         layer.points.push(
           //@ts-expect-error idk
           coords[i].map((coord: number[] | number[][]) => {
-            if (!Array.isArray(coord[0])) {
-              try {
-                return this.rootStore.mapStore.map?.project(
-                  coord as LngLatLike
-                );
-              } catch (error) {
-                console.log("Error in projecting coord: ", error);
-                return null;
-              }
+            try {
+              return this.rootStore.mapStore.map?.project(coord as LngLatLike);
+            } catch (error) {
+              console.log("Error in projecting coord: ", error);
+              return null;
             }
           })
         );

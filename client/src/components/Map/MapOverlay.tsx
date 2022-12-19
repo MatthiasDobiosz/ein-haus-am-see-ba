@@ -150,7 +150,7 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
           }
           onZoomEnd={() => onMapZoomEnd()}
         >
-          <NavigationControl position={"top-left"} visualizePitch={true} />
+          <NavigationControl position={"top-right"} visualizePitch={true} />
           <AttributionControl position={"bottom-right"} />
         </Map>
         <canvas id="texture_canvas">

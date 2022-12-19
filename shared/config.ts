@@ -2,7 +2,7 @@
  * Immutable configuration constants for client and server.
  */
 export const Config = {
-  SERVER_PORT: 8000,
+  SERVER_PORT: 3200,
   REDIS_PORT: 6379,
   OVERPASS_PORT: 49153,
   CSS_HIDDEN: "hidden",

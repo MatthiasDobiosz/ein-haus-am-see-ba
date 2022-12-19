@@ -79,9 +79,10 @@ export async function fetchOsmDataFromServer(
 
     startPerformanceMeasure("Request client side");
     // set a timeout of 7 seconds
-    const response = await axios.get(url, { timeout: 7000 });
+    const response = await axios.get(url, { timeout: 20000 });
     endPerformanceMeasure("Request client side");
     startPerformanceMeasure("o2geo client");
+    console.log(response.data);
     const geoJson = osmtogeojson(response.data);
     endPerformanceMeasure("o2geo client");
     return geoJson as FeatureCollection<GeometryObject, any>;
