@@ -1,26 +1,16 @@
-import express, { Express, Request, Response } from "express";
-import {
-  endPerformanceMeasure,
-  evaluateMeasure,
-  startPerformanceMeasure,
-} from "../shared/benchmarking.js";
+/* eslint-env node */
 
-const port = 3200;
+import { Config } from "../shared/config.js";
+import Server from "./server.js";
+//import open from "open";
 
-const app: Express = express();
+function init(): void {
+  const serverPort = Config.SERVER_PORT; // port to use for the express server and for serving static files
+  const server = new Server(serverPort);
+  server.start();
 
-app.get("/test", (req: Request, res: Response) => {
-  startPerformanceMeasure("server");
-  let j = 0;
-  for (let i = 0; i < 1000000; i++) {
-    j += i;
-  }
-  console.log(j);
-  endPerformanceMeasure("server");
-  evaluateMeasure();
-  res.send({ message: "Hello" });
-});
+  // open the website automatically
+  //open(`http://localhost:${serverPort}`);
+}
 
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
-});
+init();

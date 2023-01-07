@@ -1,21 +1,22 @@
 import { useContext } from "react";
 import { SidebarContext } from "./Sidebar/SidebarContext";
-import { SnackbarType } from "./Snackbar/Snackbar";
-import { SnackbarContext } from "./Snackbar/SnackbarContext";
+import { observer } from "mobx-react";
+
+import { VisualType } from "../stores/MapStore";
+import rootStore from "../stores/RootStore";
 
 /**
  * Heading Component that render Navbar with buttons
  */
-export const Heading = (): JSX.Element => {
+export const Heading = observer((): JSX.Element => {
   const { isSidebarOpen, setSidebarState } = useContext(SidebarContext);
-  const snackbarContext = useContext(SnackbarContext);
 
   const handleSidebarOpen = () => {
     setSidebarState(!isSidebarOpen);
   };
 
   const openSnackbar = () => {
-    snackbarContext.displayMessage("TestSnackbar", 3000, SnackbarType.SUCCESS);
+    rootStore.mapStore.resetMapData();
   };
 
   return (
@@ -39,6 +40,13 @@ export const Heading = (): JSX.Element => {
         <select
           className="italic opacity-[0.7] leading-[24px] pl-[2px] pr-[2px] pt-[3px] pb-[3px] cursor-pointer rounded-[4px] inline w-[100%]"
           defaultValue={"Overlay"}
+          onChange={(e) =>
+            rootStore.mapStore.setVisualType(
+              e.target.value === "Overlay"
+                ? VisualType.OVERLAY
+                : VisualType.NORMAL
+            )
+          }
         >
           <option value="Overlay">Gebiete</option>
           <option value="Normal">Orte</option>
@@ -46,8 +54,9 @@ export const Heading = (): JSX.Element => {
       </div>
       <button
         type="button"
-        className=" p-[0.6em] cursor-pointer overflow-hidden border-0 rounded-[2px] shadow bg-lightgreen text-whitesmoke hover:bg-darkgreen active:bg-darkgreen button-disabled"
-        disabled
+        className={`p-[0.6em] cursor-pointer overflow-hidden border-0 rounded-[2px] shadow bg-lightgreen text-whitesmoke hover:bg-darkgreen active:bg-darkgreen ${
+          rootStore.filterStore.activeFilters.size > 0 ? "" : "button-disabled"
+        }`}
       >
         Lade Daten manuell
       </button>
@@ -60,4 +69,4 @@ export const Heading = (): JSX.Element => {
       </button>
     </nav>
   );
-};
+});

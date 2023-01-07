@@ -1,4 +1,6 @@
-export const Navbar = () => {
+import { observer } from "mobx-react";
+
+export const Navbar = observer(() => {
   return (
     <nav className="bg-gray-800 h-16">
       <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
@@ -70,4 +72,4 @@ export const Navbar = () => {
       </div>
     </nav>
   );
-};
+});

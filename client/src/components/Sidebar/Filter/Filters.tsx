@@ -1,40 +1,59 @@
+import {
+  Feature,
+  FeatureCollection,
+  GeoJsonProperties,
+  Geometry,
+  MultiPolygon,
+  Polygon,
+} from "geojson";
+import { observer } from "mobx-react";
+import { Point } from "react-map-gl";
+import rootStore from "../../../stores/RootStore";
 import { FilterItem } from "./FilterItem";
+
+// every relevance has a specific weight
+export enum FilterRelevance {
+  notVeryImportant = 0.2,
+  important = 0.5,
+  veryImportant = 0.8,
+}
 
 /**
  * Filter Interface
  *
  * @interface Filter
- * @param name - category of the filter
+ * @param layername - category of the filter
  * @param distance - specified distance (m/km) of the filter
- * @param relevance - importance of the filter
- * @param polarity - whether the filter is to exclude or include nodes
+ * @param measurement - current chosen measurement
+ * @param relevanceValue - importance of the filter
+ * @param wanted - if filter is wanted
+ * @param points - ?
+ * @param features - ?
+ * @param originalData - ?
  */
 export interface Filter {
-  name: string;
-  distance: string;
-  relevance: string;
-  polarity: string;
-}
-
-interface FiltersProps {
-  /** filterArray of currently active filters */
-  activeFilters: Filter[];
-  /** Function to remove a filter from the array of currently active filters*/
-  removeFilter: (filterValue: Filter) => void;
+  layername: string;
+  distance: number;
+  measurement: string;
+  relevanceValue: number;
+  wanted: boolean;
+  points: Point[][];
+  features: Feature<Polygon | MultiPolygon, GeoJsonProperties>[];
+  originalData: FeatureCollection<Geometry> | null;
 }
 
 /**
  * Filters Component that maps the list of currently active filters
  */
-export const Filters = (props: FiltersProps): JSX.Element => {
-  const { activeFilters, removeFilter } = props;
-
+export const Filters = observer((): JSX.Element => {
   return (
     <div>
-      {activeFilters.length > 0 ? (
+      {rootStore.filterStore.allFilterLayers.length > 0 ? (
         <ul className="text-[0.9em] list-none pt-0 pr-[5px] pb-[10px] pl-[5px]">
-          {activeFilters.map((filter) => {
-            return <FilterItem filter={filter} removeFilter={removeFilter} />;
+          {rootStore.filterStore.allFilterLayers.map((filterLayer) => {
+            return (
+              <FilterItem key={filterLayer.layername} filter={filterLayer} />
+            );
           })}
         </ul>
       ) : (
@@ -47,4 +66,4 @@ export const Filters = (props: FiltersProps): JSX.Element => {
       )}
     </div>
   );
-};
+});

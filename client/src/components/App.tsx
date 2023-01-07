@@ -3,18 +3,17 @@ import "./App.css";
 import { SidebarContext } from "./Sidebar/SidebarContext";
 import { Heading } from "./Heading";
 import { MainSection } from "./MainSection";
-import { SnackbarContextProvider } from "./Snackbar/SnackbarContextProvider";
-
+/**
+ * Main App Component that wraps the MainSection and the Header in all context providers
+ */
 function App() {
   const [isSidebarOpen, setSidebarState] = useState(false);
 
   return (
-    <SnackbarContextProvider>
-      <SidebarContext.Provider value={{ isSidebarOpen, setSidebarState }}>
-        <Heading />
-        <MainSection isSidebarOpen={isSidebarOpen} />
-      </SidebarContext.Provider>
-    </SnackbarContextProvider>
+    <SidebarContext.Provider value={{ isSidebarOpen, setSidebarState }}>
+      <Heading />
+      <MainSection isSidebarOpen={isSidebarOpen} />
+    </SidebarContext.Provider>
   );
 }
 
