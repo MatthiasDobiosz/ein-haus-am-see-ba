@@ -5,6 +5,7 @@ import {
   endPerformanceMeasure,
   startPerformanceMeasure,
 } from "../../../shared/benchmarking";
+import { complexQuery } from "./../osmTagCollection";
 
 export async function uploadLogs(logs: any): Promise<void> {
   try {
@@ -84,8 +85,39 @@ export async function fetchOsmDataFromServer(
     startPerformanceMeasure("o2geo client");
     console.log(response.data);
     const geoJson = osmtogeojson(response.data);
+    console.log(geoJson);
     endPerformanceMeasure("o2geo client");
     return geoJson as FeatureCollection<GeometryObject, any>;
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+}
+
+export async function fetchDataFromPostGIS(
+  mapBounds: string,
+  query: complexQuery
+): Promise<FeatureCollection<GeometryObject, any> | null> {
+  try {
+    const conditionsQuery = encodeURIComponent(
+      JSON.stringify(query.conditions)
+    );
+
+    const params = new URLSearchParams({
+      bounds: mapBounds,
+      dataTable: query.dataTable,
+    });
+
+    const url =
+      "/testdb?" + params.toString() + "&conditions=" + conditionsQuery;
+
+    console.log("start request");
+    // set a timeout of 7 seconds
+    const response = await axios.get(url, { timeout: 20000 });
+    console.log(response.data);
+    //const geoJson = toGeoJson(response.data);
+    //endPerformanceMeasure("o2geo client");
+    return response.data as FeatureCollection<GeometryObject, any>;
   } catch (error) {
     console.error(error);
     return null;

@@ -56,7 +56,7 @@ export const Sidebar = observer((props: SidebarProps): JSX.Element => {
 
         <SidebarCategory
           title={"Bildung"}
-          items={["Universtität und Hochschule", "Schule"]}
+          items={["Universität und Hochschule", "Schule"]}
         />
 
         <SidebarCategory

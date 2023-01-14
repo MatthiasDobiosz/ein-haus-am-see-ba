@@ -3,13 +3,20 @@ import { RootStore } from "./RootStore";
 import { MapboxMap } from "react-map-gl";
 import MapLayerManager from "./../mapLayerMangager";
 import osmTagCollection from "../osmTagCollection";
-import { fetchOsmDataFromServer } from "../network/networkUtils";
+import {
+  fetchDataFromPostGIS,
+  fetchOsmDataFromServer,
+} from "../network/networkUtils";
 import { Filter } from "../components/Sidebar/Filter/Filters";
 import { FeatureCollection, Geometry } from "geojson";
 import truncate from "@turf/truncate";
 import { addBufferToFeature } from "../components/Map/turfUtils";
 import { createOverlay } from "../overlayCreation/canvasRenderer";
-import { getViewportBoundsString } from "../components/Map/mapUtils";
+import {
+  getViewportBounds,
+  getViewportBoundsString,
+  getViewportPolygon,
+} from "../components/Map/mapUtils";
 import {
   endPerformanceMeasure,
   startPerformanceMeasure,
@@ -97,13 +104,12 @@ class MapStore {
     );
     if (this.map) {
       const bounds = getViewportBoundsString(this.map, 500);
-
+      const polyBounds = getViewportPolygon(this.map);
+      console.log(bounds);
       startPerformanceMeasure("Loading data for all active filters");
       const allResults = await Promise.allSettled(
         Array.from(this.rootStore.filterStore.activeFilters).map(
           async (tag) => {
-            const query = osmTagCollection.getQueryForCategory(tag);
-
             //TODO check if already locally loaded this tag; only fetch if not!
             //TODO also check that bounds are nearly the same!
             //! doesnt work like this because filterlayer has already been created before in main!
@@ -120,15 +126,24 @@ class MapStore {
             //Benchmark.startMeasure("Fetching data from osm");
             // request data from osm
 
-            const data = await fetchOsmDataFromServer(bounds, query);
+            //const data = await fetchOsmDataFromServer(bounds, query);
+            //const query = osmTagCollection.getQueryForPostGIS(tag);
+
+            const queryInformation = osmTagCollection.getQueryForPostGIS(tag);
+            const data = await fetchDataFromPostGIS(
+              polyBounds,
+              queryInformation
+            );
+
             //Benchmark.stopMeasure("Fetching data from osm");
 
-            //console.log("data from server:", data);
+            console.log("data from server:", data);
             if (data) {
               //const filterLayer = this.preprocessGeoData(data, tag);
 
               // get the filterlayer for this tag that has already been created at this point
               const layer = this.rootStore.filterStore.getFilterLayer(tag);
+              console.log(layer);
               if (layer) {
                 layer.originalData = data;
               }

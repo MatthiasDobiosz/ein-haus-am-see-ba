@@ -74,10 +74,40 @@ export function getViewportBoundsString(
     northLat = bufferedBBox[3];
     eastLng = bufferedBBox[2];
   }
-
   return `${southLat},${westLng},${northLat},${eastLng}`;
 }
 
+/**
+ * Get the current bounding box as an array
+ */
+export function getViewportPolygon(map: MapboxMap): string {
+  const bounds = map.getBounds();
+  const north = bounds.getNorth().toString();
+  const west = bounds.getWest().toString();
+  const south = bounds.getSouth().toString();
+  const east = bounds.getEast().toString();
+  const boundsString =
+    west +
+    " " +
+    north +
+    "," +
+    east +
+    " " +
+    north +
+    "," +
+    east +
+    " " +
+    south +
+    "," +
+    west +
+    " " +
+    south +
+    "," +
+    west +
+    " " +
+    north;
+  return boundsString;
+}
 /**
  * Util-Function to convert LngLat coordinates to pixel coordinates on the screen.
  */

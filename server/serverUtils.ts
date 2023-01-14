@@ -1,9 +1,10 @@
 /* eslint-env node */
+import { complexQuery } from "./../client/src/osmTagCollection";
 
 //const exec = Util.promisify(childProcess.exec);
 
 /**
- * Builds a query for the overpass api to fetch osm data as GeoJson in the given map bounds.
+ * Builds a query for the overpass api to fetch osm data as Json in the given map bounds.
  */
 export function buildOverpassQuery(bounds: string, userQuery: string): string {
   // output-format json, runtime of max. 25 seconds (needs to be higher for more complex queries) and global bounding box
@@ -12,6 +13,27 @@ export function buildOverpassQuery(bounds: string, userQuery: string): string {
   const query = `${querySettings}(${userQuery});${output}`;
   //console.log(query);
   return query;
+}
+
+/**
+ * Builds a query for the PostGIS Database to fetch osm data as GeoJson in the given map bounds
+ */
+export function buildPostGISQUery(
+  bounds: string,
+  userQuery: complexQuery
+): string {
+  let conditions = "";
+  for (let i = 0; i < userQuery.conditions.length; i++) {
+    conditions += userQuery.conditions[i];
+    if (i > 0 && i != userQuery.conditions.length) {
+      conditions += " AND ";
+    }
+  }
+  console.log(conditions);
+  return (
+    `SELECT json_build_object('type', 'FeatureCollection','features', json_agg(json_build_object('type','Feature','id',area_id,'geometry',ST_AsGeoJSON(ST_ForceRHR(st_transform(geom,4326)))::json,'properties', jsonb_set(row_to_json(${userQuery.dataTable})::jsonb,'{geom}','0',false))))` +
+    ` FROM ${userQuery.dataTable} WHERE ${conditions} AND ST_Within(${userQuery.dataTable}.geom,st_transform(ST_GeographyFromText('POLYGON((${bounds}))')::geometry,3857))`
+  );
 }
 
 /**
