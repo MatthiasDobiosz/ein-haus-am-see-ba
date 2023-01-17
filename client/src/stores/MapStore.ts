@@ -8,12 +8,11 @@ import {
   fetchOsmDataFromServer,
 } from "../network/networkUtils";
 import { Filter } from "../components/Sidebar/Filter/Filters";
-import { FeatureCollection, Geometry } from "geojson";
+import { FeatureCollection, GeoJsonProperties, Geometry } from "geojson";
 import truncate from "@turf/truncate";
 import { addBufferToFeature } from "../components/Map/turfUtils";
 import { createOverlay } from "../overlayCreation/canvasRenderer";
 import {
-  getViewportBounds,
   getViewportBoundsString,
   getViewportPolygon,
 } from "../components/Map/mapUtils";
@@ -107,72 +106,47 @@ class MapStore {
       const polyBounds = getViewportPolygon(this.map);
       console.log(bounds);
       startPerformanceMeasure("Loading data for all active filters");
-      const allResults = await Promise.allSettled(
-        Array.from(this.rootStore.filterStore.activeFilters).map(
-          async (tag) => {
-            //TODO check if already locally loaded this tag; only fetch if not!
-            //TODO also check that bounds are nearly the same!
-            //! doesnt work like this because filterlayer has already been created before in main!
-            /*
-        if (FilterManager.activeFilters.has(tag)) {
-          console.log("loadin locally");
-          const layer = FilterManager.getFilterLayer(tag);
-          console.log("tag", tag);
-          console.log(layer);
-          this.showDataOnMap(layer?.Features, tag);
-          return;
-        }*/
+      //get Tags for active Filters
+      const tags = Array.from(this.rootStore.filterStore.activeFilters);
+      const queryInformation = osmTagCollection.getQueryForPostGISAll(tags);
 
-            //Benchmark.startMeasure("Fetching data from osm");
-            // request data from osm
+      const data = await fetchDataFromPostGIS(polyBounds, queryInformation);
 
-            //const data = await fetchOsmDataFromServer(bounds, query);
-            //const query = osmTagCollection.getQueryForPostGIS(tag);
+      if (data) {
+        //const filterLayer = this.preprocessGeoData(data, tag);
 
-            const queryInformation = osmTagCollection.getQueryForPostGIS(tag);
-            const data = await fetchDataFromPostGIS(
-              polyBounds,
-              queryInformation
-            );
+        // loop through the active tags, get their respective data and show it on the map
+        for (let i = 0; i <= tags.length; i++) {
+          const layer = this.rootStore.filterStore.getFilterLayer(tags[i]);
+          if (layer) {
+            const filteredFeatures = data.features.filter(function (feature) {
+              return (
+                feature.properties.subclass ===
+                osmTagCollection.getSubclass(tags[i])
+              );
+            });
+            const filteredData: FeatureCollection<Geometry, GeoJsonProperties> =
+              {
+                type: "FeatureCollection",
+                features: filteredFeatures,
+              };
 
-            //Benchmark.stopMeasure("Fetching data from osm");
+            layer.originalData = filteredData;
 
-            console.log("data from server:", data);
-            if (data) {
-              //const filterLayer = this.preprocessGeoData(data, tag);
-
-              // get the filterlayer for this tag that has already been created at this point
-              const layer = this.rootStore.filterStore.getFilterLayer(tag);
-              console.log(layer);
-              if (layer) {
-                layer.originalData = data;
-              }
-
-              //console.log(this.selectedVisualType);
-              if (this.visualType === VisualType.NORMAL) {
-                this.showDataOnMap(data, tag);
-              } else {
-                startPerformanceMeasure(
-                  "Preprocessing geo data for one filter"
-                );
-                this.preprocessGeoData(data, tag);
-                endPerformanceMeasure("Preprocessing geo data for one filter");
-              }
+            if (this.visualType === VisualType.NORMAL) {
+              this.showDataOnMap(filteredData, tags[i]);
+            } else {
+              startPerformanceMeasure("Preprocessing geo data for one filter");
+              this.preprocessGeoData(filteredData, tags[i]);
+              endPerformanceMeasure("Preprocessing geo data for one filter");
             }
           }
-        )
-      );
+        }
+      }
 
       endPerformanceMeasure("Loading data for all active filters");
       this.rootStore.snackbarStore.closeHandler();
-      let success = true;
-      //console.log(allResults);
-      for (const res of allResults) {
-        if (res.status === "rejected") {
-          success = false;
-          break;
-        }
-      }
+      const success = true;
       if (!success) {
         this.rootStore.snackbarStore.displayHandler(
           "Nicht alle Daten konnten erfolgreich geladen werden",
@@ -332,7 +306,8 @@ class MapStore {
      *    features: [ {Feature}, {Feature}, ...],
      *    distance: 500,
      *    relevance: 0.8,  //="very important"
-     *    name: "Park",
+     *    name: "Park",import { lineCategories } from './../../../dist/client/src/osmTagCollection';
+
      *    wanted: true,
      *  },
      *  { ### FilterLayer - Restaurant

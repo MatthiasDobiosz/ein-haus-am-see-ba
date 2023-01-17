@@ -40,6 +40,46 @@ export const TagColors = new Map([
 ]);
 
 class TagCollection {
+  getQueryForPostGISAll(categories: string[]): string[] {
+    const conditions: string[] = [];
+    for (let i = 0; i < categories.length; i++) {
+      conditions.push("subclass = '" + this.getSubclass(categories[i]) + "'");
+    }
+    return conditions;
+  }
+
+  // returns subclass name that matches PostGIS entries
+  getSubclass(tag: string): string {
+    switch (tag) {
+      case TagNames.Bar:
+        return "pub";
+
+      case TagNames.Restaurant:
+        return "pub";
+
+      case TagNames.Cafe:
+        return "pub";
+
+      case TagNames.University:
+        return "university";
+
+      case TagNames.School:
+        return "pub";
+
+      case TagNames.Parking:
+        return "pub";
+
+      case TagNames.BusStop:
+        return "pub";
+
+      case TagNames.RailwayStation:
+        return "pub";
+      default:
+        throw new Error(
+          "Unknown input value for osm tag! No suitable key was found!"
+        );
+    }
+  }
   getQueryForPostGIS(categoryName: string): complexQuery {
     switch (categoryName) {
       case TagNames.Bar:

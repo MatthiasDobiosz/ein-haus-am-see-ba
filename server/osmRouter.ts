@@ -5,6 +5,7 @@ import querystring from "querystring";
 import RedisCache from "./redisCache.js";
 import * as ServerUtils from "./serverUtils.js";
 import pgk from "pg";
+import { GeoJsonProperties } from "geojson";
 
 const { Client } = pgk;
 
@@ -91,20 +92,19 @@ export default class OsmRouter {
         user: "postgres",
         port: 5432,
         password: "syn27X!L",
-        database: "unifxi",
+        database: "btest",
       });
 
       // connect to the postGIS Database
       client.connect();
 
       const bounds = req.query.bounds?.toString();
-      const dataTable = req.query.dataTable?.toString();
       let conditions = [];
       if (typeof req.query.conditions === "string") {
         conditions = JSON.parse(req.query.conditions);
       }
 
-      if (bounds && dataTable) {
+      if (bounds) {
         /** 
         const complexQuery =
           "SELECT jsonb_build_object('type','FeatureCollection','features', jsonb_agg(features.feature)) FROM (SELECT jsonb_build_object('type', 'Feature','id', osm_id,'geometry', ST_AsGeoJSON(way)::jsonb,'properties', to_jsonb(planet_osm_point) - 'osm_id' - 'way') AS feature FROM (SELECT * FROM planet_osm_point)) features;";
@@ -122,19 +122,65 @@ export default class OsmRouter {
           "SELECT json_build_object('type', 'FeatureCollection','features', json_agg(json_build_object('type','Feature','id',osm_id,'geometry',ST_AsGeoJSON(ST_ForceRHR(st_transform(geom,4326)))::json,'properties', jsonb_set(row_to_json(restaurants)::jsonb,'{geom}','0',false))))" +
           "FROM restaurants WHERE subclass = 'restaurant' AND ST_Within(restaurants.geom,st_transform(ST_GeographyFromText('POLYGON((11.375428993859288 49.285878356498586, 12.890034554177703 49.285878356498586, 12.890034554177703 48.8271096698945, 11.375428993859288 48.8271096698945, 11.375428993859288 49.285878356498586))')::geometry,3857))";
         */
-        const finalQuery = ServerUtils.buildPostGISQUery(bounds, {
-          dataTable: dataTable,
-          conditions: conditions,
-        });
-        console.log(finalQuery);
-        client.query(finalQuery, (err, result) => {
+
+        const pointQuery = ServerUtils.buildPostGISQUery(
+          bounds,
+          conditions,
+          "universities"
+        );
+
+        const wayQuery = ServerUtils.buildPostGISQUery(
+          bounds,
+          conditions,
+          "universitiesways"
+        );
+
+        const polyQuery = ServerUtils.buildPostGISQUery(
+          bounds,
+          conditions,
+          "polygons"
+        );
+
+        /** 
+        client.query(wayQuery, (err, result) => {
           if (!err) {
             res.status(StatusCodes.OK).send(result.rows[0].json_build_object);
           } else {
             console.log(err.message);
           }
           client.end();
-        });
+        });*/
+
+        let pointFeatures: GeoJsonProperties[];
+        let lineFeatures: GeoJsonProperties[];
+        let polyFeatures: GeoJsonProperties[];
+        let roadFeatures: GeoJsonProperties[];
+
+        Promise.allSettled([
+          client
+            .query(pointQuery)
+            .then(
+              (res) => (pointFeatures = res.rows[0].json_build_object.features)
+            )
+            .catch((e) => console.error(e)),
+          client
+            .query(wayQuery)
+            .then(
+              (res) => (lineFeatures = res.rows[0].json_build_object.features)
+            )
+            .catch((e) => console.error(e)),
+          client
+            .query(polyQuery)
+            .then(
+              (res) => (polyFeatures = res.rows[0].json_build_object.features)
+            )
+            .catch((e) => console.error(e)),
+        ]).then((results) =>
+          res.status(StatusCodes.OK).send({
+            type: "FeatureCollection",
+            features: lineFeatures.concat(polyFeatures).concat(pointFeatures),
+          })
+        );
       }
     });
 

@@ -1,5 +1,4 @@
 /* eslint-env node */
-import { complexQuery } from "./../client/src/osmTagCollection";
 
 //const exec = Util.promisify(childProcess.exec);
 
@@ -20,20 +19,33 @@ export function buildOverpassQuery(bounds: string, userQuery: string): string {
  */
 export function buildPostGISQUery(
   bounds: string,
-  userQuery: complexQuery
+  conditions: string[],
+  table: string
 ): string {
-  let conditions = "";
-  for (let i = 0; i < userQuery.conditions.length; i++) {
-    conditions += userQuery.conditions[i];
-    if (i > 0 && i != userQuery.conditions.length) {
-      conditions += " AND ";
+  let parsedConditions = "";
+  for (let i = 0; i < conditions.length; i++) {
+    parsedConditions += conditions[i];
+    if (i != conditions.length - 1) {
+      parsedConditions += " AND ";
     }
   }
-  console.log(conditions);
-  return (
-    `SELECT json_build_object('type', 'FeatureCollection','features', json_agg(json_build_object('type','Feature','id',area_id,'geometry',ST_AsGeoJSON(ST_ForceRHR(st_transform(geom,4326)))::json,'properties', jsonb_set(row_to_json(${userQuery.dataTable})::jsonb,'{geom}','0',false))))` +
-    ` FROM ${userQuery.dataTable} WHERE ${conditions} AND ST_Within(${userQuery.dataTable}.geom,st_transform(ST_GeographyFromText('POLYGON((${bounds}))')::geometry,3857))`
-  );
+  console.log(parsedConditions);
+  if (table === "polygons") {
+    return (
+      `SELECT json_build_object('type', 'FeatureCollection','features', json_agg(json_build_object('type','Feature','id',area_id,'geometry',ST_AsGeoJSON(ST_Boundary(ST_ForceRHR(st_transform(geom,4326))))::json,'properties', jsonb_set(row_to_json(${table})::jsonb,'{geom}','0',false))))` +
+      ` FROM ${table} WHERE ${parsedConditions} AND ST_Within(${table}.geom,st_transform(ST_GeographyFromText('POLYGON((${bounds}))')::geometry,3857));`
+    );
+  } else if (table === "universitiesways") {
+    return (
+      `SELECT json_build_object('type', 'FeatureCollection','features', json_agg(json_build_object('type','Feature','id',way_id,'geometry',ST_AsGeoJSON(ST_ForceRHR(st_transform(geom,4326)))::json,'properties', jsonb_set(row_to_json(${table})::jsonb,'{geom}','0',false))))` +
+      ` FROM ${table} WHERE ${parsedConditions} AND ST_Within(${table}.geom,st_transform(ST_GeographyFromText('POLYGON((${bounds}))')::geometry,3857));`
+    );
+  } else {
+    return (
+      `SELECT json_build_object('type', 'FeatureCollection','features', json_agg(json_build_object('type','Feature','id',node_id,'geometry',ST_AsGeoJSON(ST_ForceRHR(st_transform(geom,4326)))::json,'properties', jsonb_set(row_to_json(${table})::jsonb,'{geom}','0',false))))` +
+      ` FROM ${table} WHERE ${parsedConditions} AND ST_Within(${table}.geom,st_transform(ST_GeographyFromText('POLYGON((${bounds}))')::geometry,3857));`
+    );
+  }
 }
 
 /**

@@ -12,6 +12,7 @@
     "format": "yarn prettier --write ./*.ts"
   },
   "dependencies": {
+    "@types/pg-promise": "^5.4.3",
     "axios": "^1.2.1",
     "body-parser": "^1.20.1",
     "compression": "^1.7.4",
@@ -20,6 +21,7 @@
     "http-status-codes": "^2.2.0",
     "ioredis": "^4.17.3",
     "pg": "^8.8.0",
+    "pg-promise": "^11.0.2",
     "redis-json": "^4.2.1",
     "ts-node": "^10.9.1",
     "tsc-watch": "^5.0.3"
