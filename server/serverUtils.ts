@@ -26,7 +26,7 @@ export function buildPostGISQUery(
   for (let i = 0; i < conditions.length; i++) {
     parsedConditions += conditions[i];
     if (i != conditions.length - 1) {
-      parsedConditions += " AND ";
+      parsedConditions += " OR ";
     }
   }
   console.log(parsedConditions);
@@ -35,7 +35,7 @@ export function buildPostGISQUery(
       `SELECT json_build_object('type', 'FeatureCollection','features', json_agg(json_build_object('type','Feature','id',area_id,'geometry',ST_AsGeoJSON(ST_Boundary(ST_ForceRHR(st_transform(geom,4326))))::json,'properties', jsonb_set(row_to_json(${table})::jsonb,'{geom}','0',false))))` +
       ` FROM ${table} WHERE ${parsedConditions} AND ST_Within(${table}.geom,st_transform(ST_GeographyFromText('POLYGON((${bounds}))')::geometry,3857));`
     );
-  } else if (table === "universitiesways") {
+  } else if (table === "ways") {
     return (
       `SELECT json_build_object('type', 'FeatureCollection','features', json_agg(json_build_object('type','Feature','id',way_id,'geometry',ST_AsGeoJSON(ST_ForceRHR(st_transform(geom,4326)))::json,'properties', jsonb_set(row_to_json(${table})::jsonb,'{geom}','0',false))))` +
       ` FROM ${table} WHERE ${parsedConditions} AND ST_Within(${table}.geom,st_transform(ST_GeographyFromText('POLYGON((${bounds}))')::geometry,3857));`

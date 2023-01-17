@@ -92,7 +92,7 @@ export default class OsmRouter {
         user: "postgres",
         port: 5432,
         password: "syn27X!L",
-        database: "btest",
+        database: "multinew",
       });
 
       // connect to the postGIS Database
@@ -126,13 +126,13 @@ export default class OsmRouter {
         const pointQuery = ServerUtils.buildPostGISQUery(
           bounds,
           conditions,
-          "universities"
+          "points"
         );
 
         const wayQuery = ServerUtils.buildPostGISQUery(
           bounds,
           conditions,
-          "universitiesways"
+          "ways"
         );
 
         const polyQuery = ServerUtils.buildPostGISQUery(
@@ -175,12 +175,23 @@ export default class OsmRouter {
               (res) => (polyFeatures = res.rows[0].json_build_object.features)
             )
             .catch((e) => console.error(e)),
-        ]).then((results) =>
+        ]).then((results) => {
+          console.log(polyFeatures);
+          let allFeatures: GeoJsonProperties[] = [];
+          if (pointFeatures) {
+            allFeatures = allFeatures.concat(pointFeatures);
+          }
+          if (lineFeatures) {
+            allFeatures = allFeatures.concat(lineFeatures);
+          }
+          if (polyFeatures) {
+            allFeatures = allFeatures.concat(polyFeatures);
+          }
           res.status(StatusCodes.OK).send({
             type: "FeatureCollection",
-            features: lineFeatures.concat(polyFeatures).concat(pointFeatures),
-          })
-        );
+            features: allFeatures,
+          });
+        });
       }
     });
 
