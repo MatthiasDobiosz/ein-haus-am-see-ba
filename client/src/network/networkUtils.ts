@@ -110,7 +110,6 @@ export async function fetchDataFromPostGIS(
     console.log("start request");
     // set a timeout of 7 seconds
     const response = await axios.get(url, { timeout: 20000 });
-    console.log(response.data);
 
     return response.data as FeatureCollection<GeometryObject, any>;
   } catch (error) {

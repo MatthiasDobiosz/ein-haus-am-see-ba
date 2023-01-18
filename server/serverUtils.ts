@@ -29,7 +29,6 @@ export function buildPostGISQUery(
       parsedConditions += " OR ";
     }
   }
-  console.log(parsedConditions);
   if (table === "polygons") {
     return (
       `SELECT json_build_object('type', 'FeatureCollection','features', json_agg(json_build_object('type','Feature','id',area_id,'geometry',ST_AsGeoJSON(ST_Boundary(ST_ForceRHR(st_transform(geom,4326))))::json,'properties', jsonb_set(row_to_json(${table})::jsonb,'{geom}','0',false))))` +

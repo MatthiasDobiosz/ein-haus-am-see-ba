@@ -55,25 +55,44 @@ class TagCollection {
         return "pub";
 
       case TagNames.Restaurant:
-        return "pub";
+        return "restaurant";
 
       case TagNames.Cafe:
-        return "pub";
+        return "cafe";
 
       case TagNames.University:
         return "university";
 
       case TagNames.School:
-        return "pub";
+        return "school";
+
+      case TagNames.Supermarket:
+        return "supermarket";
+
+      case TagNames.Mall:
+        return "mall";
 
       case TagNames.Parking:
-        return "pub";
+        return "parking";
 
       case TagNames.BusStop:
-        return "pub";
+        return "busstop";
 
       case TagNames.RailwayStation:
-        return "pub";
+        return "railwaystation";
+
+      case TagNames.Highway:
+        return "highway";
+
+      case TagNames.Parks:
+        return "park";
+
+      case TagNames.Forest:
+        return "forest";
+
+      case TagNames.River:
+        return "river";
+
       default:
         throw new Error(
           "Unknown input value for osm tag! No suitable key was found!"

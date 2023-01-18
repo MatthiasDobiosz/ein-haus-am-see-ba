@@ -33,6 +33,7 @@ export const endPerformanceMeasure = (name: string): void => {
  * logs all measured processes
  */
 export const evaluateMeasure = (): void => {
+  console.log(performance.getEntriesByType("measure"));
   const measures = avergageMeasures(performance.getEntriesByType("measure"));
   for (let i = 0; i < measures.length; i++) {
     console.log(
