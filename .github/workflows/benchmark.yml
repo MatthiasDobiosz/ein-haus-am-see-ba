@@ -17,6 +17,8 @@ jobs:
       - uses: ./.github/actions/prepare
       - name: Run benchmark
         run: yarn start & sleep 10 && curl http://localhost:3200 && node ./shared/benchmark.js | tee output.txt
+        env:
+          MAPBOX_TOKEN: ${{ secrets.MAPBOX_TOKEN }}
       - name: Store benchmark result
         uses: benchmark-action/github-action-benchmark@v1
         with:
@@ -24,7 +26,6 @@ jobs:
           tool: "benchmarkjs"
           output-file-path: output.txt
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          MAPBOX_TOKEN: ${{ secrets.MAPBOX_TOKEN }}
           auto-push: true
           # Show alert with commit comment on detecting possible performance regression
           alert-threshold: "200%"
