@@ -46,6 +46,7 @@ export default class OsmRouter {
       "/osmRequestCache",
       this.checkCache,
       async (req: Request, res: Response, next: NextFunction) => {
+        startPerformanceMeasure("Fetching data from Overpass");
         const bounds = req.query.bounds?.toString();
         const query = req.query.osmQuery?.toString();
 
@@ -80,7 +81,8 @@ export default class OsmRouter {
             RedisCache.cacheData(compositeKey, geoData.data, cacheTime);
 
             //this.saveGeoData(geoData.data, query);
-
+            endPerformanceMeasure("Fetching data from Overpass");
+            evaluateMeasure();
             return res.status(StatusCodes.OK).json(geoData.data);
           } catch (error: any) {
             if (error.response) {
@@ -112,6 +114,7 @@ export default class OsmRouter {
         // connect to the postGIS Database
         client.connect();
 
+        startPerformanceMeasure("Fetching data from PostGIS");
         const bounds = req.query.bounds?.toString();
         let conditions: string[] = [];
         if (typeof req.query.conditions === "string") {
@@ -172,7 +175,6 @@ export default class OsmRouter {
           let lineFeatures: Feature<Geometry, any>[];
           let polyFeatures: Feature<Geometry, any>[];
           // let roadFeatures: GeoJsonProperties[];
-          startPerformanceMeasure("Fetching data from PostGIS");
           Promise.allSettled([
             client
               .query(pointQuery)
@@ -208,14 +210,14 @@ export default class OsmRouter {
               type: "FeatureCollection",
               features: allFeatures,
             };
-            endPerformanceMeasure("Fetching data from PostGIS");
-            evaluateMeasure();
             // cache data for one hour, this should be enough for a typical usecase
             const cacheTime = 3600;
             //! cache only for 15 minutes during study to prevent influencing the next participant!
             //const cacheTime = 900;
             const features: any = featureCollection.features;
             RedisCache.cacheData(compositeKey, features, cacheTime);
+            endPerformanceMeasure("Fetching data from PostGIS");
+            evaluateMeasure();
             res.status(StatusCodes.OK).send(featureCollection);
           });
         }

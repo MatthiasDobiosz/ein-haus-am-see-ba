@@ -46,6 +46,7 @@ class MapStore {
       setMap: action,
       setVisualType: action,
       mapLayerManager: false,
+      loadMapDataOverpass: false,
       loadMapData: false,
       showAreasOnMap: false,
       showPOILocations: false,
@@ -88,6 +89,90 @@ class MapStore {
     }
   }
 
+  async loadMapDataOverpass(): Promise<void> {
+    if (this.rootStore.filterStore.activeFilters.size === 0) {
+      return;
+    }
+
+    // give feedback to the user
+    // FIXME: Do that in component to get snackbarContext
+    //showSnackbar("Daten werden geladen...", SnackbarType.INFO, undefined, true);
+    this.rootStore.snackbarStore.displayHandler(
+      "Daten werden geladen...",
+      undefined,
+      SnackbarType.INFO
+    );
+
+    if (this.map) {
+      const bounds = getViewportBoundsString(this.map, 500);
+
+      const allResults = await Promise.allSettled(
+        Array.from(this.rootStore.filterStore.activeFilters).map(
+          async (tag) => {
+            // get overpass query for each tag
+            const query = osmTagCollection.getQueryForCategory(tag);
+
+            //TODO check if already locally loaded this tag; only fetch if not!
+            //TODO also check that bounds are nearly the same!
+            //! doesnt work like this because filterlayer has already been created before in main!
+            /*
+          if (FilterManager.activeFilters.has(tag)) {
+            console.log("loadin locally");
+            const layer = FilterManager.getFilterLayer(tag);
+            console.log("tag", tag);
+            console.log(layer);
+            this.showDataOnMap(layer?.Features, tag);
+            return;
+          }*/
+
+            //Benchmark.startMeasure("Fetching data from osm");
+            // request data from osm
+            const data = await fetchOsmDataFromServer(bounds, query);
+            //Benchmark.stopMeasure("Fetching data from osm");
+
+            //console.log("data from server:", data);
+
+            if (data) {
+              //const filterLayer = this.preprocessGeoData(data, tag);
+
+              // get the filterlayer for this tag that has already been created at this point
+              const layer = this.rootStore.filterStore.getFilterLayer(tag);
+              if (layer) {
+                layer.originalData = data;
+              }
+
+              //console.log(this.selectedVisualType);
+              if (this.visualType === VisualType.NORMAL) {
+                this.showDataOnMap(data, tag);
+              } else {
+                this.preprocessGeoData(data, tag);
+              }
+            }
+          }
+        )
+      );
+
+      this.rootStore.snackbarStore.closeHandler();
+
+      let success = true;
+      for (const res of allResults) {
+        if (res.status === "rejected") {
+          success = false;
+          break;
+        }
+      }
+      if (!success) {
+        this.rootStore.snackbarStore.displayHandler(
+          "Nicht alle Daten konnten erfolgreich geladen werden",
+          1500,
+          SnackbarType.ERROR
+        );
+      }
+
+      this.showAreasOnMap();
+    }
+  }
+
   async loadMapData(): Promise<void> {
     if (this.rootStore.filterStore.activeFilters.size === 0) {
       return;
@@ -101,6 +186,7 @@ class MapStore {
       undefined,
       SnackbarType.INFO
     );
+
     if (this.map) {
       const bounds = getViewportBoundsString(this.map, 500);
       const polyBounds = getViewportPolygon(this.map);

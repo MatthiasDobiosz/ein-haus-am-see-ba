@@ -163,7 +163,7 @@ class TagCollection {
     return 'nwr["building"~"^apartments|dormitory|terrace|house$"];';
   }
 
-  getQueryForPostCategory(categoryName: string): string {
+  getQueryForCategory(categoryName: string): string {
     switch (categoryName) {
       case TagNames.Bar:
         // nwr is shorthand for query instead of 3 separate ones (nwr = node, way, relation)

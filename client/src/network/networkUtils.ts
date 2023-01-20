@@ -103,10 +103,15 @@ export async function fetchDataFromPostGIS(
     const params = new URLSearchParams({
       bounds: mapBounds,
     });
-
+    const data = await axios.get(
+      "/testdb?bounds=11.93691490881318+49.06334045685992%2C12.266333091186453+49.06334045685992%2C12.266333091186453+48.963473458586435%2C11.93691490881318+48.963473458586435%2C11.93691490881318+49.06334045685992&conditions=%5B%22subclass%20%3D%20'restaurant'%22%5D"
+    );
+    console.log(data);
+    console.log("LOL");
     const url =
       "/testdb?" + params.toString() + "&conditions=" + conditionsQuery;
 
+    console.log(url);
     console.log("start request");
     // set a timeout of 7 seconds
     const response = await axios.get(url, { timeout: 20000 });

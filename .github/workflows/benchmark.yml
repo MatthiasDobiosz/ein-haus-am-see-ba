@@ -3,7 +3,7 @@ on:
   push:
     branches:
       - basic-benchmarking-functionality
-      - recreate-previous-page-backend-functionality
+      - implement-postGIS-databank
 permissions:
   contents: write
   deployments: write
