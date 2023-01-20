@@ -11,3 +11,4 @@ runs:
     - run: yarn install --frozen-lockfile
       shell: bash
     - run: yarn start & sleep 10
+      shell: bash
