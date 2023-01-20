@@ -12,3 +12,5 @@ runs:
       shell: bash
     - run: yarn start
       shell: bash
+      env:
+        MAPBOX_TOKEN: ${{ secrets.MAPBOX_TOKEN }}
