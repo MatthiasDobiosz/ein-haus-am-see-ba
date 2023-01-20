@@ -1,4 +1,5 @@
 import Benchmark from "benchmark";
+import axios from "../client/src/network/axiosInterceptor";
 
 let suite = new Benchmark.Suite();
 
