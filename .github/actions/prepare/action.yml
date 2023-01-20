@@ -10,5 +10,5 @@ runs:
         cache: "yarn"
     - run: yarn install --frozen-lockfile
       shell: bash
-    - run: yarn start & sleep 10
+    - run: yarn start
       shell: bash
