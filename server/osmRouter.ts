@@ -75,10 +75,10 @@ export default class OsmRouter {
             });
 
             // cache data for one hour, this should be enough for a typical usecase
-            const cacheTime = 3600;
+            //const cacheTime = 3600;
             //! cache only for 15 minutes during study to prevent influencing the next participant!
             //const cacheTime = 900;
-            RedisCache.cacheData(compositeKey, geoData.data, cacheTime);
+            //RedisCache.cacheData(compositeKey, geoData.data, cacheTime);
 
             //this.saveGeoData(geoData.data, query);
             endPerformanceMeasure("Fetching data from Overpass");
@@ -211,11 +211,11 @@ export default class OsmRouter {
               features: allFeatures,
             };
             // cache data for one hour, this should be enough for a typical usecase
-            const cacheTime = 3600;
+            //const cacheTime = 3600;
             //! cache only for 15 minutes during study to prevent influencing the next participant!
             //const cacheTime = 900;
-            const features: any = featureCollection.features;
-            RedisCache.cacheData(compositeKey, features, cacheTime);
+            //const features: any = featureCollection.features;
+            //RedisCache.cacheData(compositeKey, features, cacheTime);
             endPerformanceMeasure("Fetching data from PostGIS");
             evaluateMeasure();
             res.status(StatusCodes.OK).send(featureCollection);
