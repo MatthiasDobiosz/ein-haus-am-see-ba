@@ -2,7 +2,6 @@ import axios from "axios";
 import express, { NextFunction, Request, Response, Router } from "express";
 import { StatusCodes } from "http-status-codes";
 import querystring from "querystring";
-import RedisCache from "./redisCache.js";
 import * as ServerUtils from "./serverUtils.js";
 import pgk from "pg";
 import {
@@ -44,7 +43,7 @@ export default class OsmRouter {
      */
     this.osmRouter.get(
       "/osmRequestCache",
-      this.checkCache,
+      //this.checkCache,
       async (req: Request, res: Response, next: NextFunction) => {
         startPerformanceMeasure("Fetching data from Overpass");
         const bounds = req.query.bounds?.toString();
@@ -99,33 +98,30 @@ export default class OsmRouter {
       }
     );
 
-    this.osmRouter.get(
-      "/testdb",
-      this.checkCachePostGIS,
-      (req: Request, res: Response) => {
-        const client = new Client({
-          host: "localhost",
-          user: "postgres",
-          port: 5432,
-          password: "syn27X!L",
-          database: "alltypes",
-        });
+    this.osmRouter.get("/testdb", (req: Request, res: Response) => {
+      const client = new Client({
+        host: "localhost",
+        user: "postgres",
+        port: 5432,
+        password: "syn27X!L",
+        database: "alltypes",
+      });
 
-        // connect to the postGIS Database
-        client.connect();
+      // connect to the postGIS Database
+      client.connect();
 
-        startPerformanceMeasure("Fetching data from PostGIS");
-        const bounds = req.query.bounds?.toString();
-        let conditions: string[] = [];
-        if (typeof req.query.conditions === "string") {
-          conditions = JSON.parse(req.query.conditions);
-        }
+      startPerformanceMeasure("Fetching data from PostGIS");
+      const bounds = req.query.bounds?.toString();
+      let conditions: string[] = [];
+      if (typeof req.query.conditions === "string") {
+        conditions = JSON.parse(req.query.conditions);
+      }
 
-        if (bounds) {
-          const compositeKey = (bounds + "/" + conditions.join("") + ";")
-            .replace(/ /g, "")
-            .toLowerCase();
-          /** 
+      if (bounds) {
+        const compositeKey = (bounds + "/" + conditions.join("") + ";")
+          .replace(/ /g, "")
+          .toLowerCase();
+        /** 
         const complexQuery =
           "SELECT jsonb_build_object('type','FeatureCollection','features', jsonb_agg(features.feature)) FROM (SELECT jsonb_build_object('type', 'Feature','id', osm_id,'geometry', ST_AsGeoJSON(way)::jsonb,'properties', to_jsonb(planet_osm_point) - 'osm_id' - 'way') AS feature FROM (SELECT * FROM planet_osm_point)) features;";
 
@@ -143,25 +139,25 @@ export default class OsmRouter {
           "FROM restaurants WHERE subclass = 'restaurant' AND ST_Within(restaurants.geom,st_transform(ST_GeographyFromText('POLYGON((11.375428993859288 49.285878356498586, 12.890034554177703 49.285878356498586, 12.890034554177703 48.8271096698945, 11.375428993859288 48.8271096698945, 11.375428993859288 49.285878356498586))')::geometry,3857))";
         */
 
-          const pointQuery = ServerUtils.buildPostGISQUery(
-            bounds,
-            conditions,
-            "points"
-          );
+        const pointQuery = ServerUtils.buildPostGISQUery(
+          bounds,
+          conditions,
+          "points"
+        );
 
-          const wayQuery = ServerUtils.buildPostGISQUery(
-            bounds,
-            conditions,
-            "ways"
-          );
+        const wayQuery = ServerUtils.buildPostGISQUery(
+          bounds,
+          conditions,
+          "ways"
+        );
 
-          const polyQuery = ServerUtils.buildPostGISQUery(
-            bounds,
-            conditions,
-            "polygons"
-          );
+        const polyQuery = ServerUtils.buildPostGISQUery(
+          bounds,
+          conditions,
+          "polygons"
+        );
 
-          /** 
+        /** 
         client.query(wayQuery, (err, result) => {
           if (!err) {
             res.status(StatusCodes.OK).send(result.rows[0].json_build_object);
@@ -171,58 +167,56 @@ export default class OsmRouter {
           client.end();
         });*/
 
-          let pointFeatures: Feature<Geometry, any>[];
-          let lineFeatures: Feature<Geometry, any>[];
-          let polyFeatures: Feature<Geometry, any>[];
-          // let roadFeatures: GeoJsonProperties[];
-          Promise.allSettled([
-            client
-              .query(pointQuery)
-              .then(
-                (res) =>
-                  (pointFeatures = res.rows[0].json_build_object.features)
-              )
-              .catch((e) => console.error(e)),
-            client
-              .query(wayQuery)
-              .then(
-                (res) => (lineFeatures = res.rows[0].json_build_object.features)
-              )
-              .catch((e) => console.error(e)),
-            client
-              .query(polyQuery)
-              .then(
-                (res) => (polyFeatures = res.rows[0].json_build_object.features)
-              )
-              .catch((e) => console.error(e)),
-          ]).then((results) => {
-            let allFeatures: Feature<Geometry, any>[] = [];
-            if (pointFeatures) {
-              allFeatures = allFeatures.concat(pointFeatures);
-            }
-            if (lineFeatures) {
-              allFeatures = allFeatures.concat(lineFeatures);
-            }
-            if (polyFeatures) {
-              allFeatures = allFeatures.concat(polyFeatures);
-            }
-            const featureCollection = {
-              type: "FeatureCollection",
-              features: allFeatures,
-            };
-            // cache data for one hour, this should be enough for a typical usecase
-            //const cacheTime = 3600;
-            //! cache only for 15 minutes during study to prevent influencing the next participant!
-            //const cacheTime = 900;
-            //const features: any = featureCollection.features;
-            //RedisCache.cacheData(compositeKey, features, cacheTime);
-            endPerformanceMeasure("Fetching data from PostGIS");
-            evaluateMeasure();
-            res.status(StatusCodes.OK).send(featureCollection);
-          });
-        }
+        let pointFeatures: Feature<Geometry, any>[];
+        let lineFeatures: Feature<Geometry, any>[];
+        let polyFeatures: Feature<Geometry, any>[];
+        // let roadFeatures: GeoJsonProperties[];
+        Promise.allSettled([
+          client
+            .query(pointQuery)
+            .then(
+              (res) => (pointFeatures = res.rows[0].json_build_object.features)
+            )
+            .catch((e) => console.error(e)),
+          client
+            .query(wayQuery)
+            .then(
+              (res) => (lineFeatures = res.rows[0].json_build_object.features)
+            )
+            .catch((e) => console.error(e)),
+          client
+            .query(polyQuery)
+            .then(
+              (res) => (polyFeatures = res.rows[0].json_build_object.features)
+            )
+            .catch((e) => console.error(e)),
+        ]).then((results) => {
+          let allFeatures: Feature<Geometry, any>[] = [];
+          if (pointFeatures) {
+            allFeatures = allFeatures.concat(pointFeatures);
+          }
+          if (lineFeatures) {
+            allFeatures = allFeatures.concat(lineFeatures);
+          }
+          if (polyFeatures) {
+            allFeatures = allFeatures.concat(polyFeatures);
+          }
+          const featureCollection = {
+            type: "FeatureCollection",
+            features: allFeatures,
+          };
+          // cache data for one hour, this should be enough for a typical usecase
+          //const cacheTime = 3600;
+          //! cache only for 15 minutes during study to prevent influencing the next participant!
+          //const cacheTime = 900;
+          //const features: any = featureCollection.features;
+          //RedisCache.cacheData(compositeKey, features, cacheTime);
+          endPerformanceMeasure("Fetching data from PostGIS");
+          evaluateMeasure();
+          res.status(StatusCodes.OK).send(featureCollection);
+        });
       }
-    );
+    });
 
     /*
     this.osmRouter.get("/getMask", async (req: Request, res: Response, next: NextFunction) => {
@@ -257,6 +251,7 @@ export default class OsmRouter {
     */
   }
 
+  /*
   //Express middleware function to check Redis Cache
   checkCache = async (
     req: Request,
@@ -316,7 +311,7 @@ export default class OsmRouter {
       }
     }
   };
-
+*/
   //! only works in linux
   /*
   testNodeOsmium(): void {
