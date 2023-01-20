@@ -10,7 +10,3 @@ runs:
         cache: "yarn"
     - run: yarn install --frozen-lockfile
       shell: bash
-    - run: yarn start
-      shell: bash
-      secrets:
-        MAPBOX_TOKEN: ${{ secrets.MAPBOX_TOKEN }}
