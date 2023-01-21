@@ -1,5 +1,10 @@
 /* eslint-disable quotes */
 
+export interface complexQuery {
+  dataTable: string;
+  conditions: string[];
+}
+
 //TODO merge these two to reduce duplicate code
 export const enum TagNames {
   Bar = "Bar",
@@ -35,6 +40,129 @@ export const TagColors = new Map([
 ]);
 
 class TagCollection {
+  getQueryForPostGISAll(categories: string[]): string[] {
+    const conditions: string[] = [];
+    for (let i = 0; i < categories.length; i++) {
+      conditions.push("subclass = '" + this.getSubclass(categories[i]) + "'");
+    }
+    return conditions;
+  }
+
+  // returns subclass name that matches PostGIS entries
+  getSubclass(tag: string): string {
+    switch (tag) {
+      case TagNames.Bar:
+        return "pub";
+
+      case TagNames.Restaurant:
+        return "restaurant";
+
+      case TagNames.Cafe:
+        return "cafe";
+
+      case TagNames.University:
+        return "university";
+
+      case TagNames.School:
+        return "school";
+
+      case TagNames.Supermarket:
+        return "supermarket";
+
+      case TagNames.Mall:
+        return "mall";
+
+      case TagNames.Parking:
+        return "parking";
+
+      case TagNames.BusStop:
+        return "busstop";
+
+      case TagNames.RailwayStation:
+        return "railwaystation";
+
+      case TagNames.Highway:
+        return "highway";
+
+      case TagNames.Parks:
+        return "park";
+
+      case TagNames.Forest:
+        return "forest";
+
+      case TagNames.River:
+        return "river";
+
+      default:
+        throw new Error(
+          "Unknown input value for osm tag! No suitable key was found!"
+        );
+    }
+  }
+  getQueryForPostGIS(categoryName: string): complexQuery {
+    switch (categoryName) {
+      case TagNames.Bar:
+        // nwr is shorthand for query instead of 3 separate ones (nwr = node, way, relation)
+        return {
+          dataTable: "pubs",
+          conditions: ["subclass = 'pub'"],
+        };
+
+      case TagNames.Restaurant:
+        return {
+          dataTable: "restaurants",
+          conditions: ["subclass = 'restaurant'"],
+        };
+
+      case TagNames.Cafe:
+        return {
+          dataTable: "cafes",
+          conditions: ["subclass = 'cafe'"],
+        };
+
+      case TagNames.University:
+        //return 'nwr["building"="university"];'; // to get the buildings itself
+        return {
+          dataTable: "polygons",
+          conditions: ["subclass = 'university'"],
+        };
+
+      case TagNames.School:
+        return { dataTable: "schools", conditions: ["subclass = 'school'"] };
+
+      case TagNames.Parking:
+        return {
+          dataTable: "parking",
+          conditions: ["subclass = 'parking'"],
+        };
+
+      case TagNames.BusStop:
+        return {
+          dataTable: "busstops",
+          conditions: ["subclass = 'busStop'"],
+        };
+
+      case TagNames.RailwayStation:
+        return {
+          dataTable: "railwaystations",
+          conditions: ["subclass = 'railwayStation'"],
+        };
+      default:
+        throw new Error(
+          "Unknown input value for osm tag! No suitable key was found!"
+        );
+    }
+  }
+
+  //TODO fetch everything that is marked as a building or apartment
+  /* * apartments / houses:
+      vllt landuse=residential mit name=* oder addr:flats ???
+     */
+  //TODO run this query only at a certain zoom level (e.g. > 14) to make it feasible??
+  getAllHousesQuery(): string {
+    return 'nwr["building"~"^apartments|dormitory|terrace|house$"];';
+  }
+
   getQueryForCategory(categoryName: string): string {
     switch (categoryName) {
       case TagNames.Bar:
@@ -93,15 +221,6 @@ class TagCollection {
           "Unknown input value for osm tag! No suitable key was found!"
         );
     }
-  }
-
-  //TODO fetch everything that is marked as a building or apartment
-  /* * apartments / houses:
-      vllt landuse=residential mit name=* oder addr:flats ???
-     */
-  //TODO run this query only at a certain zoom level (e.g. > 14) to make it feasible??
-  getAllHousesQuery(): string {
-    return 'nwr["building"~"^apartments|dormitory|terrace|house$"];';
   }
 }
 

@@ -3,13 +3,19 @@ import { RootStore } from "./RootStore";
 import { MapboxMap } from "react-map-gl";
 import MapLayerManager from "./../mapLayerMangager";
 import osmTagCollection from "../osmTagCollection";
-import { fetchOsmDataFromServer } from "../network/networkUtils";
+import {
+  fetchDataFromPostGIS,
+  fetchOsmDataFromServer,
+} from "../network/networkUtils";
 import { Filter } from "../components/Sidebar/Filter/Filters";
-import { FeatureCollection, Geometry } from "geojson";
+import { FeatureCollection, GeoJsonProperties, Geometry } from "geojson";
 import truncate from "@turf/truncate";
 import { addBufferToFeature } from "../components/Map/turfUtils";
 import { createOverlay } from "../overlayCreation/canvasRenderer";
-import { getViewportBoundsString } from "../components/Map/mapUtils";
+import {
+  getViewportBoundsString,
+  getViewportPolygon,
+} from "../components/Map/mapUtils";
 import {
   endPerformanceMeasure,
   startPerformanceMeasure,
@@ -40,6 +46,7 @@ class MapStore {
       setMap: action,
       setVisualType: action,
       mapLayerManager: false,
+      loadMapDataOverpass: false,
       loadMapData: false,
       showAreasOnMap: false,
       showPOILocations: false,
@@ -82,7 +89,7 @@ class MapStore {
     }
   }
 
-  async loadMapData(): Promise<void> {
+  async loadMapDataOverpass(): Promise<void> {
     if (this.rootStore.filterStore.activeFilters.size === 0) {
       return;
     }
@@ -95,35 +102,36 @@ class MapStore {
       undefined,
       SnackbarType.INFO
     );
+
     if (this.map) {
       const bounds = getViewportBoundsString(this.map, 500);
 
-      startPerformanceMeasure("Loading data for all active filters");
       const allResults = await Promise.allSettled(
         Array.from(this.rootStore.filterStore.activeFilters).map(
           async (tag) => {
+            // get overpass query for each tag
             const query = osmTagCollection.getQueryForCategory(tag);
 
             //TODO check if already locally loaded this tag; only fetch if not!
             //TODO also check that bounds are nearly the same!
             //! doesnt work like this because filterlayer has already been created before in main!
             /*
-        if (FilterManager.activeFilters.has(tag)) {
-          console.log("loadin locally");
-          const layer = FilterManager.getFilterLayer(tag);
-          console.log("tag", tag);
-          console.log(layer);
-          this.showDataOnMap(layer?.Features, tag);
-          return;
-        }*/
+          if (FilterManager.activeFilters.has(tag)) {
+            console.log("loadin locally");
+            const layer = FilterManager.getFilterLayer(tag);
+            console.log("tag", tag);
+            console.log(layer);
+            this.showDataOnMap(layer?.Features, tag);
+            return;
+          }*/
 
             //Benchmark.startMeasure("Fetching data from osm");
             // request data from osm
-
             const data = await fetchOsmDataFromServer(bounds, query);
             //Benchmark.stopMeasure("Fetching data from osm");
 
             //console.log("data from server:", data);
+
             if (data) {
               //const filterLayer = this.preprocessGeoData(data, tag);
 
@@ -137,27 +145,94 @@ class MapStore {
               if (this.visualType === VisualType.NORMAL) {
                 this.showDataOnMap(data, tag);
               } else {
-                startPerformanceMeasure(
-                  "Preprocessing geo data for one filter"
-                );
                 this.preprocessGeoData(data, tag);
-                endPerformanceMeasure("Preprocessing geo data for one filter");
               }
             }
           }
         )
       );
 
-      endPerformanceMeasure("Loading data for all active filters");
       this.rootStore.snackbarStore.closeHandler();
+
       let success = true;
-      //console.log(allResults);
       for (const res of allResults) {
         if (res.status === "rejected") {
           success = false;
           break;
         }
       }
+      if (!success) {
+        this.rootStore.snackbarStore.displayHandler(
+          "Nicht alle Daten konnten erfolgreich geladen werden",
+          1500,
+          SnackbarType.ERROR
+        );
+      }
+
+      this.showAreasOnMap();
+    }
+  }
+
+  async loadMapData(): Promise<void> {
+    if (this.rootStore.filterStore.activeFilters.size === 0) {
+      return;
+    }
+
+    // give feedback to the user
+    // FIXME: Do that in component to get snackbarContext
+    //showSnackbar("Daten werden geladen...", SnackbarType.INFO, undefined, true);
+    this.rootStore.snackbarStore.displayHandler(
+      "Daten werden geladen...",
+      undefined,
+      SnackbarType.INFO
+    );
+
+    if (this.map) {
+      const bounds = getViewportBoundsString(this.map, 500);
+      const polyBounds = getViewportPolygon(this.map);
+      console.log(bounds);
+      startPerformanceMeasure("Loading data for all active filters");
+      //get Tags for active Filters
+      const tags = Array.from(this.rootStore.filterStore.activeFilters);
+      const queryInformation = osmTagCollection.getQueryForPostGISAll(tags);
+
+      const data = await fetchDataFromPostGIS(polyBounds, queryInformation);
+
+      if (data) {
+        //const filterLayer = this.preprocessGeoData(data, tag);
+
+        // loop through the active tags, get their respective data and show it on the map
+        for (let i = 0; i <= tags.length; i++) {
+          const layer = this.rootStore.filterStore.getFilterLayer(tags[i]);
+          if (layer) {
+            const filteredFeatures = data.features.filter(function (feature) {
+              return (
+                feature.properties.subclass ===
+                osmTagCollection.getSubclass(tags[i])
+              );
+            });
+            const filteredData: FeatureCollection<Geometry, GeoJsonProperties> =
+              {
+                type: "FeatureCollection",
+                features: filteredFeatures,
+              };
+
+            layer.originalData = filteredData;
+
+            if (this.visualType === VisualType.NORMAL) {
+              this.showDataOnMap(filteredData, tags[i]);
+            } else {
+              startPerformanceMeasure("Preprocessing geo data for one filter");
+              this.preprocessGeoData(filteredData, tags[i]);
+              endPerformanceMeasure("Preprocessing geo data for one filter");
+            }
+          }
+        }
+      }
+
+      endPerformanceMeasure("Loading data for all active filters");
+      this.rootStore.snackbarStore.closeHandler();
+      const success = true;
       if (!success) {
         this.rootStore.snackbarStore.displayHandler(
           "Nicht alle Daten konnten erfolgreich geladen werden",
@@ -317,7 +392,8 @@ class MapStore {
      *    features: [ {Feature}, {Feature}, ...],
      *    distance: 500,
      *    relevance: 0.8,  //="very important"
-     *    name: "Park",
+     *    name: "Park",import { lineCategories } from './../../../dist/client/src/osmTagCollection';
+
      *    wanted: true,
      *  },
      *  { ### FilterLayer - Restaurant

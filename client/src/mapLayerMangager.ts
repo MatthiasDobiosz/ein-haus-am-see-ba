@@ -373,8 +373,6 @@ class MapLayerManager {
       };
       */
 
-    console.log(polygonFillLayer);
-
     //! add the layers to the map and show them below the map symbols so they don't hide labels and names
     this.addNewGeojsonLayerBefore(pointLayer);
     this.addNewGeojsonLayerBefore(lineLayer);
@@ -420,7 +418,6 @@ class MapLayerManager {
     const allSources = this.mapStore.map?.getStyle().sources;
     for (const source in allSources) {
       //! "composite" is the default vector layer of mapbox-streets; don't delete this!
-      console.log(source);
       if (source !== "composite") {
         if (source === "overlaySource") {
           this.removeCanvasSource(source);

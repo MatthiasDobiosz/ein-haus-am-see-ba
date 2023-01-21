@@ -23,10 +23,10 @@
 
   "include": [
     "./client/src/**/*.tsx",
-    "./client/src/**/*.jsx",
     "./client/src/**/*.ts",
     "./server/**/*.ts",
-    "./shared/**/*.ts"
+    "./shared/**/*.ts",
+    "shared/axiosInter.js"
   ],
   "references": [{ "path": "./client/tsconfig.node.json" }]
 }

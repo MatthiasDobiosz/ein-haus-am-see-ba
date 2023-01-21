@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - recreate-previous-page-backend-functionality
   pull_request:
 
 jobs:

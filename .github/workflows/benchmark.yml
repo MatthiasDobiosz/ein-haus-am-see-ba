@@ -3,7 +3,6 @@ on:
   push:
     branches:
       - basic-benchmarking-functionality
-      - recreate-previous-page-backend-functionality
 permissions:
   contents: write
   deployments: write
@@ -16,7 +15,9 @@ jobs:
       - uses: actions/checkout@v3
       - uses: ./.github/actions/prepare
       - name: Run benchmark
-        run: node ./shared/benchmark.js | tee output.txt
+        run: yarn dev & sleep 60 && curl http://localhost:3200 && node ./shared/benchmark.js | tee output.txt
+        env:
+          MAPBOX_TOKEN: ${{ secrets.MAPBOX_TOKEN }}
       - name: Store benchmark result
         uses: benchmark-action/github-action-benchmark@v1
         with:

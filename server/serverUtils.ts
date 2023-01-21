@@ -3,7 +3,7 @@
 //const exec = Util.promisify(childProcess.exec);
 
 /**
- * Builds a query for the overpass api to fetch osm data as GeoJson in the given map bounds.
+ * Builds a query for the overpass api to fetch osm data as Json in the given map bounds.
  */
 export function buildOverpassQuery(bounds: string, userQuery: string): string {
   // output-format json, runtime of max. 25 seconds (needs to be higher for more complex queries) and global bounding box
@@ -12,6 +12,39 @@ export function buildOverpassQuery(bounds: string, userQuery: string): string {
   const query = `${querySettings}(${userQuery});${output}`;
   //console.log(query);
   return query;
+}
+
+/**
+ * Builds a query for the PostGIS Database to fetch osm data as GeoJson in the given map bounds
+ */
+export function buildPostGISQUery(
+  bounds: string,
+  conditions: string[],
+  table: string
+): string {
+  let parsedConditions = "";
+  for (let i = 0; i < conditions.length; i++) {
+    parsedConditions += conditions[i];
+    if (i != conditions.length - 1) {
+      parsedConditions += " OR ";
+    }
+  }
+  if (table === "polygons") {
+    return (
+      `SELECT json_build_object('type', 'FeatureCollection','features', json_agg(json_build_object('type','Feature','id',area_id,'geometry',ST_AsGeoJSON(ST_Boundary(ST_ForceRHR(st_transform(geom,4326))))::json,'properties', jsonb_set(row_to_json(${table})::jsonb,'{geom}','0',false))))` +
+      ` FROM ${table} WHERE ${parsedConditions} AND ST_Intersects(${table}.geom,st_transform(ST_GeographyFromText('POLYGON((${bounds}))')::geometry,3857));`
+    );
+  } else if (table === "ways") {
+    return (
+      `SELECT json_build_object('type', 'FeatureCollection','features', json_agg(json_build_object('type','Feature','id',way_id,'geometry',ST_AsGeoJSON(ST_ForceRHR(st_transform(geom,4326)))::json,'properties', jsonb_set(row_to_json(${table})::jsonb,'{geom}','0',false))))` +
+      ` FROM ${table} WHERE ${parsedConditions} AND ST_Intersects(${table}.geom,st_transform(ST_GeographyFromText('POLYGON((${bounds}))')::geometry,3857));`
+    );
+  } else {
+    return (
+      `SELECT json_build_object('type', 'FeatureCollection','features', json_agg(json_build_object('type','Feature','id',node_id,'geometry',ST_AsGeoJSON(ST_ForceRHR(st_transform(geom,4326)))::json,'properties', jsonb_set(row_to_json(${table})::jsonb,'{geom}','0',false))))` +
+      ` FROM ${table} WHERE ${parsedConditions} AND ST_Intersects(${table}.geom,st_transform(ST_GeographyFromText('POLYGON((${bounds}))')::geometry,3857));`
+    );
+  }
 }
 
 /**

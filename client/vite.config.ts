@@ -30,6 +30,11 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
+      "/testdb": {
+        target: "http://localhost:3200",
+        changeOrigin: true,
+        secure: false,
+      },
     },
   },
 });
