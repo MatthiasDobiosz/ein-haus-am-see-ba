@@ -3,7 +3,6 @@ on:
   push:
     branches:
       - basic-benchmarking-functionality
-      - implement-postGIS-databank
 permissions:
   contents: write
   deployments: write
