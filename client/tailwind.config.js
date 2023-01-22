@@ -16,6 +16,8 @@ module.exports = {
       whitesmoke: "#f5f5f5",
       lavender: "#e6e6fa",
       red: "#b61919",
+      lightorange: "#FFB52E",
+      darkorange: "#D18700",
     },
     extend: {
       height: {

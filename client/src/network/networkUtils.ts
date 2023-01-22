@@ -77,15 +77,15 @@ export async function fetchOsmDataFromServer(
     const url = "/osmRequestCache?" + params.toString();
     console.log(url);
 
-    startPerformanceMeasure("Request client side");
+    startPerformanceMeasure("RequestClient");
     // set a timeout of 7 seconds
     const response = await axios.get(url, { timeout: 20000 });
-    endPerformanceMeasure("Request client side");
-    startPerformanceMeasure("o2geo client");
+    endPerformanceMeasure("RequestClient");
+    startPerformanceMeasure("Osm2Geo");
     console.log(response.data);
     const geoJson = osmtogeojson(response.data);
     console.log(geoJson);
-    endPerformanceMeasure("o2geo client");
+    endPerformanceMeasure("Osm2Geo");
     return geoJson as FeatureCollection<GeometryObject, any>;
   } catch (error) {
     console.error(error);
@@ -103,19 +103,18 @@ export async function fetchDataFromPostGIS(
     const params = new URLSearchParams({
       bounds: mapBounds,
     });
-    const data = await axios.get(
-      "/testdb?bounds=11.93691490881318+49.06334045685992%2C12.266333091186453+49.06334045685992%2C12.266333091186453+48.963473458586435%2C11.93691490881318+48.963473458586435%2C11.93691490881318+49.06334045685992&conditions=%5B%22subclass%20%3D%20'restaurant'%22%5D"
-    );
-    console.log(data);
-    console.log("LOL");
+
     const url =
-      "/testdb?" + params.toString() + "&conditions=" + conditionsQuery;
+      "/postGIS?" + params.toString() + "&conditions=" + conditionsQuery;
 
     console.log(url);
-    console.log("start request");
-    // set a timeout of 7 seconds
-    const response = await axios.get(url, { timeout: 20000 });
 
+    // set a timeout of 7 seconds
+    startPerformanceMeasure("RequestClient");
+    const response = await axios.get(url, { timeout: 20000 });
+    endPerformanceMeasure("RequestClient");
+    startPerformanceMeasure("Osm2Geo");
+    endPerformanceMeasure("Osm2Geo");
     return response.data as FeatureCollection<GeometryObject, any>;
   } catch (error) {
     console.error(error);

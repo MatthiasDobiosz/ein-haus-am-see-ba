@@ -4,6 +4,8 @@ import { observer } from "mobx-react";
 
 import { VisualType } from "../stores/MapStore";
 import rootStore from "../stores/RootStore";
+import { toggleDbTypeForBenchmark } from "../../../shared/benchmarking";
+import { clearAllMeasures } from "./../../../shared/benchmarking";
 
 /**
  * Heading Component that render Navbar with buttons
@@ -17,6 +19,15 @@ export const Heading = observer((): JSX.Element => {
 
   const openSnackbar = () => {
     rootStore.mapStore.resetMapData();
+  };
+
+  const toggleDbType = () => {
+    rootStore.mapStore.setOverpassActive();
+    toggleDbTypeForBenchmark();
+  };
+
+  const togglePerformanceView = () => {
+    rootStore.mapStore.setPerformanceViewActive();
   };
 
   return (
@@ -33,6 +44,31 @@ export const Heading = observer((): JSX.Element => {
       >
         Wähle Filter
       </button>
+      <div className=" flex flex-row gap-2">
+        <button
+          type="button"
+          onClick={() => toggleDbType()}
+          className=" p-[0.6em] cursor-pointer overflow-hidden border-0 rounded-[2px] outline-none shadow bg-lightorange text-whitesmoke hover:bg-darkorange active:bg-darkorange"
+        >
+          {rootStore.mapStore.overpassActive ? "Overpass" : "PostGIS"}
+        </button>
+        <button
+          type="button"
+          onClick={() => togglePerformanceView()}
+          className=" p-[0.6em] cursor-pointer overflow-hidden border-0 rounded-[2px] outline-none shadow bg-lightorange text-whitesmoke hover:bg-darkorange active:bg-darkorange"
+        >
+          {rootStore.mapStore.performanceViewActive
+            ? "View Map"
+            : "View Performance"}
+        </button>
+        <button
+          type="button"
+          onClick={() => clearAllMeasures()}
+          className=" p-[0.6em] cursor-pointer overflow-hidden border-0 rounded-[2px] outline-none shadow bg-lightorange text-whitesmoke hover:bg-darkorange active:bg-darkorange"
+        >
+          Clear
+        </button>
+      </div>
       <div className=" inline-flex relative items-center">
         <label className="inline text-[16px] ml-[10px] mr-[10px]">
           Darstellungsart:

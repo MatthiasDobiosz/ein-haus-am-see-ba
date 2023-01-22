@@ -45,12 +45,14 @@ export default class OsmRouter {
       "/osmRequestCache",
       //this.checkCache,
       async (req: Request, res: Response, next: NextFunction) => {
-        startPerformanceMeasure("Fetching data from Overpass");
         const bounds = req.query.bounds?.toString();
         const query = req.query.osmQuery?.toString();
 
+        console.log("start requ osmCache");
+
         if (bounds && query) {
           console.log(bounds);
+          console.log(query);
           // TODO show user some kind of progress information: progress bar or simply percentage / remaining time!
           //res.status(200).send("Got it! You sent: " + query + ",\n" + bounds);
           const compositeKey = (bounds + "/" + query).trim().toLowerCase();
@@ -59,9 +61,10 @@ export default class OsmRouter {
           try {
             const encodedQuery = querystring.stringify({ data: osmQuery });
             //console.log(encodedQuery);
+            console.log(encodedQuery);
             const geoData = await axios.get(
-              `https://overpass-api.de/api/interpreter?${encodedQuery}`, // official overpass api (online version)
-              //`http://localhost:${Config.OVERPASS_PORT}/api/interpreter?${encodedQuery}`, // local overpass api (docker image)
+              // `https://overpass-api.de/api/interpreter?${encodedQuery}`, // official overpass api (online version)
+              `http://localhost:12346/api/interpreter?${encodedQuery}`, // local overpass api (docker image)
               //`http://localhost:${Config.OVERPASS_PORT}/api/interpreter?${encodedQuery}`, // hosted overpass api on project server
               { timeout: 12000 }
             );
@@ -80,8 +83,6 @@ export default class OsmRouter {
             //RedisCache.cacheData(compositeKey, geoData.data, cacheTime);
 
             //this.saveGeoData(geoData.data, query);
-            endPerformanceMeasure("Fetching data from Overpass");
-            evaluateMeasure();
             return res.status(StatusCodes.OK).json(geoData.data);
           } catch (error: any) {
             if (error.response) {
@@ -98,25 +99,25 @@ export default class OsmRouter {
       }
     );
 
-    this.osmRouter.get("/testdb", (req: Request, res: Response) => {
+    this.osmRouter.get("/postGIS", (req: Request, res: Response) => {
       const client = new Client({
         host: "localhost",
         user: "postgres",
         port: 5432,
         password: "syn27X!L",
-        database: "alltypes",
+        database: "osm",
       });
 
       // connect to the postGIS Database
       client.connect();
 
-      startPerformanceMeasure("Fetching data from PostGIS");
+      startPerformanceMeasure("everything before", true);
       const bounds = req.query.bounds?.toString();
       let conditions: string[] = [];
       if (typeof req.query.conditions === "string") {
         conditions = JSON.parse(req.query.conditions);
       }
-
+      console.log("start req postgis");
       if (bounds) {
         const compositeKey = (bounds + "/" + conditions.join("") + ";")
           .replace(/ /g, "")
@@ -157,6 +158,12 @@ export default class OsmRouter {
           "polygons"
         );
 
+        const relationsQuery = ServerUtils.buildPostGISQUery(
+          bounds,
+          conditions,
+          "relations"
+        );
+
         /** 
         client.query(wayQuery, (err, result) => {
           if (!err) {
@@ -167,28 +174,54 @@ export default class OsmRouter {
           client.end();
         });*/
 
-        let pointFeatures: Feature<Geometry, any>[];
-        let lineFeatures: Feature<Geometry, any>[];
-        let polyFeatures: Feature<Geometry, any>[];
+        let pointFeatures: Feature<Geometry, any>[] = [];
+        let lineFeatures: Feature<Geometry, any>[] = [];
+        let polyFeatures: Feature<Geometry, any>[] = [];
+        let relationFeatures: Feature<Geometry, any>[] = [];
+
+        endPerformanceMeasure("everything before", true);
         // let roadFeatures: GeoJsonProperties[];
+        startPerformanceMeasure("Promises", true);
         Promise.allSettled([
           client
             .query(pointQuery)
-            .then(
-              (res) => (pointFeatures = res.rows[0].json_build_object.features)
-            )
+            .then((res) => {
+              for (let i = 0; i < res.rows.length; i++) {
+                pointFeatures = pointFeatures.concat(
+                  res.rows[i].jsonb_build_object.features
+                );
+              }
+            })
             .catch((e) => console.error(e)),
           client
             .query(wayQuery)
-            .then(
-              (res) => (lineFeatures = res.rows[0].json_build_object.features)
-            )
+            .then((res) => {
+              for (let i = 0; i < res.rows.length; i++) {
+                lineFeatures = lineFeatures.concat(
+                  res.rows[i].jsonb_build_object.features
+                );
+              }
+            })
             .catch((e) => console.error(e)),
           client
             .query(polyQuery)
-            .then(
-              (res) => (polyFeatures = res.rows[0].json_build_object.features)
-            )
+            .then((res) => {
+              for (let i = 0; i < res.rows.length; i++) {
+                polyFeatures = polyFeatures.concat(
+                  res.rows[i].jsonb_build_object.features
+                );
+              }
+            })
+            .catch((e) => console.error(e)),
+          client
+            .query(relationsQuery)
+            .then((res) => {
+              for (let i = 0; i < res.rows.length; i++) {
+                relationFeatures = relationFeatures.concat(
+                  res.rows[i].jsonb_build_object.features
+                );
+              }
+            })
             .catch((e) => console.error(e)),
         ]).then((results) => {
           let allFeatures: Feature<Geometry, any>[] = [];
@@ -201,6 +234,9 @@ export default class OsmRouter {
           if (polyFeatures) {
             allFeatures = allFeatures.concat(polyFeatures);
           }
+          if (relationFeatures) {
+            allFeatures = allFeatures.concat(relationFeatures);
+          }
           const featureCollection = {
             type: "FeatureCollection",
             features: allFeatures,
@@ -211,7 +247,8 @@ export default class OsmRouter {
           //const cacheTime = 900;
           //const features: any = featureCollection.features;
           //RedisCache.cacheData(compositeKey, features, cacheTime);
-          endPerformanceMeasure("Fetching data from PostGIS");
+          endPerformanceMeasure("Promises", true);
+          console.log("HEY");
           evaluateMeasure();
           res.status(StatusCodes.OK).send(featureCollection);
         });
