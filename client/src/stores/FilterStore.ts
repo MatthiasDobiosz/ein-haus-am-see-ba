@@ -92,15 +92,15 @@ class FilterStore {
     layer: Filter
   ): void {
     const coords = polygon.geometry.coordinates;
-
     // check if this is a multidimensional array (i.e. a multipolygon or a normal one)
     if (coords.length > 1) {
       //console.log("Multipolygon: ", coords);
+
       //const flattened: mapboxgl.Point[] = [];
-      for (let i = 0; i < coords.length; i++) {
+      for (const coordPart of coords) {
         layer.points.push(
           //@ts-expect-error idk
-          coords[i].map((coord: number[] | number[][]) => {
+          coordPart.map((coord: number[]) => {
             try {
               return this.rootStore.mapStore.map?.project(coord as LngLatLike);
             } catch (error) {
@@ -109,7 +109,6 @@ class FilterStore {
             }
           })
         );
-
         //flattened.push(coordPart.map((coord: number[]) => mapboxUtils.convertToPixelCoord(coord)));
       }
       // layer.Points.push(flattened);

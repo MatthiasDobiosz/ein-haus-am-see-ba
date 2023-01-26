@@ -67,25 +67,37 @@ export async function fetchOsmDataFromClientVersion(
 
 export async function fetchOsmDataFromServer(
   mapBounds: string,
-  query: string
+  query: string,
+  first?: boolean,
+  last?: boolean
 ): Promise<FeatureCollection<GeometryObject, any> | null> {
   try {
     const params = new URLSearchParams({
       bounds: mapBounds,
       osmQuery: query,
     });
-    const url = "/osmRequestCache?" + params.toString();
+    let url = "/osmRequestCache?" + params.toString();
+    if (first) {
+      url += "&first=true";
+    }
+    if (last) {
+      url += "&last=true";
+    }
     console.log(url);
 
-    startPerformanceMeasure("RequestClient");
+    if (first) {
+      startPerformanceMeasure("RequestClient");
+    }
     // set a timeout of 7 seconds
     const response = await axios.get(url, { timeout: 20000 });
-    endPerformanceMeasure("RequestClient");
-    startPerformanceMeasure("Osm2Geo");
-    console.log(response.data);
+    if (last) {
+      endPerformanceMeasure("RequestClient");
+    }
+    //startPerformanceMeasure("Osm2Geo");
+    //console.log(response.data);
     const geoJson = osmtogeojson(response.data);
-    console.log(geoJson);
-    endPerformanceMeasure("Osm2Geo");
+    //console.log(geoJson);
+    //endPerformanceMeasure("Osm2Geo");
     return geoJson as FeatureCollection<GeometryObject, any>;
   } catch (error) {
     console.error(error);
@@ -93,7 +105,7 @@ export async function fetchOsmDataFromServer(
   }
 }
 
-export async function fetchDataFromPostGIS(
+export async function fetchDataFromPostGISSingle(
   mapBounds: string,
   conditions: string[]
 ): Promise<FeatureCollection<GeometryObject, any> | null> {
@@ -105,7 +117,7 @@ export async function fetchDataFromPostGIS(
     });
 
     const url =
-      "/postGIS?" + params.toString() + "&conditions=" + conditionsQuery;
+      "/postGISSingle?" + params.toString() + "&conditions=" + conditionsQuery;
 
     console.log(url);
 
@@ -113,8 +125,124 @@ export async function fetchDataFromPostGIS(
     startPerformanceMeasure("RequestClient");
     const response = await axios.get(url, { timeout: 20000 });
     endPerformanceMeasure("RequestClient");
-    startPerformanceMeasure("Osm2Geo");
-    endPerformanceMeasure("Osm2Geo");
+    return response.data as FeatureCollection<GeometryObject, any>;
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+}
+
+export async function fetchDataFromPostGISMulti(
+  mapBounds: string,
+  condition: string,
+  first?: boolean,
+  last?: boolean
+): Promise<FeatureCollection<GeometryObject, any> | null> {
+  try {
+    const params = new URLSearchParams({
+      bounds: mapBounds,
+      osmQuery: condition,
+    });
+
+    let url = "/postGISMulti?" + params.toString();
+
+    if (first) {
+      url += "&first=true";
+    }
+    if (last) {
+      url += "&last=true";
+    }
+    console.log(url);
+
+    // set a timeout of 7 seconds
+    if (first) {
+      startPerformanceMeasure("RequestClient");
+    }
+    const response = await axios.get(url, { timeout: 20000 });
+    if (last) {
+      endPerformanceMeasure("RequestClient");
+    }
+    return response.data as FeatureCollection<GeometryObject, any>;
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+}
+
+export async function fetchDataFromPostGISIndex(
+  mapBounds: string,
+  condition: string,
+  first?: boolean,
+  last?: boolean
+): Promise<FeatureCollection<GeometryObject, any> | null> {
+  try {
+    const params = new URLSearchParams({
+      bounds: mapBounds,
+      osmQuery: condition,
+    });
+
+    let url = "/postGISIndex?" + params.toString();
+
+    if (first) {
+      url += "&first=true";
+    }
+    if (last) {
+      url += "&last=true";
+    }
+
+    console.log(url);
+
+    // set a timeout of 7 seconds
+    if (first) {
+      console.log("start");
+      startPerformanceMeasure("RequestClient");
+    }
+    const response = await axios.get(url, { timeout: 20000 });
+    //console.log(response);
+    if (last) {
+      console.log("last");
+      endPerformanceMeasure("RequestClient");
+    }
+    return response.data as FeatureCollection<GeometryObject, any>;
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+}
+
+export async function fetchDataFromPostGISSpIndex(
+  mapBounds: string,
+  condition: string,
+  first?: boolean,
+  last?: boolean
+): Promise<FeatureCollection<GeometryObject, any> | null> {
+  try {
+    const params = new URLSearchParams({
+      bounds: mapBounds,
+      osmQuery: condition,
+    });
+
+    let url = "/postGISIndexSp?" + params.toString();
+
+    if (first) {
+      url += "&first=true";
+    }
+    if (last) {
+      url += "&last=true";
+    }
+
+    console.log(url);
+
+    // set a timeout of 7 seconds
+    if (first) {
+      startPerformanceMeasure("RequestClient");
+    }
+    const response = await axios.get(url, { timeout: 20000 });
+    //console.log(response);
+    if (last) {
+      console.log("last");
+      endPerformanceMeasure("RequestClient");
+    }
     return response.data as FeatureCollection<GeometryObject, any>;
   } catch (error) {
     console.error(error);

@@ -6,10 +6,18 @@
  * @field duration - the duration of the measured process
  * @field count - the number of times the process was measured
  */
-interface measurement {
+export interface measurement {
   name: string;
   duration: number;
   count: number;
+}
+
+export const enum DBType {
+  POSTGISMULTI = "(no index)",
+  POSTGISSINGLE = "(union query)",
+  POSTGISINDEX = "(Index-gist)",
+  POSTGISINDEXSp = "(Index-spgist)",
+  OVERPASS = "(Overpass)",
 }
 
 export const enum MeasurementNames {
@@ -32,14 +40,24 @@ export const enum MeasurementNames {
   AddLayerToMap = "AddLayerToMap",
 }
 
-let overpassActive = false;
+let dbType = DBType.POSTGISMULTI;
+let measuring = true;
 
 export const toggleDbTypeForBenchmark = () => {
-  overpassActive = overpassActive ? false : true;
+  if (dbType === DBType.POSTGISMULTI) {
+    dbType = DBType.POSTGISSINGLE;
+  } else if (dbType === DBType.POSTGISSINGLE) {
+    dbType = DBType.POSTGISINDEX;
+  } else if (dbType === DBType.POSTGISINDEX) {
+    dbType = DBType.POSTGISINDEXSp;
+  } else if (dbType === DBType.POSTGISINDEXSp) {
+    dbType = DBType.OVERPASS;
+  } else {
+    dbType = DBType.POSTGISMULTI;
+  }
 };
 
 const getMeasurementName = (name: string): string => {
-  const dbType = overpassActive ? " (Overpass)" : " (PostGIS)";
   switch (name) {
     case MeasurementNames.Workflow:
       return "The whole workflow" + dbType;
@@ -90,10 +108,12 @@ export const startPerformanceMeasure = (
   name: string,
   backend?: boolean
 ): void => {
-  if (backend) {
-    performance.mark(`start:${name}`);
-  } else {
-    performance.mark(`start:${getMeasurementName(name)}`);
+  if (measuring) {
+    if (backend) {
+      performance.mark(`start:${name}`);
+    } else {
+      performance.mark(`start:${getMeasurementName(name)}`);
+    }
   }
 };
 
@@ -105,13 +125,15 @@ export const endPerformanceMeasure = (
   name: string,
   backend?: boolean
 ): void => {
-  if (backend) {
-    performance.mark(`end:${name}`);
-    performance.measure(name, `start:${name}`, `end:${name}`);
-  } else {
-    const fullName = getMeasurementName(name);
-    performance.mark(`end:${fullName}`);
-    performance.measure(fullName, `start:${fullName}`, `end:${fullName}`);
+  if (measuring) {
+    if (backend) {
+      performance.mark(`end:${name}`);
+      performance.measure(name, `start:${name}`, `end:${name}`);
+    } else {
+      const fullName = getMeasurementName(name);
+      performance.mark(`end:${fullName}`);
+      performance.measure(fullName, `start:${fullName}`, `end:${fullName}`);
+    }
   }
 };
 
@@ -120,15 +142,20 @@ export const endPerformanceMeasure = (
  */
 export const evaluateMeasure = (): void => {
   const measures = avergageMeasures(performance.getEntriesByType("measure"));
+  /*
   for (let i = 0; i < measures.length; i++) {
     console.log(
       `Average Time meassured for the process "${measures[i].name}": ${measures[i].duration}ms over ${measures[i].count} iterations`
     );
-  }
+  }*/
 };
 
 export const clearAllMeasures = (): void => {
   performance.clearMeasures();
+};
+
+export const toggleMeasuring = (isMeasuring: boolean): void => {
+  measuring = isMeasuring;
 };
 
 export const getMeasures = (): measurement[] => {

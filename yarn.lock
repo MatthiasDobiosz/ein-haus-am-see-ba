@@ -787,13 +787,6 @@
     "@types/mime" "*"
     "@types/node" "*"
 
-"@types/turf@^3.5.32":
-  version "3.5.32"
-  resolved "https://registry.yarnpkg.com/@types/turf/-/turf-3.5.32.tgz#15b39ad94e9b5c00e9e0ad97e9987253b5302b69"
-  integrity sha512-2Rtv0EIG7Tx1CC2ASzCPw63ugCwrqJCFqNL/Gk9QYE5iIyd+0/S/TlPTgQ+qeQC8NCEn/TncUeZp+aM9cg68rg==
-  dependencies:
-    "@types/geojson" "*"
-
 "@types/viewport-mercator-project@*":
   version "6.1.2"
   resolved "https://registry.yarnpkg.com/@types/viewport-mercator-project/-/viewport-mercator-project-6.1.2.tgz#81c28c868625bb83d373a2b726cebb7958a71d8e"

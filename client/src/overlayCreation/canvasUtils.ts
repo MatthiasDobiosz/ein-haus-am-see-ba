@@ -89,7 +89,7 @@ export function makeAlphaMask(
     return;
   }
 
-  startPerformanceMeasure("CreateAlphaMask");
+  //startPerformanceMeasure("CreateAlphaMask");
   context.drawImage(canvas, 0, 0);
 
   const imageData = context.getImageData(0, 0, c.width, c.height);
@@ -118,13 +118,13 @@ export function makeAlphaMask(
   }
 
   context.putImageData(imageData, 0, 0);
-  endPerformanceMeasure("CreateAlphaMask");
+  //endPerformanceMeasure("CreateAlphaMask");
 
-  startPerformanceMeasure("AddLayerToMap");
+  //startPerformanceMeasure("AddLayerToMap");
   //* add canvas with opacity 0.7 (i.e. 70% overlay, 30% map background) which makes the overlay clearly visible
   //* even for lighter grey but still allows the user to see the map background everywhere
   addCanvasOverlay(c, overlayOpacity, map, mapLayerManager);
-  endPerformanceMeasure("AddLayerToMap");
+  //endPerformanceMeasure("AddLayerToMap");
   endPerformanceMeasure("Workflow");
   evaluateMeasure();
 }

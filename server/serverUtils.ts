@@ -17,7 +17,35 @@ export function buildOverpassQuery(bounds: string, userQuery: string): string {
 /**
  * Builds a query for the PostGIS Database to fetch osm data as GeoJson in the given map bounds
  */
-export function buildPostGISQUery(
+export function buildPostGISQUeryOld(
+  bounds: string,
+  condition: string,
+  table: string
+): string {
+  if (table === "polygons") {
+    return (
+      `SELECT json_build_object('type', 'FeatureCollection','features', json_agg(json_build_object('type','Feature','id',area_id,'geometry',ST_AsGeoJSON(ST_Boundary(ST_ForceRHR(st_transform(geom,4326))))::json,'properties', jsonb_set(row_to_json(${table})::jsonb,'{geom}','0',false))))` +
+      ` FROM ${table} WHERE ${condition} AND ST_Intersects(${table}.geom,st_transform(ST_GeographyFromText('POLYGON((${bounds}))')::geometry,3857))`
+    );
+  } else if (table === "ways") {
+    return (
+      `SELECT json_build_object('type', 'FeatureCollection','features', json_agg(json_build_object('type','Feature','id',way_id,'geometry',ST_AsGeoJSON(ST_ForceRHR(st_transform(geom,4326)))::json,'properties', jsonb_set(row_to_json(${table})::jsonb,'{geom}','0',false))))` +
+      ` FROM ${table} WHERE ${condition} AND ST_Intersects(${table}.geom,st_transform(ST_GeographyFromText('POLYGON((${bounds}))')::geometry,3857))`
+    );
+  } else if (table === "relations") {
+    return (
+      `SELECT json_build_object('type', 'FeatureCollection','features', json_agg(json_build_object('type','Feature','id',relation_id,'geometry',ST_AsGeoJSON(ST_ForceRHR(st_transform(geom,4326)))::json,'properties', jsonb_set(row_to_json(${table})::jsonb,'{geom}','0',false))))` +
+      ` FROM ${table} WHERE ${condition} AND ST_Intersects(${table}.geom,st_transform(ST_GeographyFromText('POLYGON((${bounds}))')::geometry,3857));`
+    );
+  } else {
+    return (
+      `SELECT json_build_object('type', 'FeatureCollection','features', json_agg(json_build_object('type','Feature','id',node_id,'geometry',ST_AsGeoJSON(ST_ForceRHR(st_transform(geom,4326)))::json,'properties', jsonb_set(row_to_json(${table})::jsonb,'{geom}','0',false))))` +
+      ` FROM ${table} WHERE ${condition} AND ST_Intersects(${table}.geom,st_transform(ST_GeographyFromText('POLYGON((${bounds}))')::geometry,3857))`
+    );
+  }
+}
+
+export function buildPostGISQuerySingleOld(
   bounds: string,
   conditions: string[],
   table: string
@@ -40,6 +68,70 @@ export function buildPostGISQUery(
     } else {
       queryString +=
         `SELECT jsonb_build_object('type', 'FeatureCollection','features', json_agg(json_build_object('type','Feature','id',node_id,'geometry',ST_AsGeoJSON(ST_ForceRHR(st_transform(geom,4326)))::json,'properties', jsonb_set(row_to_json(${table})::jsonb,'{geom}','0',false))))` +
+        ` FROM ${table} WHERE ${conditions[i]} AND ST_Intersects(${table}.geom,st_transform(ST_GeographyFromText('POLYGON((${bounds}))')::geometry,3857))`;
+    }
+
+    if (i !== conditions.length - 1) {
+      queryString += " UNION ";
+    }
+  }
+  return queryString;
+}
+
+export function buildPostGISQueryForMulti(
+  bounds: string,
+  condition: string,
+  table: string
+): string {
+  if (table === "polygons" || table === "polygonsn" || table === "polygonss") {
+    return (
+      `SELECT ST_AsGeoJSON(ST_Boundary(ST_ForceRHR(st_transform(geom,4326))))::json as geometry, area_id as id, jsonb_build_object('subclass',subclass,'name', name) as properties` +
+      ` FROM ${table} WHERE ${condition} AND ST_Intersects(${table}.geom,st_transform(ST_GeographyFromText('POLYGON((${bounds}))')::geometry,3857))`
+    );
+  } else if (table === "ways" || table === "waysn" || table === "wayss") {
+    return (
+      `SELECT ST_AsGeoJSON(ST_ForceRHR(st_transform(geom,4326)))::json as geometry, way_id as id, jsonb_build_object('subclass',subclass,'name', name) as properties` +
+      ` FROM ${table} WHERE ${condition} AND ST_Intersects(${table}.geom,st_transform(ST_GeographyFromText('POLYGON((${bounds}))')::geometry,3857))`
+    );
+  } else if (
+    table === "relations" ||
+    table === "relationsn" ||
+    table === "relationss"
+  ) {
+    return (
+      `SELECT ST_AsGeoJSON(ST_ForceRHR(st_transform(geom,4326)))::json as geometry, relation_id as id, jsonb_build_object('subclass',subclass,'name', name) as properties` +
+      ` FROM ${table} WHERE ${condition} AND ST_Intersects(${table}.geom,st_transform(ST_GeographyFromText('POLYGON((${bounds}))')::geometry,3857));`
+    );
+  } else {
+    return (
+      `SELECT ST_AsGeoJSON(ST_ForceRHR(st_transform(geom,4326)))::json as geometry, node_id as id, jsonb_build_object('subclass',subclass,'name', name) as properties` +
+      ` FROM ${table} WHERE ${condition} AND ST_Intersects(${table}.geom,st_transform(ST_GeographyFromText('POLYGON((${bounds}))')::geometry,3857))`
+    );
+  }
+}
+
+export function buildPostGISQueryForSingle(
+  bounds: string,
+  conditions: string[],
+  table: string
+): string {
+  let queryString = "";
+  for (let i = 0; i < conditions.length; i++) {
+    if (table === "polygons") {
+      queryString +=
+        `SELECT jsonb_build_object('geometry', ST_AsGeoJSON(ST_Boundary(ST_ForceRHR(st_transform(geom,4326))))::json, 'id', area_id, 'properties', jsonb_build_object('subclass',subclass,'name', name))` +
+        ` FROM ${table} WHERE ${conditions[i]} AND ST_Intersects(${table}.geom,st_transform(ST_GeographyFromText('POLYGON((${bounds}))')::geometry,3857))`;
+    } else if (table === "ways") {
+      queryString +=
+        `SELECT jsonb_build_object('geometry', ST_AsGeoJSON(ST_ForceRHR(st_transform(geom,4326)))::json, 'id', way_id, 'properties', jsonb_build_object('subclass',subclass,'name', name))` +
+        ` FROM ${table} WHERE ${conditions[i]} AND ST_Intersects(${table}.geom,st_transform(ST_GeographyFromText('POLYGON((${bounds}))')::geometry,3857))`;
+    } else if (table === "relations") {
+      queryString +=
+        `SELECT jsonb_build_object('geometry', ST_AsGeoJSON(ST_ForceRHR(st_transform(geom,4326)))::json, 'id', relation_id, 'properties', jsonb_build_object('subclass',subclass,'name', name))` +
+        ` FROM ${table} WHERE ${conditions[i]} AND ST_Intersects(${table}.geom,st_transform(ST_GeographyFromText('POLYGON((${bounds}))')::geometry,3857))`;
+    } else {
+      queryString +=
+        `SELECT jsonb_build_object('geometry', ST_AsGeoJSON(ST_ForceRHR(st_transform(geom,4326)))::json, 'id', node_id, 'properties', jsonb_build_object('subclass',subclass,'name', name))` +
         ` FROM ${table} WHERE ${conditions[i]} AND ST_Intersects(${table}.geom,st_transform(ST_GeographyFromText('POLYGON((${bounds}))')::geometry,3857))`;
     }
 

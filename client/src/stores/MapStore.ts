@@ -4,11 +4,19 @@ import { MapboxMap } from "react-map-gl";
 import MapLayerManager from "./../mapLayerMangager";
 import osmTagCollection from "../osmTagCollection";
 import {
-  fetchDataFromPostGIS,
+  fetchDataFromPostGISIndex,
+  fetchDataFromPostGISMulti,
+  fetchDataFromPostGISSingle,
+  fetchDataFromPostGISSpIndex,
   fetchOsmDataFromServer,
 } from "../network/networkUtils";
 import { Filter } from "../components/Sidebar/Filter/Filters";
-import { FeatureCollection, GeoJsonProperties, Geometry } from "geojson";
+import {
+  Feature,
+  FeatureCollection,
+  GeoJsonProperties,
+  Geometry,
+} from "geojson";
 import truncate from "@turf/truncate";
 import { addBufferToFeature } from "../components/Map/turfUtils";
 import { createOverlay } from "../overlayCreation/canvasRenderer";
@@ -17,6 +25,7 @@ import {
   getViewportPolygon,
 } from "../components/Map/mapUtils";
 import {
+  DBType,
   endPerformanceMeasure,
   startPerformanceMeasure,
 } from "../../../shared/benchmarking";
@@ -33,7 +42,7 @@ class MapStore {
   visualType: VisualType;
   mapLayerManager: MapLayerManager | null;
   rootStore: RootStore;
-  overpassActive: boolean;
+  dbType: DBType;
   performanceViewActive: boolean;
 
   constructor(rootStore: RootStore) {
@@ -41,17 +50,17 @@ class MapStore {
     this.visualType = VisualType.OVERLAY;
     this.mapLayerManager = null;
     this.rootStore = rootStore;
-    this.overpassActive = false;
+    this.dbType = DBType.POSTGISMULTI;
     this.performanceViewActive = false;
 
     makeObservable(this, {
       map: observable,
       visualType: observable,
-      overpassActive: observable,
+      dbType: observable,
       performanceViewActive: observable,
       setMap: action,
       setVisualType: action,
-      setOverpassActive: action,
+      toggleDbType: action,
       setPerformanceViewActive: action,
       mapLayerManager: false,
       loadMapDataOverpass: false,
@@ -97,8 +106,18 @@ class MapStore {
     }
   }
 
-  setOverpassActive() {
-    this.overpassActive = this.overpassActive ? false : true;
+  toggleDbType() {
+    if (this.dbType === DBType.POSTGISMULTI) {
+      this.dbType = DBType.POSTGISSINGLE;
+    } else if (this.dbType === DBType.POSTGISSINGLE) {
+      this.dbType = DBType.POSTGISINDEX;
+    } else if (this.dbType === DBType.POSTGISINDEX) {
+      this.dbType = DBType.POSTGISINDEXSp;
+    } else if (this.dbType === DBType.POSTGISINDEXSp) {
+      this.dbType = DBType.OVERPASS;
+    } else {
+      this.dbType = DBType.POSTGISMULTI;
+    }
   }
 
   setPerformanceViewActive() {
@@ -206,19 +225,21 @@ class MapStore {
     );
 
     if (this.map) {
-      if (this.overpassActive) {
+      if (this.dbType === DBType.OVERPASS) {
         const bounds = getViewportBoundsString(this.map, 500);
         startPerformanceMeasure("LoadingAllFilters");
+        const activeTags = Array.from(this.rootStore.filterStore.activeFilters);
+        const firstTag = activeTags[0];
+        const lastTag = activeTags[activeTags.length - 1];
         const allResults = await Promise.allSettled(
-          Array.from(this.rootStore.filterStore.activeFilters).map(
-            async (tag) => {
-              // get overpass query for each tag
-              const query = osmTagCollection.getQueryForCategory(tag);
+          activeTags.map(async (tag) => {
+            // get overpass query for each tag
+            const query = osmTagCollection.getQueryForCategory(tag);
 
-              //TODO check if already locally loaded this tag; only fetch if not!
-              //TODO also check that bounds are nearly the same!
-              //! doesnt work like this because filterlayer has already been created before in main!
-              /*
+            //TODO check if already locally loaded this tag; only fetch if not!
+            //TODO also check that bounds are nearly the same!
+            //! doesnt work like this because filterlayer has already been created before in main!
+            /*
             if (FilterManager.activeFilters.has(tag)) {
               console.log("loadin locally");
               const layer = FilterManager.getFilterLayer(tag);
@@ -228,35 +249,40 @@ class MapStore {
               return;
             }*/
 
-              //Benchmark.startMeasure("Fetching data from osm");
-              // request data from osm
-              const data = await fetchOsmDataFromServer(bounds, query);
-              //Benchmark.stopMeasure("Fetching data from osm");
+            //Benchmark.startMeasure("Fetching data from osm");
+            // request data from osm
+            const data = await fetchOsmDataFromServer(
+              bounds,
+              query,
+              tag === firstTag,
+              tag === lastTag
+            );
+            //console.log("Overpass: ", data);
+            //Benchmark.stopMeasure("Fetching data from osm");
 
-              console.log("data from server:", data);
+            if (data) {
+              console.log(data);
+              //const filterLayer = this.preprocessGeoData(data, tag);
 
-              if (data) {
-                //const filterLayer = this.preprocessGeoData(data, tag);
+              // get the filterlayer for this tag that has already been created at this point
+              const layer = this.rootStore.filterStore.getFilterLayer(tag);
+              if (layer) {
+                layer.originalData = data;
+              }
 
-                // get the filterlayer for this tag that has already been created at this point
-                const layer = this.rootStore.filterStore.getFilterLayer(tag);
-                if (layer) {
-                  layer.originalData = data;
-                }
-
-                //console.log(this.selectedVisualType);
-                if (this.visualType === VisualType.NORMAL) {
-                  this.showDataOnMap(data, tag);
-                } else {
-                  startPerformanceMeasure("LoadingSingleFilter");
-                  this.preprocessGeoData(data, tag);
-                  endPerformanceMeasure("LoadingSingleFilter");
-                }
+              //console.log(this.selectedVisualType);
+              if (this.visualType === VisualType.NORMAL) {
+                this.showDataOnMap(data, tag);
+              } else {
+                startPerformanceMeasure("LoadingSingleFilter");
+                this.preprocessGeoData(data, tag);
+                endPerformanceMeasure("LoadingSingleFilter");
               }
             }
-          )
+          })
         );
 
+        endPerformanceMeasure("LoadingAllFilters");
         this.rootStore.snackbarStore.closeHandler();
 
         let success = true;
@@ -274,20 +300,74 @@ class MapStore {
           );
         }
         this.showAreasOnMap();
-      } else {
+      } else if (this.dbType === DBType.POSTGISMULTI) {
         startPerformanceMeasure("LoadingAllFilters");
-        const bounds = getViewportPolygon(this.map);
+        const bounds = getViewportPolygon(this.map, 500);
+        const activeTags = Array.from(this.rootStore.filterStore.activeFilters);
+        const firstTag = activeTags[0];
+        const lastTag = activeTags[activeTags.length - 1];
+        const allResults = await Promise.allSettled(
+          activeTags.map(async (tag) => {
+            const query = osmTagCollection.getQueryForCategoryPostGIS(tag);
+
+            const data = await fetchDataFromPostGISMulti(
+              bounds,
+              query,
+              tag === firstTag,
+              tag === lastTag
+            );
+            //console.log("Multi: ", data);
+            if (data) {
+              console.log(data);
+              const layer = this.rootStore.filterStore.getFilterLayer(tag);
+
+              if (layer) {
+                layer.originalData = data;
+              }
+
+              if (this.visualType === VisualType.NORMAL) {
+                this.showDataOnMap(data, tag);
+              } else {
+                startPerformanceMeasure("LoadingSingleFilter");
+                this.preprocessGeoData(data, tag);
+                endPerformanceMeasure("LoadingSingleFilter");
+              }
+            }
+          })
+        );
+
+        endPerformanceMeasure("LoadingAllFilters");
+        this.rootStore.snackbarStore.closeHandler();
+
+        let success = true;
+        for (const res of allResults) {
+          if (res.status === "rejected") {
+            success = false;
+            break;
+          }
+        }
+        if (!success) {
+          this.rootStore.snackbarStore.displayHandler(
+            "Nicht alle Daten konnten erfolgreich geladen werden",
+            1500,
+            SnackbarType.ERROR
+          );
+        }
+        this.showAreasOnMap();
+      } else if (this.dbType === DBType.POSTGISSINGLE) {
+        startPerformanceMeasure("LoadingAllFilters");
+        const bounds = getViewportPolygon(this.map, 500);
         //get Tags for active Filters
         const tags = Array.from(this.rootStore.filterStore.activeFilters);
         const queryInformation = osmTagCollection.getQueryForPostGISAll(tags);
 
-        const data = await fetchDataFromPostGIS(bounds, queryInformation);
+        const data = await fetchDataFromPostGISSingle(bounds, queryInformation);
 
         if (data) {
           //const filterLayer = this.preprocessGeoData(data, tag);
 
           // loop through the active tags, get their respective data and show it on the map
-          console.log(data);
+          //console.log(data);
           for (let i = 0; i <= tags.length; i++) {
             const layer = this.rootStore.filterStore.getFilterLayer(tags[i]);
             if (layer) {
@@ -321,6 +401,7 @@ class MapStore {
             }
           }
         }
+        endPerformanceMeasure("LoadingAllFilters");
         this.rootStore.snackbarStore.closeHandler();
         const success = true;
         if (!success) {
@@ -332,10 +413,113 @@ class MapStore {
         }
 
         this.showAreasOnMap();
+      } else if (this.dbType === DBType.POSTGISINDEX) {
+        startPerformanceMeasure("LoadingAllFilters");
+        const bounds = getViewportPolygon(this.map, 500);
+        const activeTags = Array.from(this.rootStore.filterStore.activeFilters);
+        const firstTag = activeTags[0];
+        const lastTag = activeTags[activeTags.length - 1];
+        const allResults = await Promise.allSettled(
+          activeTags.map(async (tag) => {
+            const query = osmTagCollection.getQueryForCategoryPostGIS(tag);
+            const data = await fetchDataFromPostGISIndex(
+              bounds,
+              query,
+              tag === firstTag,
+              tag === lastTag
+            );
+            //console.log(data);
+            if (data) {
+              const layer = this.rootStore.filterStore.getFilterLayer(tag);
+
+              if (layer) {
+                layer.originalData = data;
+              }
+
+              if (this.visualType === VisualType.NORMAL) {
+                this.showDataOnMap(data, tag);
+              } else {
+                startPerformanceMeasure("LoadingSingleFilter");
+                this.preprocessGeoData(data, tag);
+                endPerformanceMeasure("LoadingSingleFilter");
+              }
+            }
+          })
+        );
+
+        endPerformanceMeasure("LoadingAllFilters");
+        this.rootStore.snackbarStore.closeHandler();
+
+        let success = true;
+        for (const res of allResults) {
+          if (res.status === "rejected") {
+            success = false;
+            break;
+          }
+        }
+        if (!success) {
+          this.rootStore.snackbarStore.displayHandler(
+            "Nicht alle Daten konnten erfolgreich geladen werden",
+            1500,
+            SnackbarType.ERROR
+          );
+        }
+        this.showAreasOnMap();
+      } else {
+        startPerformanceMeasure("LoadingAllFilters");
+        const bounds = getViewportPolygon(this.map, 500);
+        const activeTags = Array.from(this.rootStore.filterStore.activeFilters);
+        const firstTag = activeTags[0];
+        const lastTag = activeTags[activeTags.length - 1];
+        const allResults = await Promise.allSettled(
+          activeTags.map(async (tag) => {
+            const query = osmTagCollection.getQueryForCategoryPostGIS(tag);
+
+            const data = await fetchDataFromPostGISSpIndex(
+              bounds,
+              query,
+              tag === firstTag,
+              tag === lastTag
+            );
+            //console.log(data);
+            if (data) {
+              const layer = this.rootStore.filterStore.getFilterLayer(tag);
+
+              if (layer) {
+                layer.originalData = data;
+              }
+
+              if (this.visualType === VisualType.NORMAL) {
+                this.showDataOnMap(data, tag);
+              } else {
+                startPerformanceMeasure("LoadingSingleFilter");
+                this.preprocessGeoData(data, tag);
+                endPerformanceMeasure("LoadingSingleFilter");
+              }
+            }
+          })
+        );
+
+        endPerformanceMeasure("LoadingAllFilters");
+        this.rootStore.snackbarStore.closeHandler();
+
+        let success = true;
+        for (const res of allResults) {
+          if (res.status === "rejected") {
+            success = false;
+            break;
+          }
+        }
+        if (!success) {
+          this.rootStore.snackbarStore.displayHandler(
+            "Nicht alle Daten konnten erfolgreich geladen werden",
+            1500,
+            SnackbarType.ERROR
+          );
+        }
+        this.showAreasOnMap();
       }
     }
-
-    endPerformanceMeasure("LoadingAllFilters");
   }
 
   showAreasOnMap(): void {
@@ -365,7 +549,7 @@ class MapStore {
         this.addAreaOverlay();
       }
     } else {
-      console.log("removeGeojson");
+      //console.log("removeGeojson");
       this.mapLayerManager?.removeGeojsonSource(filter.layername);
     }
   }
@@ -381,15 +565,15 @@ class MapStore {
   }
 
   showDataOnMap(data: any, tagName: string): void {
-    startPerformanceMeasure("RemoveExistingLayers");
+    //startPerformanceMeasure("RemoveExistingLayers");
     if (this.map?.getSource("overlaySource")) {
       this.mapLayerManager?.removeCanvasSource("overlaySource");
     }
     this.mapLayerManager?.removeAllLayersForSource(tagName);
 
-    endPerformanceMeasure("RemoveExistingLayers");
+    //endPerformanceMeasure("RemoveExistingLayers");
 
-    startPerformanceMeasure("AddNewGeoData");
+    //startPerformanceMeasure("AddNewGeoData");
     if (this.map?.getSource(tagName)) {
       // the source already exists, only update the data
       //console.log(`Source ${tagName} is already used! Updating it!`);
@@ -399,9 +583,10 @@ class MapStore {
       this.mapLayerManager?.addNewGeojsonSource(tagName, data, false);
     }
     //show the source data on the map
+
     this.mapLayerManager?.addLayersForSource(tagName);
 
-    endPerformanceMeasure("AddNewGeoData");
+    //endPerformanceMeasure("AddNewGeoData");
   }
 
   //! most of the data preprocessing could (and probably should) already happen on the server!
@@ -436,17 +621,41 @@ class MapStore {
     // add buffer to filterlayer
     for (let index = 0; index < truncatedData.features.length; index++) {
       const feature = truncatedData.features[index];
-      const bufferedPoly = addBufferToFeature(
-        feature,
-        layer.distance,
-        "meters"
-      );
-      layer.features.push(bufferedPoly);
-
-      this.rootStore.filterStore.convertPolygonCoordsToPixelCoords(
-        bufferedPoly,
-        layer
-      );
+      if (feature.geometry.type === "MultiLineString") {
+        for (let i = 0; i < feature.geometry.coordinates.length; i++) {
+          const singleFeature: Feature<Geometry, any> = {
+            type: "Feature",
+            geometry: {
+              type: "LineString",
+              coordinates: feature.geometry.coordinates[i],
+            },
+            properties: {},
+          };
+          const bufferedPoly = addBufferToFeature(
+            singleFeature,
+            layer.distance,
+            "meters"
+          );
+          layer.features.push(bufferedPoly);
+          //console.log(bufferedPoly.geometry.coordinates);
+          this.rootStore.filterStore.convertPolygonCoordsToPixelCoords(
+            bufferedPoly,
+            layer
+          );
+        }
+      } else {
+        const bufferedPoly = addBufferToFeature(
+          feature,
+          layer.distance,
+          "meters"
+        );
+        layer.features.push(bufferedPoly);
+        //console.log(bufferedPoly.geometry.coordinates);
+        this.rootStore.filterStore.convertPolygonCoordsToPixelCoords(
+          bufferedPoly,
+          layer
+        );
+      }
     }
 
     /*

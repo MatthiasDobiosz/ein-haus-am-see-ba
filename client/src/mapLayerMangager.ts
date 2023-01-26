@@ -377,7 +377,6 @@ class MapLayerManager {
     this.addNewGeojsonLayerBefore(pointLayer);
     this.addNewGeojsonLayerBefore(lineLayer);
     this.addNewGeojsonLayerBefore(polygonFillLayer);
-    console.log("fetisch");
   }
 
   addCanvasLayer(id: string, layerId: string, opacity: number): void {

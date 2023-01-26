@@ -45,8 +45,9 @@ class LegendStore {
 
   removeItem(layerName: string): boolean {
     this.legendItems = this.legendItems.filter((legendItem) => {
-      legendItem.layerName !== layerName;
+      return legendItem.layerName !== layerName;
     });
+
     if (this.legendItems.length === 0) {
       this.isLegendActive = false;
       return true;

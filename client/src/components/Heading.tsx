@@ -4,8 +4,12 @@ import { observer } from "mobx-react";
 
 import { VisualType } from "../stores/MapStore";
 import rootStore from "../stores/RootStore";
-import { toggleDbTypeForBenchmark } from "../../../shared/benchmarking";
+import {
+  toggleDbTypeForBenchmark,
+  toggleMeasuring,
+} from "../../../shared/benchmarking";
 import { clearAllMeasures } from "./../../../shared/benchmarking";
+import axios from "../network/axiosInterceptor";
 
 /**
  * Heading Component that render Navbar with buttons
@@ -22,12 +26,31 @@ export const Heading = observer((): JSX.Element => {
   };
 
   const toggleDbType = () => {
-    rootStore.mapStore.setOverpassActive();
+    rootStore.mapStore.toggleDbType();
     toggleDbTypeForBenchmark();
   };
 
   const togglePerformanceView = () => {
     rootStore.mapStore.setPerformanceViewActive();
+  };
+
+  const clearMeasures = async () => {
+    clearAllMeasures();
+    await axios.get("/backendLogs?clear=true");
+  };
+
+  const toggleMeasuringOn = async () => {
+    toggleMeasuring(true);
+    await axios.get("/backendLogs?on=true");
+  };
+
+  const toggleMeasuringOff = async () => {
+    toggleMeasuring(false);
+    await axios.get("/backendLogs?off=true");
+  };
+
+  const repeatLoad = () => {
+    rootStore.mapStore.loadMapData();
   };
 
   return (
@@ -50,7 +73,7 @@ export const Heading = observer((): JSX.Element => {
           onClick={() => toggleDbType()}
           className=" p-[0.6em] cursor-pointer overflow-hidden border-0 rounded-[2px] outline-none shadow bg-lightorange text-whitesmoke hover:bg-darkorange active:bg-darkorange"
         >
-          {rootStore.mapStore.overpassActive ? "Overpass" : "PostGIS"}
+          {rootStore.mapStore.dbType}
         </button>
         <button
           type="button"
@@ -63,10 +86,31 @@ export const Heading = observer((): JSX.Element => {
         </button>
         <button
           type="button"
-          onClick={() => clearAllMeasures()}
+          onClick={() => clearMeasures()}
           className=" p-[0.6em] cursor-pointer overflow-hidden border-0 rounded-[2px] outline-none shadow bg-lightorange text-whitesmoke hover:bg-darkorange active:bg-darkorange"
         >
           Clear
+        </button>
+        <button
+          type="button"
+          onClick={() => toggleMeasuringOn()}
+          className=" p-[0.6em] cursor-pointer overflow-hidden border-0 rounded-[2px] outline-none shadow bg-lightorange text-whitesmoke hover:bg-darkorange active:bg-darkorange"
+        >
+          On
+        </button>
+        <button
+          type="button"
+          onClick={() => toggleMeasuringOff()}
+          className=" p-[0.6em] cursor-pointer overflow-hidden border-0 rounded-[2px] outline-none shadow bg-lightorange text-whitesmoke hover:bg-darkorange active:bg-darkorange"
+        >
+          Off
+        </button>
+        <button
+          type="button"
+          onClick={() => repeatLoad()}
+          className=" p-[0.6em] cursor-pointer overflow-hidden border-0 rounded-[2px] outline-none shadow bg-lightorange text-whitesmoke hover:bg-darkorange active:bg-darkorange"
+        >
+          rep
         </button>
       </div>
       <div className=" inline-flex relative items-center">
