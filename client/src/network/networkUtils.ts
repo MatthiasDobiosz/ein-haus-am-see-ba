@@ -132,43 +132,6 @@ export async function fetchDataFromPostGISSingle(
   }
 }
 
-export async function fetchDataFromPostGISMulti(
-  mapBounds: string,
-  condition: string,
-  first?: boolean,
-  last?: boolean
-): Promise<FeatureCollection<GeometryObject, any> | null> {
-  try {
-    const params = new URLSearchParams({
-      bounds: mapBounds,
-      osmQuery: condition,
-    });
-
-    let url = "/postGISMulti?" + params.toString();
-
-    if (first) {
-      url += "&first=true";
-    }
-    if (last) {
-      url += "&last=true";
-    }
-    console.log(url);
-
-    // set a timeout of 7 seconds
-    if (first) {
-      startPerformanceMeasure("RequestClient");
-    }
-    const response = await axios.get(url, { timeout: 20000 });
-    if (last) {
-      endPerformanceMeasure("RequestClient");
-    }
-    return response.data as FeatureCollection<GeometryObject, any>;
-  } catch (error) {
-    console.error(error);
-    return null;
-  }
-}
-
 export async function fetchDataFromPostGISIndex(
   mapBounds: string,
   condition: string,
@@ -194,53 +157,11 @@ export async function fetchDataFromPostGISIndex(
 
     // set a timeout of 7 seconds
     if (first) {
-      console.log("start");
       startPerformanceMeasure("RequestClient");
     }
     const response = await axios.get(url, { timeout: 20000 });
     //console.log(response);
     if (last) {
-      console.log("last");
-      endPerformanceMeasure("RequestClient");
-    }
-    return response.data as FeatureCollection<GeometryObject, any>;
-  } catch (error) {
-    console.error(error);
-    return null;
-  }
-}
-
-export async function fetchDataFromPostGISSpIndex(
-  mapBounds: string,
-  condition: string,
-  first?: boolean,
-  last?: boolean
-): Promise<FeatureCollection<GeometryObject, any> | null> {
-  try {
-    const params = new URLSearchParams({
-      bounds: mapBounds,
-      osmQuery: condition,
-    });
-
-    let url = "/postGISIndexSp?" + params.toString();
-
-    if (first) {
-      url += "&first=true";
-    }
-    if (last) {
-      url += "&last=true";
-    }
-
-    console.log(url);
-
-    // set a timeout of 7 seconds
-    if (first) {
-      startPerformanceMeasure("RequestClient");
-    }
-    const response = await axios.get(url, { timeout: 20000 });
-    //console.log(response);
-    if (last) {
-      console.log("last");
       endPerformanceMeasure("RequestClient");
     }
     return response.data as FeatureCollection<GeometryObject, any>;

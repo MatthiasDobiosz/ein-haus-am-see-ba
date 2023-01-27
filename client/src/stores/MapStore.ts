@@ -5,9 +5,7 @@ import MapLayerManager from "./../mapLayerMangager";
 import osmTagCollection from "../osmTagCollection";
 import {
   fetchDataFromPostGISIndex,
-  fetchDataFromPostGISMulti,
   fetchDataFromPostGISSingle,
-  fetchDataFromPostGISSpIndex,
   fetchOsmDataFromServer,
 } from "../network/networkUtils";
 import { Filter } from "../components/Sidebar/Filter/Filters";
@@ -50,7 +48,7 @@ class MapStore {
     this.visualType = VisualType.OVERLAY;
     this.mapLayerManager = null;
     this.rootStore = rootStore;
-    this.dbType = DBType.POSTGISMULTI;
+    this.dbType = DBType.POSTGISSINGLE;
     this.performanceViewActive = false;
 
     makeObservable(this, {
@@ -107,16 +105,12 @@ class MapStore {
   }
 
   toggleDbType() {
-    if (this.dbType === DBType.POSTGISMULTI) {
-      this.dbType = DBType.POSTGISSINGLE;
-    } else if (this.dbType === DBType.POSTGISSINGLE) {
+    if (this.dbType === DBType.POSTGISSINGLE) {
       this.dbType = DBType.POSTGISINDEX;
     } else if (this.dbType === DBType.POSTGISINDEX) {
-      this.dbType = DBType.POSTGISINDEXSp;
-    } else if (this.dbType === DBType.POSTGISINDEXSp) {
       this.dbType = DBType.OVERPASS;
     } else {
-      this.dbType = DBType.POSTGISMULTI;
+      this.dbType = DBType.POSTGISSINGLE;
     }
   }
 
@@ -300,60 +294,6 @@ class MapStore {
           );
         }
         this.showAreasOnMap();
-      } else if (this.dbType === DBType.POSTGISMULTI) {
-        startPerformanceMeasure("LoadingAllFilters");
-        const bounds = getViewportPolygon(this.map, 500);
-        const activeTags = Array.from(this.rootStore.filterStore.activeFilters);
-        const firstTag = activeTags[0];
-        const lastTag = activeTags[activeTags.length - 1];
-        const allResults = await Promise.allSettled(
-          activeTags.map(async (tag) => {
-            const query = osmTagCollection.getQueryForCategoryPostGIS(tag);
-
-            const data = await fetchDataFromPostGISMulti(
-              bounds,
-              query,
-              tag === firstTag,
-              tag === lastTag
-            );
-            //console.log("Multi: ", data);
-            if (data) {
-              console.log(data);
-              const layer = this.rootStore.filterStore.getFilterLayer(tag);
-
-              if (layer) {
-                layer.originalData = data;
-              }
-
-              if (this.visualType === VisualType.NORMAL) {
-                this.showDataOnMap(data, tag);
-              } else {
-                startPerformanceMeasure("LoadingSingleFilter");
-                this.preprocessGeoData(data, tag);
-                endPerformanceMeasure("LoadingSingleFilter");
-              }
-            }
-          })
-        );
-
-        endPerformanceMeasure("LoadingAllFilters");
-        this.rootStore.snackbarStore.closeHandler();
-
-        let success = true;
-        for (const res of allResults) {
-          if (res.status === "rejected") {
-            success = false;
-            break;
-          }
-        }
-        if (!success) {
-          this.rootStore.snackbarStore.displayHandler(
-            "Nicht alle Daten konnten erfolgreich geladen werden",
-            1500,
-            SnackbarType.ERROR
-          );
-        }
-        this.showAreasOnMap();
       } else if (this.dbType === DBType.POSTGISSINGLE) {
         startPerformanceMeasure("LoadingAllFilters");
         const bounds = getViewportPolygon(this.map, 500);
@@ -413,58 +353,6 @@ class MapStore {
         }
 
         this.showAreasOnMap();
-      } else if (this.dbType === DBType.POSTGISINDEX) {
-        startPerformanceMeasure("LoadingAllFilters");
-        const bounds = getViewportPolygon(this.map, 500);
-        const activeTags = Array.from(this.rootStore.filterStore.activeFilters);
-        const firstTag = activeTags[0];
-        const lastTag = activeTags[activeTags.length - 1];
-        const allResults = await Promise.allSettled(
-          activeTags.map(async (tag) => {
-            const query = osmTagCollection.getQueryForCategoryPostGIS(tag);
-            const data = await fetchDataFromPostGISIndex(
-              bounds,
-              query,
-              tag === firstTag,
-              tag === lastTag
-            );
-            //console.log(data);
-            if (data) {
-              const layer = this.rootStore.filterStore.getFilterLayer(tag);
-
-              if (layer) {
-                layer.originalData = data;
-              }
-
-              if (this.visualType === VisualType.NORMAL) {
-                this.showDataOnMap(data, tag);
-              } else {
-                startPerformanceMeasure("LoadingSingleFilter");
-                this.preprocessGeoData(data, tag);
-                endPerformanceMeasure("LoadingSingleFilter");
-              }
-            }
-          })
-        );
-
-        endPerformanceMeasure("LoadingAllFilters");
-        this.rootStore.snackbarStore.closeHandler();
-
-        let success = true;
-        for (const res of allResults) {
-          if (res.status === "rejected") {
-            success = false;
-            break;
-          }
-        }
-        if (!success) {
-          this.rootStore.snackbarStore.displayHandler(
-            "Nicht alle Daten konnten erfolgreich geladen werden",
-            1500,
-            SnackbarType.ERROR
-          );
-        }
-        this.showAreasOnMap();
       } else {
         startPerformanceMeasure("LoadingAllFilters");
         const bounds = getViewportPolygon(this.map, 500);
@@ -474,8 +362,7 @@ class MapStore {
         const allResults = await Promise.allSettled(
           activeTags.map(async (tag) => {
             const query = osmTagCollection.getQueryForCategoryPostGIS(tag);
-
-            const data = await fetchDataFromPostGISSpIndex(
+            const data = await fetchDataFromPostGISIndex(
               bounds,
               query,
               tag === firstTag,

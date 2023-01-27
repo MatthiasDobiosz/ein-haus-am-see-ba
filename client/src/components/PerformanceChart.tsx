@@ -47,10 +47,8 @@ const possibleBenchmarks = [
 
 export const PerformanceChart = observer((): JSX.Element => {
   const [labels, setLabels] = useState<string[]>([]);
-  const [postGISMultiData, setPostGISMultiData] = useState<number[]>([]);
   const [postGISSingleData, setPostGISSingleData] = useState<number[]>([]);
   const [postGISIndexData, setPostGISIndexData] = useState<number[]>([]);
-  const [postGISIndexSpData, setPostGISIndexSpData] = useState<number[]>([]);
   const [overpassData, setOverpassData] = useState<number[]>([]);
 
   const chartRef = useRef<Chart | null>(null);
@@ -80,15 +78,6 @@ export const PerformanceChart = observer((): JSX.Element => {
       allMeasures = getMeasures();
     }
     console.log(allMeasures);
-    let postGISMultiMeasures = allMeasures.filter((measure) => {
-      return measure.name.includes(DBType.POSTGISMULTI);
-    });
-    postGISMultiMeasures.forEach((filteredMeasure) => {
-      filteredMeasure.name = filteredMeasure.name.replace(
-        DBType.POSTGISMULTI,
-        ""
-      );
-    });
 
     let postGISSingleMeasures = allMeasures.filter((measure) => {
       return measure.name.includes(DBType.POSTGISSINGLE);
@@ -111,16 +100,6 @@ export const PerformanceChart = observer((): JSX.Element => {
       );
     });
 
-    let postGISIndexSpMeasures = allMeasures.filter((measure) => {
-      return measure.name.includes(DBType.POSTGISINDEXSp);
-    });
-    postGISIndexSpMeasures.forEach((filteredMeasure) => {
-      filteredMeasure.name = filteredMeasure.name.replace(
-        DBType.POSTGISINDEXSp,
-        ""
-      );
-    });
-
     let overpassMeasures = allMeasures.filter((measure) => {
       return measure.name.includes(DBType.OVERPASS);
     });
@@ -128,30 +107,18 @@ export const PerformanceChart = observer((): JSX.Element => {
       filteredMeasure.name = filteredMeasure.name.replace(DBType.OVERPASS, "");
     });
 
-    postGISMultiMeasures = addLoadingTime(postGISMultiMeasures);
     postGISSingleMeasures = addLoadingTime(postGISSingleMeasures);
     postGISIndexMeasures = addLoadingTime(postGISIndexMeasures);
-    postGISIndexSpMeasures = addLoadingTime(postGISIndexSpMeasures);
     overpassMeasures = addLoadingTime(overpassMeasures);
 
-    const PostGISMultiPoints: number[] = [];
     const PostGISSinglePoints: number[] = [];
     const PostGISIndexPoints: number[] = [];
-    const PostGISIndexSpPoints: number[] = [];
     const OverpassPoints: number[] = [];
     const matchedLabels: string[] = [];
 
     for (let i = 0; i < possibleBenchmarks.length; i++) {
       let matched = false;
-      const multiIndex = postGISMultiMeasures.findIndex(
-        (measure) => measure.name === possibleBenchmarks[i]
-      );
-      if (multiIndex > -1) {
-        matched = true;
-        PostGISMultiPoints.push(postGISMultiMeasures[multiIndex].duration);
-      } else {
-        PostGISMultiPoints.push(-10);
-      }
+
       const singleIndex = postGISSingleMeasures.findIndex(
         (measure) => measure.name === possibleBenchmarks[i]
       );
@@ -161,6 +128,7 @@ export const PerformanceChart = observer((): JSX.Element => {
       } else {
         PostGISSinglePoints.push(-10);
       }
+
       const indexIndex = postGISIndexMeasures.findIndex(
         (measure) => measure.name === possibleBenchmarks[i]
       );
@@ -171,17 +139,6 @@ export const PerformanceChart = observer((): JSX.Element => {
         PostGISIndexPoints.push(-10);
       }
 
-      const spindexIndex = postGISIndexSpMeasures.findIndex(
-        (measure) => measure.name === possibleBenchmarks[i]
-      );
-      if (spindexIndex > -1) {
-        matched = true;
-        PostGISIndexSpPoints.push(
-          postGISIndexSpMeasures[spindexIndex].duration
-        );
-      } else {
-        PostGISIndexSpPoints.push(-10);
-      }
       const overpassIndex = overpassMeasures.findIndex(
         (measure) => measure.name === possibleBenchmarks[i]
       );
@@ -195,18 +152,14 @@ export const PerformanceChart = observer((): JSX.Element => {
       if (matched) {
         matchedLabels.push(possibleBenchmarks[i]);
       } else {
-        PostGISMultiPoints.pop();
         PostGISSinglePoints.pop();
         PostGISIndexPoints.pop();
-        PostGISIndexSpPoints.pop();
         OverpassPoints.pop();
       }
     }
 
-    setPostGISMultiData(PostGISMultiPoints);
     setPostGISSingleData(PostGISSinglePoints);
     setPostGISIndexData(PostGISIndexPoints);
-    setPostGISIndexSpData(PostGISIndexSpPoints);
     setOverpassData(OverpassPoints);
     setLabels(matchedLabels);
   }
@@ -268,12 +221,6 @@ export const PerformanceChart = observer((): JSX.Element => {
     labels: labels,
     datasets: [
       {
-        label: "PostGIS (no index)",
-        data: postGISMultiData,
-        borderColor: "rgb(255, 190, 11)",
-        backgroundColor: "rgba(255, 190, 11, 0.5)",
-      },
-      {
         label: "PostGIS (Union Query)",
         data: postGISSingleData,
         borderColor: "rgb(251, 86, 7)",
@@ -284,12 +231,6 @@ export const PerformanceChart = observer((): JSX.Element => {
         data: postGISIndexData,
         borderColor: "rgb(255, 0, 110)",
         backgroundColor: "rgba(255, 0, 110, 0.5)",
-      },
-      {
-        label: "PostGIS (spGist-Index)",
-        data: postGISIndexSpData,
-        borderColor: "rgb(131, 56, 236)",
-        backgroundColor: "rgba(131, 56, 236, 0.5)",
       },
       {
         label: "Overpass",

@@ -13,10 +13,8 @@ export interface measurement {
 }
 
 export const enum DBType {
-  POSTGISMULTI = "(no index)",
   POSTGISSINGLE = "(union query)",
   POSTGISINDEX = "(Index-gist)",
-  POSTGISINDEXSp = "(Index-spgist)",
   OVERPASS = "(Overpass)",
 }
 
@@ -40,20 +38,16 @@ export const enum MeasurementNames {
   AddLayerToMap = "AddLayerToMap",
 }
 
-let dbType = DBType.POSTGISMULTI;
+let dbType = DBType.POSTGISSINGLE;
 let measuring = true;
 
 export const toggleDbTypeForBenchmark = () => {
-  if (dbType === DBType.POSTGISMULTI) {
-    dbType = DBType.POSTGISSINGLE;
-  } else if (dbType === DBType.POSTGISSINGLE) {
+  if (dbType === DBType.POSTGISSINGLE) {
     dbType = DBType.POSTGISINDEX;
   } else if (dbType === DBType.POSTGISINDEX) {
-    dbType = DBType.POSTGISINDEXSp;
-  } else if (dbType === DBType.POSTGISINDEXSp) {
     dbType = DBType.OVERPASS;
   } else {
-    dbType = DBType.POSTGISMULTI;
+    dbType = DBType.POSTGISSINGLE;
   }
 };
 

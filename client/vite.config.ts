@@ -30,32 +30,12 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
-      "/postGISMulti": {
-        target: "http://localhost:3200",
-        changeOrigin: true,
-        secure: false,
-      },
       "/postGISSingle": {
         target: "http://localhost:3200",
         changeOrigin: true,
         secure: false,
       },
-      "/postGISMultiOld": {
-        target: "http://localhost:3200",
-        changeOrigin: true,
-        secure: false,
-      },
-      "/postGISSingleOld": {
-        target: "http://localhost:3200",
-        changeOrigin: true,
-        secure: false,
-      },
       "/postGISIndex": {
-        target: "http://localhost:3200",
-        changeOrigin: true,
-        secure: false,
-      },
-      "/postGISIndexSp": {
         target: "http://localhost:3200",
         changeOrigin: true,
         secure: false,
