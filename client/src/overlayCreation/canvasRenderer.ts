@@ -22,10 +22,6 @@ import {
   setupCanvasForDrawing,
 } from "./../webgl/webglUtils";
 import MapLayerManager from "../mapLayerMangager";
-import {
-  endPerformanceMeasure,
-  startPerformanceMeasure,
-} from "../../../shared/benchmarking";
 import MapStore from "../stores/MapStore";
 import LegendStore from "../stores/LegendStore";
 
@@ -90,7 +86,7 @@ class CanvasRenderer {
     // calculate the blur size for this layer based on the distance the user specified
     this.calculateBlurSize(mapLayer.distance);
 
-    startPerformanceMeasure("render polygons of this layer");
+    //startPerformanceMeasure("RenderLayerPolygons");
 
     // apply a "feather"/blur - effect to everything that is drawn on the canvas from now on
     //this.ctx.filter = `blur(${this.currentBlurSize}px)`;
@@ -162,7 +158,7 @@ class CanvasRenderer {
       */
     }
 
-    endPerformanceMeasure("render polygons of this layer");
+    //endPerformanceMeasure("RenderLayerPolygons");
 
     /*
     console.log(`Render polys took ${renderPolyBenchmarks} ms`);
@@ -180,11 +176,11 @@ class CanvasRenderer {
 
     await this.applyGaussianBlur();
 
-    startPerformanceMeasure("read and save final layer image from canvas");
+    //startPerformanceMeasure("ReadAndSaveLayer");
     const blurredImage = await readImageFromCanvas(this.overlayCanvas);
     // save the blurred image for this layer
     this.allTextures.push(blurredImage);
-    endPerformanceMeasure("read and save final layer image from canvas");
+    //endPerformanceMeasure("ReadAndSaveLayer");
   }
 
   //TODO find a better function to bring the pixelDistance in relation to the blur size
@@ -212,13 +208,13 @@ class CanvasRenderer {
   }
 
   async applyGaussianBlur(): Promise<void> {
-    startPerformanceMeasure("get image from canvas to blur");
+    //startPerformanceMeasure("GetImageFromCanvas");
     const img = await readImageFromCanvas(this.overlayCanvas);
-    endPerformanceMeasure("get image from canvas to blur");
+    //endPerformanceMeasure("GetImageFromCanvas");
 
-    startPerformanceMeasure("blur Image in Webgl");
+    //startPerformanceMeasure("BlurImage");
     const blurredCanvas = applyGaussianBlur(img, this.currentBlurSize);
-    endPerformanceMeasure("blur Image in Webgl");
+    //endPerformanceMeasure("BlurImage");
 
     // draw the blurred canvas on the overlayCanvas
     this.ctx.drawImage(blurredCanvas, 0, 0);
@@ -370,9 +366,9 @@ class CanvasRenderer {
   }
 
   createOverlay(textures: HTMLImageElement[]): HTMLCanvasElement {
-    startPerformanceMeasure("combining textures");
+    //startPerformanceMeasure("CombiningTextures");
     this.combineOverlays(textures);
-    endPerformanceMeasure("combining textures");
+    //endPerformanceMeasure("CombiningTextures");
     return this.overlayCanvas;
   }
 
@@ -427,17 +423,17 @@ export async function createOverlay(
 ): Promise<void> {
   const renderer = new CanvasRenderer(map);
 
-  startPerformanceMeasure("creating canvas overlay overall");
-  startPerformanceMeasure("render all Polygons");
+  //startPerformanceMeasure("CreateCanvasLayer");
+  //startPerformanceMeasure("RenderAllPolygons");
   const allRenderProcesses = data.map((layer: Filter) =>
     renderer.renderPolygons(layer)
   );
   await Promise.all(allRenderProcesses);
-  endPerformanceMeasure("render all Polygons");
+  //endPerformanceMeasure("RenderAllPolygons");
   //console.log("Current number of saved textures in canvasRenderer: ", renderer.allTextures.length);
 
   const resultCanvas = renderer.createOverlay(renderer.allTextures);
-  endPerformanceMeasure("creating canvas overlay overall");
+  //endPerformanceMeasure("CreateCanvasLayer");
 
   applyAlphaMask(resultCanvas, map, new MapLayerManager(mapStore, legendStore));
 

@@ -40,6 +40,10 @@ export const TagColors = new Map([
 ]);
 
 class TagCollection {
+  getQueryForCategoryPostGIS(tag: string): string {
+    return "subclass = '" + this.getSubclass(tag) + "'";
+  }
+
   getQueryForPostGISAll(categories: string[]): string[] {
     const conditions: string[] = [];
     for (let i = 0; i < categories.length; i++) {

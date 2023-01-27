@@ -103,7 +103,7 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
           // don't update data if the zoom level change is below the treshold
           return;
         }
-        rootStore.mapStore.loadMapData();
+        //rootStore.mapStore.loadMapData();
       }
     }
   };
@@ -127,7 +127,7 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
           initialViewState={{
             longitude: 12.101624,
             latitude: 49.013432,
-            zoom: 12,
+            zoom: 10,
             bearing: 0,
             pitch: 0,
           }}

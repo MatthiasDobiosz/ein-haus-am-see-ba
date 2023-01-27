@@ -32,11 +32,5 @@ module.exports = {
         argsIgnorePattern: "^_",
       },
     ],
-    "sort-imports": [
-      "error",
-      {
-        ignoreDeclarationSort: true,
-      },
-    ],
   },
 };

@@ -30,7 +30,17 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
-      "/testdb": {
+      "/postGISSingle": {
+        target: "http://localhost:3200",
+        changeOrigin: true,
+        secure: false,
+      },
+      "/postGISIndex": {
+        target: "http://localhost:3200",
+        changeOrigin: true,
+        secure: false,
+      },
+      "/backendLogs": {
         target: "http://localhost:3200",
         changeOrigin: true,
         secure: false,
