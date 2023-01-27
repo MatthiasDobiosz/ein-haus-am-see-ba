@@ -1,11 +1,5 @@
 import axios from "axios";
-import express, {
-  json,
-  NextFunction,
-  Request,
-  Response,
-  Router,
-} from "express";
+import express, { NextFunction, Request, Response, Router } from "express";
 import { StatusCodes } from "http-status-codes";
 import querystring from "querystring";
 import * as ServerUtils from "./serverUtils.js";
@@ -15,7 +9,6 @@ import {
   clearAllMeasures,
   DBType,
   endPerformanceMeasure,
-  evaluateMeasure,
   getMeasures,
   startPerformanceMeasure,
   toggleMeasuring,
@@ -28,7 +21,7 @@ const pool = new Pool({
   user: "postgres",
   port: 5432,
   password: "syn27X!L",
-  database: "osm_bench",
+  database: "osm_simple",
   max: 100,
   connectionTimeoutMillis: 0,
   idleTimeoutMillis: 0,

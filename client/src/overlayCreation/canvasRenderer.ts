@@ -22,10 +22,6 @@ import {
   setupCanvasForDrawing,
 } from "./../webgl/webglUtils";
 import MapLayerManager from "../mapLayerMangager";
-import {
-  endPerformanceMeasure,
-  startPerformanceMeasure,
-} from "../../../shared/benchmarking";
 import MapStore from "../stores/MapStore";
 import LegendStore from "../stores/LegendStore";
 

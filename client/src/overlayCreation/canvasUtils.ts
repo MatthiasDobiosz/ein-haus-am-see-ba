@@ -8,7 +8,6 @@ import MapLayerManager from "../mapLayerMangager";
 import {
   endPerformanceMeasure,
   evaluateMeasure,
-  startPerformanceMeasure,
 } from "../../../shared/benchmarking.js";
 
 export function clearCanvasPart(
