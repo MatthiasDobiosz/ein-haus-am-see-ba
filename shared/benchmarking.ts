@@ -15,6 +15,7 @@ export interface measurement {
 export const enum DBType {
   POSTGISSINGLE = "(union query)",
   POSTGISINDEX = "(Index-gist)",
+  POSTGISBUFFER = "(index-buffer)",
   OVERPASS = "(Overpass)",
 }
 
@@ -36,6 +37,7 @@ export const enum MeasurementNames {
   CombiningTextures = "CombiningTextures",
   CreateAlphaMask = "CreateAlphaMask",
   AddLayerToMap = "AddLayerToMap",
+  AddBuffer = "AddBuffer",
 }
 
 let dbType = DBType.POSTGISSINGLE;
@@ -45,6 +47,8 @@ export const toggleDbTypeForBenchmark = () => {
   if (dbType === DBType.POSTGISSINGLE) {
     dbType = DBType.POSTGISINDEX;
   } else if (dbType === DBType.POSTGISINDEX) {
+    dbType = DBType.POSTGISBUFFER;
+  } else if (dbType === DBType.POSTGISBUFFER) {
     dbType = DBType.OVERPASS;
   } else {
     dbType = DBType.POSTGISSINGLE;
@@ -87,6 +91,8 @@ const getMeasurementName = (name: string): string => {
       return "Creating Alpha Mask" + dbType;
     case MeasurementNames.AddLayerToMap:
       return "Adding Layer to the Map" + dbType;
+    case MeasurementNames.AddBuffer:
+      return "Adding Buffers" + dbType;
     default:
       throw new Error(
         `Unknown input value for Measurement! No suitable key for ${name} was found!`

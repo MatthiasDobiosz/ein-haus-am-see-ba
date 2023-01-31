@@ -1,6 +1,11 @@
 import axios from "./axiosInterceptor";
 import osmtogeojson from "osmtogeojson";
-import { FeatureCollection, GeometryObject } from "geojson";
+import {
+  FeatureCollection,
+  GeometryObject,
+  MultiPolygon,
+  Polygon,
+} from "geojson";
 import {
   endPerformanceMeasure,
   startPerformanceMeasure,
@@ -165,6 +170,57 @@ export async function fetchDataFromPostGISIndex(
       endPerformanceMeasure("RequestClient");
     }
     return response.data as FeatureCollection<GeometryObject, any>;
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+}
+
+export async function fetchDataFromPostGISBuffer(
+  mapBounds: string,
+  condition: string,
+  bufferValue: number,
+  overlay: boolean,
+  first?: boolean,
+  last?: boolean
+): Promise<FeatureCollection<Polygon | MultiPolygon, any> | null> {
+  try {
+    let url = "";
+    if (overlay) {
+      const params = new URLSearchParams({
+        bounds: mapBounds,
+        osmQuery: condition,
+        bufferValue: bufferValue.toString(),
+      });
+
+      url = "/postGISBuffer?" + params.toString();
+    } else {
+      const params = new URLSearchParams({
+        bounds: mapBounds,
+        osmQuery: condition,
+        bufferValue: bufferValue.toString(),
+      });
+
+      url = "/postGISNoBuffer?" + params.toString();
+    }
+
+    if (first) {
+      url += "&first=true";
+    }
+    if (last) {
+      url += "&last=true";
+    }
+
+    // set a timeout of 7 seconds
+    if (first) {
+      startPerformanceMeasure("RequestClient");
+    }
+    const response = await axios.get(url, { timeout: 20000 });
+    //console.log(response);
+    if (last) {
+      endPerformanceMeasure("RequestClient");
+    }
+    return response.data as FeatureCollection<Polygon | MultiPolygon, any>;
   } catch (error) {
     console.error(error);
     return null;

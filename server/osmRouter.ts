@@ -305,6 +305,128 @@ export default class OsmRouter {
             .catch((e) => console.error(e)),
           pool
             .query(wayQuery)
+            .then(
+              (res) =>
+                (allFeatures = allFeatures.concat(
+                  ServerUtils.getDataWithinBoundingBox(res.rows, bounds)
+                ))
+            )
+            .catch((e) => console.error(e)),
+          pool
+            .query(polyQuery)
+            .then(
+              (res) =>
+                (allFeatures = allFeatures.concat(
+                  ServerUtils.getDataWithinBoundingBox(res.rows, bounds)
+                ))
+            )
+            .catch((e) => console.error(e)),
+          pool
+            .query(relationsQuery)
+            .then(
+              (res) =>
+                (allFeatures = allFeatures.concat(
+                  ServerUtils.getDataWithinBoundingBox(res.rows, bounds)
+                ))
+            )
+            .catch((e) => console.error(e)),
+        ]).then((results) => {
+          // cache data for one hour, this should be enough for a typical usecase
+          //const cacheTime = 3600;
+          //! cache only for 15 minutes during study to prevent influencing the next participant!
+          //const cacheTime = 900;
+          //const features: any = featureCollection.features;
+          //RedisCache.cacheData(compositeKey, features, cacheTime);
+
+          allFeatures.forEach((feature) => {
+            feature.type = "Feature";
+          });
+          const featureCollection = {
+            type: "FeatureCollection",
+            features: allFeatures,
+          };
+          if (last) {
+            endPerformanceMeasure("RequestServer" + DBType.POSTGISINDEX, true);
+          }
+          res.status(StatusCodes.OK).send(featureCollection);
+        });
+        // let roadFeatures: GeoJsonProperties[];
+      }
+    });
+
+    this.osmRouter.get("/postGISBuffer", (req: Request, res: Response) => {
+      const bounds = req.query.bounds?.toString();
+      const query = req.query.osmQuery?.toString();
+      const bufferValue = req.query.bufferValue?.toString();
+      const first = req.query.first?.toString();
+      const last = req.query.last?.toString();
+      if (first) {
+        startPerformanceMeasure("RequestServer" + DBType.POSTGISBUFFER, true);
+      }
+      if (bounds && query && bufferValue) {
+        /** 
+        const complexQuery =
+          "SELECT jsonb_build_object('type','FeatureCollection','features', jsonb_agg(features.feature)) FROM (SELECT jsonb_build_object('type', 'Feature','id', osm_id,'geometry', ST_AsGeoJSON(way)::jsonb,'properties', to_jsonb(planet_osm_point) - 'osm_id' - 'way') AS feature FROM (SELECT * FROM planet_osm_point)) features;";
+
+        const featureQuery =
+          "SELECT json_build_object('type', 'FeatureCollection','features', json_agg(json_build_object('type','Feature','id',osm_id,'geometry',ST_AsGeoJSON(ST_ForceRHR(st_transform(way,4326)))::json,'properties', jsonb_set(row_to_json(planet_osm_point)::jsonb,'{way}','0',false))))" +
+          "FROM planet_osm_point WHERE amenity = 'restaurant' AND ST_Within(planet_osm_point.way,st_transform(ST_GeographyFromText('POLYGON((11.980345237183542 49.06334045685861,12.222902762818705 49.06334045685861, 12.222902762818705 48.963473458585185, 11.980345237183542 48.963473458585185, 11.980345237183542 49.06334045685861))')::geometry,3857))";
+        const lel =
+          "SELECT json_build_object('type', 'FeatureCollection','features', json_agg(json_build_object('type','Feature','id',osm_id,'geometry',ST_AsGeoJSON(ST_ForceRHR(st_transform(way,4326)))::json,'properties', jsonb_set(row_to_json(planet_osm_point)::jsonb,'{way}','0',false))))" +
+          "FROM planet_osm_point WHERE amenity = 'restaurant' AND ST_Within(planet_osm_point.way,st_transform(ST_GeographyFromText('POLYGON((11.523960394564455 49.17681124925767,12.552824961656114 49.17681124925767, 12.552824961656114 48.75279187037441, 11.523960394564455 48.75279187037441, 11.523960394564455 49.17681124925767))')::geometry,3857))";
+        const standardQuery =
+          "SELECT ST_X(ST_Transform(way, 4326)) as LONG, ST_Y(ST_Transform(way, 4326)) as LAT from planet_osm_point WHERE amenity ='restaurant' AND ST_Within(planet_osm_point.way,st_transform(ST_GeographyFromText('POLYGON((11.980345237183542 49.06334045685861,12.222902762818705 49.06334045685861, 12.222902762818705 48.963473458585185, 11.980345237183542 48.963473458585185, 11.980345237183542 49.06334045685861))')::geometry,3857))";
+
+        const poisquery =
+          "SELECT json_build_object('type', 'FeatureCollection','features', json_agg(json_build_object('type','Feature','id',osm_id,'geometry',ST_AsGeoJSON(ST_ForceRHR(st_transform(geom,4326)))::json,'properties', jsonb_set(row_to_json(restaurants)::jsonb,'{geom}','0',false))))" +
+          "FROM restaurants WHERE subclass = 'restaurant' AND ST_Within(restaurants.geom,st_transform(ST_GeographyFromText('POLYGON((11.375428993859288 49.285878356498586, 12.890034554177703 49.285878356498586, 12.890034554177703 48.8271096698945, 11.375428993859288 48.8271096698945, 11.375428993859288 49.285878356498586))')::geometry,3857))";
+        */
+
+        const pointQuery = ServerUtils.buildPostGISQueryWithBuffer(
+          bounds,
+          query,
+          bufferValue,
+          "points"
+        );
+
+        const wayQuery = ServerUtils.buildPostGISQueryWithBuffer(
+          bounds,
+          query,
+          bufferValue,
+          "ways"
+        );
+
+        const polyQuery = ServerUtils.buildPostGISQueryWithBuffer(
+          bounds,
+          query,
+          bufferValue,
+          "polygons"
+        );
+
+        const relationsQuery = ServerUtils.buildPostGISQueryWithBuffer(
+          bounds,
+          query,
+          bufferValue,
+          "relations"
+        );
+
+        /** 
+        client.query(wayQuery, (err, result) => {
+          if (!err) {
+            res.status(StatusCodes.OK).send(result.rows[0].json_build_object);
+          } else {
+            console.log(err.message);
+          }
+          client.end();
+        });*/
+        let allFeatures: Feature<Geometry, any>[] = [];
+        Promise.allSettled([
+          pool
+            .query(pointQuery)
+            .then((res) => (allFeatures = allFeatures.concat(res.rows)))
+            .catch((e) => console.error(e)),
+          pool
+            .query(wayQuery)
             .then((res) => (allFeatures = allFeatures.concat(res.rows)))
             .catch((e) => console.error(e)),
           pool
@@ -331,7 +453,109 @@ export default class OsmRouter {
             features: allFeatures,
           };
           if (last) {
-            endPerformanceMeasure("RequestServer" + DBType.POSTGISINDEX, true);
+            endPerformanceMeasure("RequestServer" + DBType.POSTGISBUFFER, true);
+          }
+          res.status(StatusCodes.OK).send(featureCollection);
+        });
+        // let roadFeatures: GeoJsonProperties[];
+      }
+    });
+
+    this.osmRouter.get("/postGISNoBuffer", (req: Request, res: Response) => {
+      const bounds = req.query.bounds?.toString();
+      const query = req.query.osmQuery?.toString();
+      const first = req.query.first?.toString();
+      const last = req.query.last?.toString();
+      if (first) {
+        startPerformanceMeasure("RequestServer" + DBType.POSTGISBUFFER, true);
+      }
+      if (bounds && query) {
+        /** 
+        const complexQuery =
+          "SELECT jsonb_build_object('type','FeatureCollection','features', jsonb_agg(features.feature)) FROM (SELECT jsonb_build_object('type', 'Feature','id', osm_id,'geometry', ST_AsGeoJSON(way)::jsonb,'properties', to_jsonb(planet_osm_point) - 'osm_id' - 'way') AS feature FROM (SELECT * FROM planet_osm_point)) features;";
+
+        const featureQuery =
+          "SELECT json_build_object('type', 'FeatureCollection','features', json_agg(json_build_object('type','Feature','id',osm_id,'geometry',ST_AsGeoJSON(ST_ForceRHR(st_transform(way,4326)))::json,'properties', jsonb_set(row_to_json(planet_osm_point)::jsonb,'{way}','0',false))))" +
+          "FROM planet_osm_point WHERE amenity = 'restaurant' AND ST_Within(planet_osm_point.way,st_transform(ST_GeographyFromText('POLYGON((11.980345237183542 49.06334045685861,12.222902762818705 49.06334045685861, 12.222902762818705 48.963473458585185, 11.980345237183542 48.963473458585185, 11.980345237183542 49.06334045685861))')::geometry,3857))";
+        const lel =
+          "SELECT json_build_object('type', 'FeatureCollection','features', json_agg(json_build_object('type','Feature','id',osm_id,'geometry',ST_AsGeoJSON(ST_ForceRHR(st_transform(way,4326)))::json,'properties', jsonb_set(row_to_json(planet_osm_point)::jsonb,'{way}','0',false))))" +
+          "FROM planet_osm_point WHERE amenity = 'restaurant' AND ST_Within(planet_osm_point.way,st_transform(ST_GeographyFromText('POLYGON((11.523960394564455 49.17681124925767,12.552824961656114 49.17681124925767, 12.552824961656114 48.75279187037441, 11.523960394564455 48.75279187037441, 11.523960394564455 49.17681124925767))')::geometry,3857))";
+        const standardQuery =
+          "SELECT ST_X(ST_Transform(way, 4326)) as LONG, ST_Y(ST_Transform(way, 4326)) as LAT from planet_osm_point WHERE amenity ='restaurant' AND ST_Within(planet_osm_point.way,st_transform(ST_GeographyFromText('POLYGON((11.980345237183542 49.06334045685861,12.222902762818705 49.06334045685861, 12.222902762818705 48.963473458585185, 11.980345237183542 48.963473458585185, 11.980345237183542 49.06334045685861))')::geometry,3857))";
+
+        const poisquery =
+          "SELECT json_build_object('type', 'FeatureCollection','features', json_agg(json_build_object('type','Feature','id',osm_id,'geometry',ST_AsGeoJSON(ST_ForceRHR(st_transform(geom,4326)))::json,'properties', jsonb_set(row_to_json(restaurants)::jsonb,'{geom}','0',false))))" +
+          "FROM restaurants WHERE subclass = 'restaurant' AND ST_Within(restaurants.geom,st_transform(ST_GeographyFromText('POLYGON((11.375428993859288 49.285878356498586, 12.890034554177703 49.285878356498586, 12.890034554177703 48.8271096698945, 11.375428993859288 48.8271096698945, 11.375428993859288 49.285878356498586))')::geometry,3857))";
+        */
+
+        const pointQuery = ServerUtils.buildPostGISQueryForMulti(
+          bounds,
+          query,
+          "points"
+        );
+
+        const wayQuery = ServerUtils.buildPostGISQueryForMulti(
+          bounds,
+          query,
+          "ways"
+        );
+
+        const polyQuery = ServerUtils.buildPostGISQueryForMulti(
+          bounds,
+          query,
+          "polygons"
+        );
+
+        const relationsQuery = ServerUtils.buildPostGISQueryForMulti(
+          bounds,
+          query,
+          "relations"
+        );
+
+        /** 
+        client.query(wayQuery, (err, result) => {
+          if (!err) {
+            res.status(StatusCodes.OK).send(result.rows[0].json_build_object);
+          } else {
+            console.log(err.message);
+          }
+          client.end();
+        });*/
+        let allFeatures: Feature<Geometry, any>[] = [];
+        Promise.allSettled([
+          pool
+            .query(pointQuery)
+            .then((res) => (allFeatures = allFeatures.concat(res.rows)))
+            .catch((e) => console.error(e)),
+          pool
+            .query(wayQuery)
+            .then((res) => (allFeatures = allFeatures.concat(res.rows)))
+            .catch((e) => console.error(e)),
+          pool
+            .query(polyQuery)
+            .then((res) => (allFeatures = allFeatures.concat(res.rows)))
+            .catch((e) => console.error(e)),
+          pool
+            .query(relationsQuery)
+            .then((res) => (allFeatures = allFeatures.concat(res.rows)))
+            .catch((e) => console.error(e)),
+        ]).then((results) => {
+          // cache data for one hour, this should be enough for a typical usecase
+          //const cacheTime = 3600;
+          //! cache only for 15 minutes during study to prevent influencing the next participant!
+          //const cacheTime = 900;
+          //const features: any = featureCollection.features;
+          //RedisCache.cacheData(compositeKey, features, cacheTime);
+
+          allFeatures.forEach((feature) => {
+            feature.type = "Feature";
+          });
+          const featureCollection = {
+            type: "FeatureCollection",
+            features: allFeatures,
+          };
+          if (last) {
+            endPerformanceMeasure("RequestServer" + DBType.POSTGISBUFFER, true);
           }
           res.status(StatusCodes.OK).send(featureCollection);
         });

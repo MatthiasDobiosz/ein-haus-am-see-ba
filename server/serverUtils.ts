@@ -1,4 +1,5 @@
 /* eslint-env node */
+import { Feature, Geometry } from "geojson";
 
 //const exec = Util.promisify(childProcess.exec);
 
@@ -46,6 +47,35 @@ export function buildPostGISQueryForMulti(
   }
 }
 
+export function buildPostGISQueryWithBuffer(
+  bounds: string,
+  condition: string,
+  bufferValue: string,
+  table: string
+): string {
+  if (table === "polygons") {
+    return (
+      `SELECT ST_AsGeoJSON(ST_Buffer(ST_Boundary(ST_ForceRHR(st_transform(geom,4326)))::geography, ${bufferValue}))::json as geometry, area_id as id, jsonb_build_object('subclass',subclass,'name', name) as properties` +
+      ` FROM ${table} WHERE ${condition} AND ST_Intersects(${table}.geom,st_transform(ST_GeographyFromText('POLYGON((${bounds}))')::geometry,3857))`
+    );
+  } else if (table === "ways") {
+    return (
+      `SELECT ST_AsGeoJSON(ST_Buffer(ST_ForceRHR(st_transform(geom,4326)):: geography, ${bufferValue}))::json as geometry, way_id as id, jsonb_build_object('subclass',subclass,'name', name) as properties` +
+      ` FROM ${table} WHERE ${condition} AND ST_Intersects(${table}.geom,st_transform(ST_GeographyFromText('POLYGON((${bounds}))')::geometry,3857))`
+    );
+  } else if (table === "relations") {
+    return (
+      `SELECT ST_AsGeoJSON(ST_Buffer(ST_ForceRHR(st_transform(geom,4326)):: geography, ${bufferValue}))::json as geometry, relation_id as id, jsonb_build_object('subclass',subclass,'name', name) as properties` +
+      ` FROM ${table} WHERE ${condition} AND ST_Intersects(${table}.geom,st_transform(ST_GeographyFromText('POLYGON((${bounds}))')::geometry,3857));`
+    );
+  } else {
+    return (
+      `SELECT ST_AsGeoJSON(ST_Buffer(ST_ForceRHR(st_transform(geom,4326)):: geography, ${bufferValue}))::json as geometry, node_id as id, jsonb_build_object('subclass',subclass,'name', name) as properties` +
+      ` FROM ${table} WHERE ${condition} AND ST_Intersects(${table}.geom,st_transform(ST_GeographyFromText('POLYGON((${bounds}))')::geometry,3857))`
+    );
+  }
+}
+
 export function buildPostGISQueryForSingle(
   bounds: string,
   conditions: string[],
@@ -76,6 +106,189 @@ export function buildPostGISQueryForSingle(
     }
   }
   return queryString;
+}
+
+export function convertMulti(
+  allData: Feature<Geometry, any>[]
+): Feature<Geometry, any>[] {
+  const featuresWithin: Feature<Geometry, any>[] = [];
+  for (let i = 0; i < allData.length; i++) {
+    const feature = allData[i];
+    if (feature.geometry.type === "MultiLineString") {
+      for (let y = 0; y < feature.geometry.coordinates.length; y++) {
+        for (let x = 0; x < feature.geometry.coordinates[y].length; x++) {
+          const singleFeature: Feature<Geometry, any> = {
+            type: "Feature",
+            geometry: {
+              type: "LineString",
+              coordinates: feature.geometry.coordinates[y],
+            },
+            properties: {},
+          };
+          featuresWithin.push(singleFeature);
+          break;
+        }
+      }
+    }
+  }
+
+  return featuresWithin;
+}
+
+export function getDataWithinBoundingBox(
+  allData: Feature<Geometry, any>[],
+  bounds: string
+): Feature<Geometry, any>[] {
+  const boundingBox = bounds
+    .split(",")
+    .map((points) => {
+      return points.split(" ");
+    })
+    .map((points) => {
+      return [parseFloat(points[0]), parseFloat(points[1])];
+    });
+
+  const featuresWithin: Feature<Geometry, any>[] = [];
+  for (let i = 0; i < allData.length; i++) {
+    const feature = allData[i];
+    if (feature.geometry.type === "MultiLineString") {
+      for (let y = 0; y < feature.geometry.coordinates.length; y++) {
+        for (let x = 0; x < feature.geometry.coordinates[y].length; x++) {
+          if (
+            isPointInPolygon(
+              feature.geometry.coordinates[y][x][0],
+              feature.geometry.coordinates[y][x][1],
+              boundingBox
+            )
+          ) {
+            const singleFeature: Feature<Geometry, any> = {
+              type: "Feature",
+              geometry: {
+                type: "LineString",
+                coordinates: feature.geometry.coordinates[y],
+              },
+              properties: {},
+            };
+            featuresWithin.push(singleFeature);
+            break;
+          }
+        }
+      }
+    } else {
+      featuresWithin.push(feature);
+    }
+  }
+
+  return featuresWithin;
+}
+
+/** 
+export function removeUnseenRelationParts(
+  allData: Feature<Polygon | MultiPolygon, any>[],
+  bounds: string
+): Feature<Polygon | MultiPolygon, any>[] {
+  const boundingBox = bounds
+    .split(",")
+    .map((points) => {
+      return points.split(" ");
+    })
+    .map((points) => {
+      return [parseFloat(points[0]), parseFloat(points[1])];
+    });
+
+  const featuresWithin: Feature<Polygon | MultiPolygon, any>[] = [];
+  for (let i = 0; i < allData.length; i++) {
+    const feature = allData[i];
+    if (feature.geometry.type === "Polygon") {
+      if (
+        isPointInPolygon(
+          feature.geometry.coordinates[y][x][0],
+          feature.geometry.coordinates[y][x][1],
+          boundingBox
+        )
+      ) {
+        const singleFeature: Feature<Geometry, any> = {
+          type: "Feature",
+          geometry: {
+            type: "Polygon",
+            coordinates: feature.geometry.coordinates[y],
+          },
+          properties: {},
+        };
+        featuresWithin.push(singleFeature);
+        break;
+      }
+    } else {
+      featuresWithin.push(feature);
+    }
+  }
+
+  return featuresWithin;
+}
+
+function isPolygonWithinBounds(
+  feature: Feature<Polygon, any>,
+  boundingBox: number[][]
+): Feature<Polygon, any> | null {
+  for (let y = 0; y < feature.geometry.coordinates.length; y++) {
+    for (let x = 0; x < feature.geometry.coordinates[y].length; x++) {
+      if (
+        isPointInPolygon(
+          feature.geometry.coordinates[y][x][0],
+          feature.geometry.coordinates[y][x][1],
+          boundingBox
+        )
+      ) {
+        return {
+          type: "Feature",
+          geometry: {
+            type: "Polygon",
+            coordinates: feature.geometry.coordinates[y],
+          },
+          properties: {},
+        }
+      }
+    }
+  }
+  return null;
+} */
+
+/**
+ * Verify if point of coordinates (longitude, latitude) is within polygon of coordinates
+ * https://github.com/substack/point-in-polygon/blob/master/index.js
+ * @param {number} latitude Latitude
+ * @param {number} longitude Longitude
+ * @param {array<[number,number]>} polygon Polygon contains arrays of points. One array have the following format: [latitude,longitude]
+ */
+export function isPointInPolygon(
+  latitude: number,
+  longitude: number,
+  polygon: number[][]
+) {
+  if (typeof latitude !== "number" || typeof longitude !== "number") {
+    throw new TypeError("Invalid latitude or longitude. Numbers are expected");
+  } else if (!polygon || !Array.isArray(polygon)) {
+    throw new TypeError("Invalid polygon. Array with locations expected");
+  } else if (polygon.length === 0) {
+    throw new TypeError("Invalid polygon. Non-empty Array expected");
+  }
+
+  const x = latitude;
+  const y = longitude;
+
+  let inside = false;
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const xi = polygon[i][0];
+    const yi = polygon[i][1];
+    const xj = polygon[j][0];
+    const yj = polygon[j][1];
+
+    const intersect =
+      yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
+    if (intersect) inside = !inside;
+  }
+
+  return inside;
 }
 
 /**

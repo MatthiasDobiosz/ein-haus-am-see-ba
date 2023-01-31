@@ -127,13 +127,14 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
           initialViewState={{
             longitude: 12.101624,
             latitude: 49.013432,
-            zoom: 10,
+            zoom: 12,
             bearing: 0,
             pitch: 0,
           }}
           style={{ width: "100%", height: "100%" }}
           mapStyle="mapbox://styles/mapbox/streets-v11?optimize=true"
           dragPan={{ linearity: 0.3, maxSpeed: 1400, deceleration: 3000 }}
+          dragRotate={false}
           //onMove={(evt) => setViewport(evt.viewState)}
           attributionControl={false}
           minZoom={4}

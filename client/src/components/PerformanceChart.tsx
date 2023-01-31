@@ -43,12 +43,14 @@ const possibleBenchmarks = [
   "Combining of textures",
   "Creating Alpha Mask",
   "Adding Layer to the Map",
+  "Adding Buffers",
 ];
 
 export const PerformanceChart = observer((): JSX.Element => {
   const [labels, setLabels] = useState<string[]>([]);
   const [postGISSingleData, setPostGISSingleData] = useState<number[]>([]);
   const [postGISIndexData, setPostGISIndexData] = useState<number[]>([]);
+  const [postGISBufferData, setPostGISBufferData] = useState<number[]>([]);
   const [overpassData, setOverpassData] = useState<number[]>([]);
 
   const chartRef = useRef<Chart | null>(null);
@@ -100,6 +102,17 @@ export const PerformanceChart = observer((): JSX.Element => {
       );
     });
 
+    let postGISBufferMeasures = allMeasures.filter((measure) => {
+      return measure.name.includes(DBType.POSTGISBUFFER);
+    });
+
+    postGISBufferMeasures.forEach((filteredMeasure) => {
+      filteredMeasure.name = filteredMeasure.name.replace(
+        DBType.POSTGISBUFFER,
+        ""
+      );
+    });
+
     let overpassMeasures = allMeasures.filter((measure) => {
       return measure.name.includes(DBType.OVERPASS);
     });
@@ -109,10 +122,12 @@ export const PerformanceChart = observer((): JSX.Element => {
 
     postGISSingleMeasures = addLoadingTime(postGISSingleMeasures);
     postGISIndexMeasures = addLoadingTime(postGISIndexMeasures);
+    postGISBufferMeasures = addLoadingTime(postGISBufferMeasures);
     overpassMeasures = addLoadingTime(overpassMeasures);
 
     const PostGISSinglePoints: number[] = [];
     const PostGISIndexPoints: number[] = [];
+    const PostGISBufferPoints: number[] = [];
     const OverpassPoints: number[] = [];
     const matchedLabels: string[] = [];
 
@@ -139,6 +154,16 @@ export const PerformanceChart = observer((): JSX.Element => {
         PostGISIndexPoints.push(-10);
       }
 
+      const bufferIndex = postGISBufferMeasures.findIndex(
+        (measure) => measure.name === possibleBenchmarks[i]
+      );
+      if (bufferIndex > -1) {
+        matched = true;
+        PostGISBufferPoints.push(postGISBufferMeasures[bufferIndex].duration);
+      } else {
+        PostGISBufferPoints.push(-10);
+      }
+
       const overpassIndex = overpassMeasures.findIndex(
         (measure) => measure.name === possibleBenchmarks[i]
       );
@@ -154,12 +179,14 @@ export const PerformanceChart = observer((): JSX.Element => {
       } else {
         PostGISSinglePoints.pop();
         PostGISIndexPoints.pop();
+        PostGISBufferPoints.pop();
         OverpassPoints.pop();
       }
     }
 
     setPostGISSingleData(PostGISSinglePoints);
     setPostGISIndexData(PostGISIndexPoints);
+    setPostGISBufferData(PostGISBufferPoints);
     setOverpassData(OverpassPoints);
     setLabels(matchedLabels);
   }
@@ -231,6 +258,12 @@ export const PerformanceChart = observer((): JSX.Element => {
         data: postGISIndexData,
         borderColor: "rgb(255, 0, 110)",
         backgroundColor: "rgba(255, 0, 110, 0.5)",
+      },
+      {
+        label: "PostGIS (Buffer)",
+        data: postGISBufferData,
+        borderColor: "rgb(131, 56, 236)",
+        backgroundColor: "rgba(131, 56, 236, 0.5)",
       },
       {
         label: "Overpass",
