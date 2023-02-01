@@ -303,8 +303,21 @@ class MapStore {
         //get Tags for active Filters
         const tags = Array.from(this.rootStore.filterStore.activeFilters);
         const queryInformation = osmTagCollection.getQueryForPostGISAll(tags);
+        const bufferValues: string[] = [];
+        for (let i = 0; i < tags.length; i++) {
+          const buffer = this.rootStore.filterStore
+            .getFilterLayerBuffer(tags[i])
+            ?.toString();
+          if (buffer) {
+            bufferValues.push(buffer);
+          }
+        }
 
-        const data = await fetchDataFromPostGISSingle(bounds, queryInformation);
+        const data = await fetchDataFromPostGISSingle(
+          bounds,
+          queryInformation,
+          bufferValues
+        );
 
         if (data) {
           //const filterLayer = this.preprocessGeoData(data, tag);
@@ -325,7 +338,7 @@ class MapStore {
                 }
               });
               const filteredData: FeatureCollection<
-                Geometry,
+                Polygon | MultiPolygon,
                 GeoJsonProperties
               > = {
                 type: "FeatureCollection",
@@ -338,7 +351,7 @@ class MapStore {
                 this.showDataOnMap(filteredData, tags[i]);
               } else {
                 startPerformanceMeasure("LoadingSingleFilter");
-                this.preprocessGeoData(filteredData, tags[i]);
+                this.preprocessGeoDataNew(filteredData, tags[i]);
                 endPerformanceMeasure("LoadingSingleFilter");
               }
             }
@@ -431,11 +444,6 @@ class MapStore {
             //console.log(data);
             if (data) {
               console.log(data);
-              const layer = this.rootStore.filterStore.getFilterLayer(tag);
-
-              if (layer) {
-                layer.originalData = data;
-              }
 
               if (this.visualType === VisualType.NORMAL) {
                 this.showDataOnMap(data, tag);
@@ -643,9 +651,6 @@ class MapStore {
 
     // truncate geojson precision to yy4 decimals;
     // this increases performance and the perfectly exact coords aren't necessary for the area overlay
-    const options = { precision: 4, coordinates: 2, mutate: true };
-    const truncatedData: FeatureCollection<Polygon | MultiPolygon, any> =
-      truncate(data, options);
     //Benchmark.stopMeasure("truncate geodata");
     const layer = this.rootStore.filterStore.getFilterLayer(dataName);
     if (!layer) {
@@ -657,8 +662,8 @@ class MapStore {
     layer.points.length = 0;
     layer.features.length = 0;
     // add buffer to filterlayer
-    for (let index = 0; index < truncatedData.features.length; index++) {
-      const feature = truncatedData.features[index];
+    for (let index = 0; index < data.features.length; index++) {
+      const feature = data.features[index];
 
       //console.log(bufferedPoly.geometry.coordinates);
       layer.features.push(feature);

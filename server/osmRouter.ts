@@ -4,7 +4,13 @@ import { StatusCodes } from "http-status-codes";
 import querystring from "querystring";
 import * as ServerUtils from "./serverUtils.js";
 import pgk from "pg";
-import { Feature, Geometry } from "geojson";
+import {
+  Feature,
+  FeatureCollection,
+  Geometry,
+  Polygon,
+  MultiPolygon,
+} from "geojson";
 import {
   clearAllMeasures,
   DBType,
@@ -13,6 +19,7 @@ import {
   startPerformanceMeasure,
   toggleMeasuring,
 } from "../shared/benchmarking.js";
+import truncate from "@turf/truncate";
 
 const { Pool } = pgk;
 
@@ -114,8 +121,12 @@ export default class OsmRouter {
       startPerformanceMeasure("RequestServer" + DBType.POSTGISSINGLE, true);
       const bounds = req.query.bounds?.toString();
       let conditions: string[] = [];
+      let bufferValues: string[] = [];
       if (typeof req.query.conditions === "string") {
         conditions = JSON.parse(req.query.conditions);
+      }
+      if (typeof req.query.bufferValue === "string") {
+        bufferValues = JSON.parse(req.query.bufferValue);
       }
       if (bounds) {
         const compositeKey = (bounds + "/" + conditions.join("") + ";")
@@ -142,24 +153,28 @@ export default class OsmRouter {
         const pointQuery = ServerUtils.buildPostGISQueryForSingle(
           bounds,
           conditions,
+          bufferValues,
           "points"
         );
 
         const wayQuery = ServerUtils.buildPostGISQueryForSingle(
           bounds,
           conditions,
+          bufferValues,
           "ways"
         );
 
         const polyQuery = ServerUtils.buildPostGISQueryForSingle(
           bounds,
           conditions,
+          bufferValues,
           "polygons"
         );
 
         const relationsQuery = ServerUtils.buildPostGISQueryForSingle(
           bounds,
           conditions,
+          bufferValues,
           "relations"
         );
 
@@ -211,7 +226,10 @@ export default class OsmRouter {
             .then((res) => {
               for (let i = 0; i < res.rows.length; i++) {
                 allFeatures = allFeatures.concat(
-                  res.rows[i].jsonb_build_object
+                  ServerUtils.removeUnseenRelationParts(
+                    res.rows[i].jsonb_build_object,
+                    bounds
+                  )
                 );
               }
             })
@@ -232,7 +250,11 @@ export default class OsmRouter {
           //const features: any = featureCollection.features;
           //RedisCache.cacheData(compositeKey, features, cacheTime);
           endPerformanceMeasure("RequestServer" + DBType.POSTGISSINGLE, true);
-          res.status(StatusCodes.OK).send(featureCollection);
+
+          const options = { precision: 4, coordinates: 2, mutate: true };
+          const truncatedData: FeatureCollection<Polygon | MultiPolygon, any> =
+            truncate(featureCollection, options);
+          res.status(StatusCodes.OK).send(truncatedData);
         });
       }
     });
@@ -435,7 +457,12 @@ export default class OsmRouter {
             .catch((e) => console.error(e)),
           pool
             .query(relationsQuery)
-            .then((res) => (allFeatures = allFeatures.concat(res.rows)))
+            .then(
+              (res) =>
+                (allFeatures = allFeatures.concat(
+                  ServerUtils.removeUnseenRelationParts(res.rows, bounds)
+                ))
+            )
             .catch((e) => console.error(e)),
         ]).then((results) => {
           // cache data for one hour, this should be enough for a typical usecase
@@ -455,7 +482,10 @@ export default class OsmRouter {
           if (last) {
             endPerformanceMeasure("RequestServer" + DBType.POSTGISBUFFER, true);
           }
-          res.status(StatusCodes.OK).send(featureCollection);
+          const options = { precision: 4, coordinates: 2, mutate: true };
+          const truncatedData: FeatureCollection<Polygon | MultiPolygon, any> =
+            truncate(featureCollection, options);
+          res.status(StatusCodes.OK).send(truncatedData);
         });
         // let roadFeatures: GeoJsonProperties[];
       }

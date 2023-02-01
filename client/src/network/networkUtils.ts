@@ -112,17 +112,24 @@ export async function fetchOsmDataFromServer(
 
 export async function fetchDataFromPostGISSingle(
   mapBounds: string,
-  conditions: string[]
-): Promise<FeatureCollection<GeometryObject, any> | null> {
+  conditions: string[],
+  bufferValue: string[]
+): Promise<FeatureCollection<Polygon | MultiPolygon, any> | null> {
   try {
     const conditionsQuery = encodeURIComponent(JSON.stringify(conditions));
+    const bufferValues = encodeURIComponent(JSON.stringify(bufferValue));
 
     const params = new URLSearchParams({
       bounds: mapBounds,
     });
 
     const url =
-      "/postGISSingle?" + params.toString() + "&conditions=" + conditionsQuery;
+      "/postGISSingle?" +
+      params.toString() +
+      "&conditions=" +
+      conditionsQuery +
+      "&bufferValue=" +
+      bufferValues;
 
     console.log(url);
 
@@ -130,7 +137,7 @@ export async function fetchDataFromPostGISSingle(
     startPerformanceMeasure("RequestClient");
     const response = await axios.get(url, { timeout: 20000 });
     endPerformanceMeasure("RequestClient");
-    return response.data as FeatureCollection<GeometryObject, any>;
+    return response.data as FeatureCollection<Polygon | MultiPolygon, any>;
   } catch (error) {
     console.error(error);
     return null;

@@ -1,5 +1,7 @@
 /* eslint-env node */
 import { Feature, Geometry } from "geojson";
+import { Polygon } from "geojson";
+import { MultiPolygon } from "geojson";
 
 //const exec = Util.promisify(childProcess.exec);
 
@@ -55,22 +57,22 @@ export function buildPostGISQueryWithBuffer(
 ): string {
   if (table === "polygons") {
     return (
-      `SELECT ST_AsGeoJSON(ST_Buffer(ST_Boundary(ST_ForceRHR(st_transform(geom,4326)))::geography, ${bufferValue}))::json as geometry, area_id as id, jsonb_build_object('subclass',subclass,'name', name) as properties` +
+      `SELECT ST_AsGeoJSON(ST_Buffer(ST_Boundary(ST_ForceRHR(st_transform(geom,4326)))::geography, ${bufferValue}, 'quad_segs=2'))::json as geometry, area_id as id, jsonb_build_object('subclass',subclass,'name', name) as properties` +
       ` FROM ${table} WHERE ${condition} AND ST_Intersects(${table}.geom,st_transform(ST_GeographyFromText('POLYGON((${bounds}))')::geometry,3857))`
     );
   } else if (table === "ways") {
     return (
-      `SELECT ST_AsGeoJSON(ST_Buffer(ST_ForceRHR(st_transform(geom,4326)):: geography, ${bufferValue}))::json as geometry, way_id as id, jsonb_build_object('subclass',subclass,'name', name) as properties` +
+      `SELECT ST_AsGeoJSON(ST_Buffer(ST_ForceRHR(st_transform(geom,4326)):: geography, ${bufferValue}, 'quad_segs=2'))::json as geometry, way_id as id, jsonb_build_object('subclass',subclass,'name', name) as properties` +
       ` FROM ${table} WHERE ${condition} AND ST_Intersects(${table}.geom,st_transform(ST_GeographyFromText('POLYGON((${bounds}))')::geometry,3857))`
     );
   } else if (table === "relations") {
     return (
-      `SELECT ST_AsGeoJSON(ST_Buffer(ST_ForceRHR(st_transform(geom,4326)):: geography, ${bufferValue}))::json as geometry, relation_id as id, jsonb_build_object('subclass',subclass,'name', name) as properties` +
+      `SELECT ST_AsGeoJSON(ST_Buffer(ST_ForceRHR(st_transform(geom,4326)):: geography, ${bufferValue}, 'quad_segs=2'))::json as geometry, relation_id as id, jsonb_build_object('subclass',subclass,'name', name) as properties` +
       ` FROM ${table} WHERE ${condition} AND ST_Intersects(${table}.geom,st_transform(ST_GeographyFromText('POLYGON((${bounds}))')::geometry,3857));`
     );
   } else {
     return (
-      `SELECT ST_AsGeoJSON(ST_Buffer(ST_ForceRHR(st_transform(geom,4326)):: geography, ${bufferValue}))::json as geometry, node_id as id, jsonb_build_object('subclass',subclass,'name', name) as properties` +
+      `SELECT ST_AsGeoJSON(ST_Buffer(ST_ForceRHR(st_transform(geom,4326)):: geography, ${bufferValue}, 'quad_segs=2'))::json as geometry, node_id as id, jsonb_build_object('subclass',subclass,'name', name) as properties` +
       ` FROM ${table} WHERE ${condition} AND ST_Intersects(${table}.geom,st_transform(ST_GeographyFromText('POLYGON((${bounds}))')::geometry,3857))`
     );
   }
@@ -79,25 +81,26 @@ export function buildPostGISQueryWithBuffer(
 export function buildPostGISQueryForSingle(
   bounds: string,
   conditions: string[],
+  bufferValues: string[],
   table: string
 ): string {
   let queryString = "";
   for (let i = 0; i < conditions.length; i++) {
     if (table === "polygons") {
       queryString +=
-        `SELECT jsonb_build_object('geometry', ST_AsGeoJSON(ST_Boundary(ST_ForceRHR(st_transform(geom,4326))))::json, 'id', area_id, 'properties', jsonb_build_object('subclass',subclass,'name', name))` +
+        `SELECT jsonb_build_object('geometry', ST_AsGeoJSON(ST_Buffer(ST_Boundary(ST_ForceRHR(st_transform(geom,4326)))::geography, ${bufferValues[i]}))::json, 'id', area_id, 'properties', jsonb_build_object('subclass',subclass,'name', name))` +
         ` FROM ${table} WHERE ${conditions[i]} AND ST_Intersects(${table}.geom,st_transform(ST_GeographyFromText('POLYGON((${bounds}))')::geometry,3857))`;
     } else if (table === "ways") {
       queryString +=
-        `SELECT jsonb_build_object('geometry', ST_AsGeoJSON(ST_ForceRHR(st_transform(geom,4326)))::json, 'id', way_id, 'properties', jsonb_build_object('subclass',subclass,'name', name))` +
+        `SELECT jsonb_build_object('geometry', ST_AsGeoJSON(ST_Buffer(ST_ForceRHR(st_transform(geom,4326))::geography, ${bufferValues[i]}))::json, 'id', way_id, 'properties', jsonb_build_object('subclass',subclass,'name', name))` +
         ` FROM ${table} WHERE ${conditions[i]} AND ST_Intersects(${table}.geom,st_transform(ST_GeographyFromText('POLYGON((${bounds}))')::geometry,3857))`;
     } else if (table === "relations") {
       queryString +=
-        `SELECT jsonb_build_object('geometry', ST_AsGeoJSON(ST_ForceRHR(st_transform(geom,4326)))::json, 'id', relation_id, 'properties', jsonb_build_object('subclass',subclass,'name', name))` +
+        `SELECT jsonb_build_object('geometry', ST_AsGeoJSON(ST_Buffer(ST_ForceRHR(st_transform(geom,4326))::geography, ${bufferValues[i]}))::json, 'id', relation_id, 'properties', jsonb_build_object('subclass',subclass,'name', name))` +
         ` FROM ${table} WHERE ${conditions[i]} AND ST_Intersects(${table}.geom,st_transform(ST_GeographyFromText('POLYGON((${bounds}))')::geometry,3857))`;
     } else {
       queryString +=
-        `SELECT jsonb_build_object('geometry', ST_AsGeoJSON(ST_ForceRHR(st_transform(geom,4326)))::json, 'id', node_id, 'properties', jsonb_build_object('subclass',subclass,'name', name))` +
+        `SELECT jsonb_build_object('geometry', ST_AsGeoJSON(ST_Buffer(ST_ForceRHR(st_transform(geom,4326))::geography, ${bufferValues[i]}))::json, 'id', node_id, 'properties', jsonb_build_object('subclass',subclass,'name', name))` +
         ` FROM ${table} WHERE ${conditions[i]} AND ST_Intersects(${table}.geom,st_transform(ST_GeographyFromText('POLYGON((${bounds}))')::geometry,3857))`;
     }
 
@@ -182,7 +185,6 @@ export function getDataWithinBoundingBox(
   return featuresWithin;
 }
 
-/** 
 export function removeUnseenRelationParts(
   allData: Feature<Polygon | MultiPolygon, any>[],
   bounds: string
@@ -200,26 +202,33 @@ export function removeUnseenRelationParts(
   for (let i = 0; i < allData.length; i++) {
     const feature = allData[i];
     if (feature.geometry.type === "Polygon") {
-      if (
-        isPointInPolygon(
-          feature.geometry.coordinates[y][x][0],
-          feature.geometry.coordinates[y][x][1],
-          boundingBox
-        )
-      ) {
-        const singleFeature: Feature<Geometry, any> = {
-          type: "Feature",
-          geometry: {
+      const validFeature = isPolygonWithinBounds(feature.geometry, boundingBox);
+      if (validFeature) {
+        featuresWithin.push(feature);
+      }
+    } else if (feature.geometry.type === "MultiPolygon") {
+      for (let y = 0; y < feature.geometry.coordinates.length; y++) {
+        const validFeature = isPolygonWithinBounds(
+          {
             type: "Polygon",
             coordinates: feature.geometry.coordinates[y],
           },
-          properties: {},
-        };
-        featuresWithin.push(singleFeature);
-        break;
+          boundingBox
+        );
+        if (validFeature) {
+          featuresWithin.push({
+            type: "Feature",
+            geometry: {
+              type: "Polygon",
+              coordinates: feature.geometry.coordinates[y],
+            },
+            properties: {
+              name: feature.properties.name,
+              subclass: feature.properties.subclass,
+            },
+          });
+        }
       }
-    } else {
-      featuresWithin.push(feature);
     }
   }
 
@@ -227,31 +236,24 @@ export function removeUnseenRelationParts(
 }
 
 function isPolygonWithinBounds(
-  feature: Feature<Polygon, any>,
+  feature: Polygon,
   boundingBox: number[][]
-): Feature<Polygon, any> | null {
-  for (let y = 0; y < feature.geometry.coordinates.length; y++) {
-    for (let x = 0; x < feature.geometry.coordinates[y].length; x++) {
+): Polygon | null {
+  for (let y = 0; y < feature.coordinates.length; y++) {
+    for (let x = 0; x < feature.coordinates[y].length; x++) {
       if (
         isPointInPolygon(
-          feature.geometry.coordinates[y][x][0],
-          feature.geometry.coordinates[y][x][1],
+          feature.coordinates[y][x][0],
+          feature.coordinates[y][x][1],
           boundingBox
         )
       ) {
-        return {
-          type: "Feature",
-          geometry: {
-            type: "Polygon",
-            coordinates: feature.geometry.coordinates[y],
-          },
-          properties: {},
-        }
+        return feature;
       }
     }
   }
   return null;
-} */
+}
 
 /**
  * Verify if point of coordinates (longitude, latitude) is within polygon of coordinates

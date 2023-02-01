@@ -187,8 +187,8 @@ class CanvasRenderer {
     endPerformanceMeasure("ReadAndSaveLayer");
   }
 
-  //TODO find a better function to bring the pixelDistance in relation to the blur size
-  //TODO -> should probably rise quite slow (upper bound may not even be necessary then?)
+  //TODO: find a better function to bring the pixelDistance in relation to the blur size
+  //TODO: -> should probably rise quite slow (upper bound may not even be necessary then?)
   calculateBlurSize(layerDistance: number): void {
     const pixelDist = metersInPixel(
       layerDistance,
@@ -415,7 +415,7 @@ class CanvasRenderer {
       texture.remove();
     });
     // clear images by setting its length to 0
-    this.allTextures.length = 0;
+    this.allTextures = [];
   }
 }
 
@@ -429,9 +429,9 @@ export async function createOverlay(
 
   startPerformanceMeasure("CreateCanvasLayer");
   startPerformanceMeasure("RenderAllPolygons");
-  const allRenderProcesses = data.map((layer: Filter) =>
-    renderer.renderPolygons(layer)
-  );
+  const allRenderProcesses = data.map((layer: Filter) => {
+    return renderer.renderPolygons(layer);
+  });
   await Promise.all(allRenderProcesses);
   endPerformanceMeasure("RenderAllPolygons");
   //console.log("Current number of saved textures in canvasRenderer: ", renderer.allTextures.length);

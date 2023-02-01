@@ -78,7 +78,7 @@ const getMeasurementName = (name: string): string => {
     case MeasurementNames.CreateCanvasLayer:
       return "Creating the Canvas Layer" + dbType;
     case MeasurementNames.RenderLayerPolygons:
-      return "Rendering of Polygons for single Layer" + dbType;
+      return "Drawing of Polygons" + dbType;
     case MeasurementNames.GetImageFromCanvas:
       return "Getting Image from Canvas to blur" + dbType;
     case MeasurementNames.BlurImage:

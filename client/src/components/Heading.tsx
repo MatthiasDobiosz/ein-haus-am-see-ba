@@ -21,7 +21,7 @@ export const Heading = observer((): JSX.Element => {
     setSidebarState(!isSidebarOpen);
   };
 
-  const openSnackbar = () => {
+  const resetMap = () => {
     rootStore.mapStore.resetMapData();
   };
 
@@ -143,7 +143,7 @@ export const Heading = observer((): JSX.Element => {
       <button
         type="button"
         className=" p-[0.6em] cursor-pointer overflow-hidden border-0 rounded-[6px]  bg-[#be150f] text-whitesmoke focus:ring-transparent hover:bg-[#a30d08] active:bg-[#a30d08]"
-        onClick={() => openSnackbar()}
+        onClick={() => resetMap()}
       >
         Karte zurücksetzen
       </button>
