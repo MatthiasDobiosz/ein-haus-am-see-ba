@@ -6,6 +6,7 @@ import { SnackbarType } from "./../../stores/SnackbarStore";
 import rootStore from "../../stores/RootStore";
 import { VisualType } from "../../stores/MapStore";
 import { observer } from "mobx-react";
+import { Geocoder } from "./Geocoder";
 
 interface MapOverlayProps {
   /* dynamically change width depending on sidebarState */
@@ -116,9 +117,10 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
 
   return (
     <div
-      className="h-[calc(100vh-50px)] flex justify-start items-center transition-width ease-in-out duration-500"
+      className="h-[calc(100vh-50px)] flex justify-start items-center transition-width ease-in-out duration-500 relative"
       style={{ width: isSidebarOpen ? "70%" : "100%" }}
     >
+      <Geocoder />
       <div className="w-[100%] h-[100%]">
         <Map
           ref={(ref) => ref && rootStore.mapStore.setMap(ref.getMap())}

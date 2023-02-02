@@ -28,7 +28,7 @@ const pool = new Pool({
   user: "postgres",
   port: 5432,
   password: "syn27X!L",
-  database: "osm_simple",
+  database: "osm_geo",
   max: 100,
   connectionTimeoutMillis: 0,
   idleTimeoutMillis: 0,
@@ -591,6 +591,15 @@ export default class OsmRouter {
         });
         // let roadFeatures: GeoJsonProperties[];
       }
+    });
+
+    this.osmRouter.get("/geocoder", (req: Request, res: Response) => {
+      const geoQuery = `SELECT name, ST_AsGeoJSON(ST_ForceRHR(st_transform(geom,4326)))::json as geometry FROM cities`;
+
+      pool
+        .query(geoQuery)
+        .then((resp) => res.status(StatusCodes.OK).send(resp.rows))
+        .catch((e) => console.error(e));
     });
 
     this.osmRouter.get("/backendLogs", (req: Request, res: Response) => {

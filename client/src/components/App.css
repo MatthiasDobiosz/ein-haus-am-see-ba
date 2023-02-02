@@ -106,7 +106,31 @@ body {
   animation: fadein 0.5s, fadeout 0.5s 2.5s;
 }
 
+.searchBar {
+  transition: width 2s linear 1s;
+}
+
 /* Add Animation */
+
+@-webkit-keyframes animateopen {
+  from {
+    width: 0;
+  }
+
+  to {
+    width: 100%;
+  }
+}
+
+@keyframes animateopen {
+  from {
+    width: 0;
+  }
+
+  to {
+    width: auto;
+  }
+}
 
 @-webkit-keyframes fadein {
   from {
