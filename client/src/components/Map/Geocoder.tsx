@@ -3,8 +3,9 @@ import { useEffect, useState } from "react";
 import axios from "../../network/axiosInterceptor";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
+import { GeocoderCity } from "./GeocoderCity";
 
-interface City {
+export interface City {
   name: string;
   geometry: { type: string; coordinates: number[] };
 }
@@ -37,10 +38,17 @@ export const Geocoder = observer(() => {
       setCurrentCities([]);
     } else {
       const matchedCities = cities.filter((city) => {
-        return city.name.includes(text);
+        return city.name.toLowerCase().startsWith(text.toLowerCase());
       });
       setCurrentCities(matchedCities.slice(0, 9));
     }
+    console.log(currentCities);
+  }
+
+  function onCitySelect() {
+    setIsSearchActive(false);
+    setCurrentCities([]);
+    setCurrentText("");
   }
 
   if (!isSearchActive) {
@@ -71,9 +79,19 @@ export const Geocoder = observer(() => {
           />
         </div>
       </div>
-      <div className="">
-        <div>Regensburg</div>
-      </div>
+      {currentCities.length > 0 && (
+        <div className=" flex flex-col ">
+          {currentCities.map((city) => {
+            return (
+              <GeocoderCity
+                city={city}
+                key={city.name}
+                onSelect={onCitySelect}
+              />
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 });

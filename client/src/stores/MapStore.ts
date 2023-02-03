@@ -45,6 +45,7 @@ class MapStore {
   rootStore: RootStore;
   dbType: DBType;
   performanceViewActive: boolean;
+  isFlying: boolean;
 
   constructor(rootStore: RootStore) {
     this.map = null;
@@ -53,6 +54,7 @@ class MapStore {
     this.rootStore = rootStore;
     this.dbType = DBType.POSTGISSINGLE;
     this.performanceViewActive = false;
+    this.isFlying = false;
 
     makeObservable(this, {
       map: observable,
@@ -75,6 +77,8 @@ class MapStore {
       preprocessGeoDataNew: false,
       addAreaOverlay: false,
       rootStore: false,
+      flyToLocation: false,
+      isFlying: observable,
     });
   }
 
@@ -220,7 +224,7 @@ class MapStore {
       SnackbarType.INFO
     );
 
-    if (this.map) {
+    if (this.map && !this.isFlying) {
       console.log(this.dbType);
       if (this.dbType === DBType.OVERPASS) {
         const bounds = getViewportBoundsString(this.map, 500);
@@ -737,6 +741,18 @@ import { buffer } from '@turf/buffer';
         "Creating an overlay is not possible because overlayData is empty!"
       );
     }
+  }
+
+  flyToLocation(coordinates: number[]): void {
+    this.isFlying = true;
+    this.map?.flyTo({
+      center: [coordinates[0], coordinates[1]],
+      essential: true,
+    });
+    this.map?.once("moveend", () => {
+      this.isFlying = false;
+      this.loadMapData();
+    });
   }
 }
 
