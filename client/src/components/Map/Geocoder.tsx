@@ -51,33 +51,26 @@ export const Geocoder = observer(() => {
     setCurrentText("");
   }
 
-  if (!isSearchActive) {
-    return (
-      <div
-        className="absolute p-[6px] border-none mt-[8px] mr-[16px] ml-[16px] text-[25px] z-50 top-2 bg-[#fff]"
-        onMouseEnter={() => setIsSearchActive(true)}
-      >
-        <FontAwesomeIcon icon={faMagnifyingGlass} />
-      </div>
-    );
-  }
   return (
     <div
       className="absolute p-0 border-none mt-[8px] mr-[16px] ml-[16px] text-[25px] z-50 top-2 flex flex-col"
       onMouseLeave={() => setDisabled()}
     >
-      <div className="flex flex-row">
-        <div className="p-[6px] border-none text-[25px] bg-[#fff]">
+      <div className="flex flex-row searchBox">
+        <div
+          className="p-[6px] text-[25px] bg-[#fff]"
+          onMouseEnter={() => setIsSearchActive(true)}
+        >
           <FontAwesomeIcon icon={faMagnifyingGlass} />
         </div>
-        <div className={`block SearchBar`}>
-          <input
-            type="text"
-            placeholder="search city.."
-            onChange={(e) => handleTextInput(e)}
-            className="h-[100%]"
-          />
-        </div>
+        <input
+          type="text"
+          placeholder="search city.."
+          id="searchInput"
+          onChange={(e) => handleTextInput(e)}
+          className={`searchInput w-0 ${isSearchActive ? "active" : ""}`}
+          value={currentText}
+        />
       </div>
       {currentCities.length > 0 && (
         <div className=" flex flex-col ">
