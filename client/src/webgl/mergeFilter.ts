@@ -1,4 +1,4 @@
-import { getGaussianBlurFS, getVSForGaussBlur } from "./shaders";
+import { getMergeFS, getVSForMerge } from "./shaders";
 //import { computeKernelWeight, getBlurFilterKernel } from "./webglUtils";
 
 const renderCanvas = document.createElement("canvas");
@@ -16,9 +16,10 @@ let renderImageTexureCoordinatesBuffer: WebGLBuffer | null;
 
 let gl: WebGL2RenderingContext | WebGLRenderingContext;
 
+let textureCount: number;
 import { createProgramFromSources } from "twgl.js";
 
-export function setupGaussianBlurFilter(): void {
+export function setupMergeFilter(): void {
   const glCtx = renderCanvas.getContext("webgl");
   if (!glCtx) {
     throw new Error("Couldn't get a webgl context for combining the overlays!");
@@ -64,24 +65,18 @@ renderCanvas.addEventListener(
 );
 // TODO: renderCanvas.addEventListener("webglcontextrestored", init, false);
 
-function setupProgram(blurSize: number): void {
+function setupProgram(): void {
   //! the blur size needs to be defined as a constant so it can be used as an array index in the shader!
   //const blurShaderSource = `#version 300 es\n#define MSIZE ${blurSize}` + getGaussianBlurFS();
-
-  //TODO adjusting the sigma based on the kernelsize changes how sharp/blurry the result appears per zoom level
-  //TODO which gives quite nice effect when zooming out -> Find a good formula (maybe a better one than dividing by 2)
-  //const sigma = (blurSize / 2).toFixed(1); //! needs to be a float to work correctly!
-  const sigma = (10).toFixed(1);
-  const blurShaderSource =
-    `#define MSIZE ${blurSize.toString()}\n#define SIGMA ${sigma.toString()}` +
-    getGaussianBlurFS();
+  const mergeShaderSource =
+    `#define NUM_TEXTURES ${textureCount.toString()}\n` + getMergeFS();
   //console.log(blurShaderSource);
 
   // create and link program
   /* eslint-disable */
   glProgram = createProgramFromSources(gl, [
-    getVSForGaussBlur(),
-    blurShaderSource,
+    getVSForMerge(),
+    mergeShaderSource,
   ]);
 
   // the coordinate attribute
@@ -102,32 +97,40 @@ function setupProgram(blurSize: number): void {
 
 function setupSourceTexture(
   gl: WebGL2RenderingContext | WebGLRenderingContext,
-  sourceTextureImage: HTMLImageElement
-): WebGLTexture | null {
-  const sourceTexture = gl.createTexture();
-  gl.bindTexture(gl.TEXTURE_2D, sourceTexture);
-  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-  //gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true); //* to premultiply alpha
-  gl.texImage2D(
-    gl.TEXTURE_2D,
-    0,
-    gl.RGBA,
-    gl.RGBA,
-    gl.UNSIGNED_BYTE,
-    sourceTextureImage
-  );
+  sourceTextureImages: HTMLImageElement[]
+): WebGLTexture[] {
+  const textures: WebGLTexture[] = [];
+  for (let ii = 0; ii < sourceTextureImages.length; ii++) {
+    const sourceTexture = gl.createTexture();
+    gl.activeTexture(gl.TEXTURE0 + ii);
+    gl.bindTexture(gl.TEXTURE_2D, sourceTexture);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    //gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true); //* to premultiply alpha
 
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
-  return sourceTexture;
+    gl.texImage2D(
+      gl.TEXTURE_2D,
+      0,
+      gl.RGBA,
+      gl.RGBA,
+      gl.UNSIGNED_BYTE,
+      sourceTextureImages[ii]
+    );
+
+    if (sourceTexture) {
+      textures.push(sourceTexture);
+    }
+  }
+  return textures;
 }
 
 function render(
   gl: WebGL2RenderingContext | WebGLRenderingContext,
-  sourceTexture: WebGLTexture | null
+  sourceTexture: WebGLTexture[]
 ): void {
   gl.viewport(0, 0, renderCanvas.width, renderCanvas.height);
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -147,40 +150,29 @@ function render(
     1.0 / sourceTextureSize[1]
   );
 
-  /*
-    const kernelLocation = gl.getUniformLocation(glProgram, "u_kernel[0]");
-    const kernelWeightLocation = gl.getUniformLocation(glProgram, "u_kernelWeight");
-    // set the kernel and it's weight
-    gl.uniform1fv(kernelLocation, blurKernel);
-    gl.uniform1f(kernelWeightLocation, kernelWeight);
-    */
-
-  // the sourceTexture
-  gl.activeTexture(gl.TEXTURE0);
-  gl.bindTexture(gl.TEXTURE_2D, sourceTexture);
-  gl.uniform1i(gl.getUniformLocation(glProgram, "sourceTextureSampler"), 0);
+  const textureLoc = gl.getUniformLocation(glProgram, "u_textures[0]");
+  gl.uniform1iv(textureLoc, Array.from(Array(textureCount).keys())); //uniform variable location and texture Index (or array of indices)
 
   gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 }
 
-export function applyGaussianBlur(
-  image: HTMLImageElement,
-  blurStrength: number
-): HTMLCanvasElement {
-  sourceTextureSize[0] = image.width;
-  sourceTextureSize[1] = image.height;
+export function applyMerge(images: HTMLImageElement[]): HTMLCanvasElement {
+  sourceTextureSize[0] = images[0].width;
+  sourceTextureSize[1] = images[0].height;
 
-  renderCanvas.width = image.width;
-  renderCanvas.height = image.height;
+  renderCanvas.width = images[0].width;
+  renderCanvas.height = images[0].height;
+
   const ctx = gl;
   if (!ctx) {
-    throw new Error("GL context not available for gaussian blur!");
+    throw new Error("GL context not available for merge!");
   }
 
-  setupProgram(blurStrength);
+  textureCount = images.length;
+  setupProgram();
 
-  const texture = setupSourceTexture(ctx, image);
-  render(ctx, texture);
+  const textures = setupSourceTexture(ctx, images);
+  render(ctx, textures);
 
   /*
   // setup textures

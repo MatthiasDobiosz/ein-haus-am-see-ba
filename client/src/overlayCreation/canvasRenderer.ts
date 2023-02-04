@@ -28,6 +28,7 @@ import {
   endPerformanceMeasure,
   startPerformanceMeasure,
 } from "../../../shared/benchmarking";
+import { applyMerge, setupMergeFilter } from "../webgl/mergeFilter";
 
 //import WebWorker from "worker-loader!../worker";
 
@@ -69,15 +70,16 @@ class CanvasRenderer {
     }
     this.ctx = context;
 
-    // setup the webgl code for the gaussian blur filter
+    // setup the webgl code for the gaussian blur filter and merge filter
     setupGaussianBlurFilter();
+    setupMergeFilter();
   }
 
   /**
    * Draws all polygons for the given filter on a canvas and applies a blur effect.
    * @param mapLayer the current filter layer, e.g. one for park, restaurant, etc.
    */
-  async renderPolygons(mapLayer: Filter): Promise<any> {
+  async renderPolygons(mapLayer: Filter[]): Promise<any> {
     // clear the canvas
     this.ctx.clearRect(
       0,
@@ -85,81 +87,85 @@ class CanvasRenderer {
       this.overlayCanvas.width,
       this.overlayCanvas.height
     );
-    this.weights.push(mapLayer.relevanceValue);
+    this.weights.push(mapLayer[0].relevanceValue);
 
     // calculate the blur size for this layer based on the distance the user specified
-    this.calculateBlurSize(mapLayer.distance);
+    this.calculateBlurSize(mapLayer[0].distance);
 
     startPerformanceMeasure("RenderLayerPolygons");
 
     // apply a "feather"/blur - effect to everything that is drawn on the canvas from now on
     //this.ctx.filter = `blur(${this.currentBlurSize}px)`;
+    const images: HTMLImageElement[] = [];
+    for (let i = 0; i < mapLayer.length; i++) {
+      if (mapLayer[i].wanted) {
+        //fill canvas black initially
+        this.ctx.fillStyle = "rgba(0.0, 0.0, 0.0, 1.0)";
+        this.ctx.fillRect(
+          0,
+          0,
+          this.overlayCanvas.width,
+          this.overlayCanvas.height
+        );
 
-    if (mapLayer.wanted) {
-      //fill canvas black initially
-      this.ctx.fillStyle = "rgba(0.0, 0.0, 0.0, 1.0)";
-      this.ctx.fillRect(
-        0,
-        0,
-        this.overlayCanvas.width,
-        this.overlayCanvas.height
-      );
+        // fill polygons white, fully opaque
+        this.ctx.fillStyle = "rgba(255, 255, 255, 1.0)";
+      } else {
+        //fill canvas white initially
+        this.ctx.fillStyle = "rgba(255, 255, 255, 1.0)";
+        this.ctx.fillRect(
+          0,
+          0,
+          this.overlayCanvas.width,
+          this.overlayCanvas.height
+        );
 
-      // fill polygons white, fully opaque
-      this.ctx.fillStyle = "rgba(255, 255, 255, 1.0)";
-    } else {
-      //fill canvas white initially
-      this.ctx.fillStyle = "rgba(255, 255, 255, 1.0)";
-      this.ctx.fillRect(
-        0,
-        0,
-        this.overlayCanvas.width,
-        this.overlayCanvas.height
-      );
-
-      // fill polygons black, fully opaque
-      this.ctx.fillStyle = "rgba(0.0, 0.0, 0.0, 1.0)";
-    }
-
-    /*
-    //* for benchmarking:
-    let renderPolyBenchmarks = 0;
-    let blurBenchmarks = 0;
-    const avgBlur = [];
-    */
-
-    for (const polygon of mapLayer.points) {
-      //let start = performance.now();
-      const startPoint = polygon[0];
-      if (!startPoint) {
-        continue;
+        // fill polygons black, fully opaque
+        this.ctx.fillStyle = "rgba(0.0, 0.0, 0.0, 1.0)";
       }
-
-      this.ctx.beginPath();
-      this.ctx.moveTo(startPoint.x, startPoint.y);
-
-      // draw the polygon
-      for (let index = 1; index < polygon.length; index += 1) {
-        if (polygon[index] && polygon[index]) {
-          this.ctx.lineTo(polygon[index].x, polygon[index].y);
-        }
-      }
-      this.ctx.closePath();
-
-      this.ctx.fill("evenodd");
 
       /*
-      //! this code is used to measure performance for every polygon blur for benchmarking!
-      let end = performance.now();
-      renderPolyBenchmarks += end - start;
-
-      start = performance.now();
-      await this.applyGaussianBlur();
-      end = performance.now();
-      const diff = end - start;
-      blurBenchmarks += diff;
-      avgBlur.push(diff);
+      //* for benchmarking:
+      let renderPolyBenchmarks = 0;
+      let blurBenchmarks = 0;
+      const avgBlur = [];
       */
+
+      for (const polygon of mapLayer[i].points) {
+        //let start = performance.now();
+        const startPoint = polygon[0];
+        if (!startPoint) {
+          continue;
+        }
+
+        this.ctx.beginPath();
+        this.ctx.moveTo(startPoint.x, startPoint.y);
+
+        // draw the polygon
+        for (let index = 1; index < polygon.length; index += 1) {
+          if (polygon[index] && polygon[index]) {
+            this.ctx.lineTo(polygon[index].x, polygon[index].y);
+          }
+        }
+        this.ctx.closePath();
+
+        this.ctx.fill("evenodd");
+
+        /*
+        //! this code is used to measure performance for every polygon blur for benchmarking!
+        let end = performance.now();
+        renderPolyBenchmarks += end - start;
+  
+        start = performance.now();
+        await this.applyGaussianBlur();
+        end = performance.now();
+        const diff = end - start;
+        blurBenchmarks += diff;
+        avgBlur.push(diff);
+        */
+      }
+      const layerImage = await readImageFromCanvas(this.overlayCanvas);
+      images.push(layerImage);
     }
 
     endPerformanceMeasure("RenderLayerPolygons");
@@ -178,8 +184,16 @@ class CanvasRenderer {
     Benchmark.stopMeasure("fastgaussblur");
     */
 
+    if (images.length > 1) {
+      this.ctx.clearRect(
+        0,
+        0,
+        this.overlayCanvas.width,
+        this.overlayCanvas.height
+      );
+      this.applyColorMerge(images);
+    }
     await this.applyGaussianBlur();
-
     startPerformanceMeasure("ReadAndSaveLayer");
     const blurredImage = await readImageFromCanvas(this.overlayCanvas);
     // save the blurred image for this layer
@@ -209,6 +223,11 @@ class CanvasRenderer {
     }
 
     this.currentBlurSize = blurStrength;
+  }
+
+  applyColorMerge(images: HTMLImageElement[]): void {
+    const mergedCanvas = applyMerge(images);
+    this.ctx.drawImage(mergedCanvas, 0, 0);
   }
 
   async applyGaussianBlur(): Promise<void> {
@@ -429,12 +448,12 @@ export async function createOverlay(
 
   startPerformanceMeasure("CreateCanvasLayer");
   startPerformanceMeasure("RenderAllPolygons");
-  const allRenderProcesses = data.map((layer: Filter) => {
-    return renderer.renderPolygons(layer);
-  });
-  await Promise.all(allRenderProcesses);
+  await renderer.renderPolygons(data);
   endPerformanceMeasure("RenderAllPolygons");
-  //console.log("Current number of saved textures in canvasRenderer: ", renderer.allTextures.length);
+  console.log(
+    "Current number of saved textures in canvasRenderer: ",
+    renderer.allTextures.length
+  );
 
   const resultCanvas = renderer.createOverlay(renderer.allTextures);
   endPerformanceMeasure("CreateCanvasLayer");

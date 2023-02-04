@@ -70,12 +70,99 @@ export function combineOverlayFragmentShader(): string {
   `;
 }
 
+export function getVSForMerge(): string {
+  return `
+    precision mediump float;
+  
+    attribute vec3 coordinate;
+    attribute vec2 textureCoordinate;
+
+    uniform vec2 sourceTextureSize;
+    uniform vec2 sourceTexelSize;
+  
+    varying vec2 v_texCoord;
+  
+    void main(void) {
+      gl_Position = vec4(coordinate, 1.0);
+  
+      v_texCoord = textureCoordinate;
+    }
+    `;
+}
+
+export function getMergeFS(): string {
+  //* this shader has to be written in webgl 1 because webgl 2 doesn't allow dynamic access in a for loop!
+  return `
+  precision mediump float;    // mediump should be enough and highp isn't supported on all devices
+    
+  // array of textures
+  uniform sampler2D u_textures[NUM_TEXTURES];
+
+  uniform sampler2D sourceTextureSampler;
+  uniform vec2 sourceTextureSize;
+  uniform vec2 sourceTexelSize;
+
+  // the texCoords passed in from the vertex shader.
+  varying vec2 v_texCoord;
+
+  void main() {
+      vec4 overlayColor = vec4(1.0, 1.0, 1.0, 0.1); 
+      
+      for (int i = 0; i < NUM_TEXTURES; ++i) {
+        overlayColor *= texture2D(u_textures[i], v_texCoord);
+    }
+
+      //float invertedAlpha = 1.0 - overlayColor.g;
+
+      // switch to premultiplied alpha to blend transparent images correctly
+      //overlayColor.rgb *= overlayColor.a;
+
+      gl_FragColor = overlayColor;
+
+      //if(gl_FragColor.a == 0.0) discard;    // discard pixels with 100% transparency
+  }
+  `;
+}
+
+export function getMergeFSOld(): string {
+  //* this shader has to be written in webgl 1 because webgl 2 doesn't allow dynamic access in a for loop!
+  return `
+    precision mediump float;    // mediump should be enough and highp isn't supported on all devices
+    
+    // array of textures
+    uniform sampler2D u_textures[NUM_TEXTURES];
+
+    uniform sampler2D sourceTextureSampler;
+    uniform vec2 sourceTextureSize;
+    uniform vec2 sourceTexelSize;
+
+    // the texCoords passed in from the vertex shader.
+    varying vec2 v_texCoord;
+
+    void main() {
+        vec4 overlayColor = texture2D(u_textures[2], v_texCoord); 
+        
+        //float invertedAlpha = 1.0 - overlayColor.g;
+
+        // switch to premultiplied alpha to blend transparent images correctly
+        //overlayColor.rgb *= overlayColor.a;
+
+        gl_FragColor = overlayColor;
+
+        //if(gl_FragColor.a == 0.0) discard;    // discard pixels with 100% transparency
+    }
+  `;
+}
+
 export function getVSForGaussBlur(): string {
   return `
     precision mediump float;
   
     attribute vec3 coordinate;
     attribute vec2 textureCoordinate;
+
+    uniform vec2 sourceTextureSize;
+    uniform vec2 sourceTexelSize;
   
     varying vec2 varyingTextureCoordinate;
   
