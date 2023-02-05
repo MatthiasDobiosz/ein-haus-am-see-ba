@@ -302,6 +302,7 @@ class MapStore {
         }
         this.showAreasOnMap();
       } else if (this.dbType === DBType.POSTGISSINGLE) {
+        //FIXME: Union Query nicht wert extra auf Filtergruppen umzustellen.. bräuchte eigenen Workflow
         startPerformanceMeasure("LoadingAllFilters");
         const bounds = getViewportPolygon(this.map, 500);
         //get Tags for active Filters
@@ -428,56 +429,101 @@ class MapStore {
         this.showAreasOnMap();
       } else {
         startPerformanceMeasure("LoadingAllFilters");
-        const bounds = getViewportPolygon(this.map, 500);
-        const activeTags = Array.from(this.rootStore.filterStore.activeFilters);
-        const firstTag = activeTags[0];
-        const lastTag = activeTags[activeTags.length - 1];
-        const allResults = await Promise.allSettled(
-          activeTags.map(async (tag) => {
-            const query = osmTagCollection.getQueryForCategoryPostGIS(tag);
-            const bufferValue =
-              this.rootStore.filterStore.getFilterLayerBuffer(tag) || 0;
-            const data = await fetchDataFromPostGISBuffer(
-              bounds,
-              query,
-              bufferValue,
-              this.visualType === VisualType.OVERLAY,
-              tag === firstTag,
-              tag === lastTag
-            );
-            //console.log(data);
-            if (data) {
-              console.log(data);
+        //FIXME: Hier langt es wahrscheinlich nicht, alle tags zu holen, wir brauchen eigtl. alle Tags + ihre zugehörige Gruppe um z.B. den richtigen Buffer zu holen
+        if (this.visualType === VisualType.OVERLAY) {
+          const bounds = getViewportPolygon(this.map, 500);
+          const activeFilters = this.rootStore.filterStore.allFilterLayers;
+          const firstLayer = activeFilters[0].layername;
+          const lastLayer = activeFilters[activeFilters.length - 1].layername;
+          const allResults = await Promise.allSettled(
+            activeFilters.map(async (filter) => {
+              const query = osmTagCollection.getQueryForCategoryPostGIS(
+                filter.tagName
+              );
+              const bufferValue =
+                this.rootStore.filterStore.getFilterLayerBuffer(
+                  filter.layername
+                ) || 0;
+              const data = await fetchDataFromPostGISBuffer(
+                bounds,
+                query,
+                bufferValue,
+                this.visualType === VisualType.OVERLAY,
+                filter.layername === firstLayer,
+                filter.layername === lastLayer
+              );
+              //console.log(data);
+              if (data) {
+                console.log(data);
 
-              if (this.visualType === VisualType.NORMAL) {
-                this.showDataOnMap(data, tag);
-              } else {
                 startPerformanceMeasure("LoadingSingleFilter");
-                this.preprocessGeoDataNew(data, tag);
+                this.preprocessGeoDataNew(data, filter.layername);
                 endPerformanceMeasure("LoadingSingleFilter");
               }
-            }
-          })
-        );
-
-        endPerformanceMeasure("LoadingAllFilters");
-        this.rootStore.snackbarStore.closeHandler();
-
-        let success = true;
-        for (const res of allResults) {
-          if (res.status === "rejected") {
-            success = false;
-            break;
-          }
-        }
-        if (!success) {
-          this.rootStore.snackbarStore.displayHandler(
-            "Nicht alle Daten konnten erfolgreich geladen werden",
-            1500,
-            SnackbarType.ERROR
+            })
           );
+
+          endPerformanceMeasure("LoadingAllFilters");
+          this.rootStore.snackbarStore.closeHandler();
+
+          let success = true;
+          for (const res of allResults) {
+            if (res.status === "rejected") {
+              success = false;
+              break;
+            }
+          }
+          if (!success) {
+            this.rootStore.snackbarStore.displayHandler(
+              "Nicht alle Daten konnten erfolgreich geladen werden",
+              1500,
+              SnackbarType.ERROR
+            );
+          }
+          this.showAreasOnMap();
+        } else {
+          const bounds = getViewportPolygon(this.map, 500);
+          const activeTags = this.rootStore.filterStore.getAllActiveTags();
+          const firstTag = activeTags[0];
+          const lastTag = activeTags[activeTags.length - 1];
+          const allResults = await Promise.allSettled(
+            activeTags.map(async (tag) => {
+              const query = osmTagCollection.getQueryForCategoryPostGIS(tag);
+              const data = await fetchDataFromPostGISBuffer(
+                bounds,
+                query,
+                0,
+                this.visualType === VisualType.OVERLAY,
+                tag === firstTag,
+                tag === lastTag
+              );
+              //console.log(data);
+              if (data) {
+                console.log(data);
+                this.showDataOnMap(data, tag);
+              }
+            })
+          );
+
+          endPerformanceMeasure("LoadingAllFilters");
+          this.rootStore.snackbarStore.closeHandler();
+
+          let success = true;
+          for (const res of allResults) {
+            if (res.status === "rejected") {
+              success = false;
+              break;
+            }
+          }
+          if (!success) {
+            this.rootStore.snackbarStore.displayHandler(
+              "Nicht alle Daten konnten erfolgreich geladen werden",
+              1500,
+              SnackbarType.ERROR
+            );
+          }
+          this.showAreasOnMap();
         }
-        this.showAreasOnMap();
       }
     }
   }
@@ -492,6 +538,7 @@ class MapStore {
     }
   }
 
+  // FIXME: wird jetzt glaub ich sowieso nicht mehr genutzt
   showPOILocations(): void {
     const filterLayers = this.rootStore.filterStore.allFilterLayers;
     for (let index = 0; index < filterLayers.length; index++) {
@@ -514,6 +561,7 @@ class MapStore {
     }
   }
 
+  //FIXME: Removen der Daten sollte dann eigtl. passen wenn alles andere stimmt
   resetMapData(): void {
     this.rootStore.filterStore.clearAllFilters();
     this.mapLayerManager?.removeAllDataFromMap();
@@ -524,6 +572,7 @@ class MapStore {
     );
   }
 
+  //FIXME: Hier statt tagName dann einzigartigen Namen übergeben
   showDataOnMap(data: any, tagName: string): void {
     startPerformanceMeasure("RemoveExistingLayers");
     if (this.map?.getSource("overlaySource")) {
@@ -727,10 +776,11 @@ import { buffer } from '@turf/buffer';
      */
 
     // check that there is data to create an overlay for the map
+    // FIXME: Hier evtl. check ausbessern
     if (this.rootStore.filterStore.allFilterLayers.length > 0) {
       if (this.map) {
         createOverlay(
-          this.rootStore.filterStore.allFilterLayers,
+          this.rootStore.filterStore.allFilterGroups,
           this.map,
           this,
           this.rootStore.legendStore

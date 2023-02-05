@@ -595,7 +595,7 @@ export default class OsmRouter {
 
     this.osmRouter.get("/geocoder", (req: Request, res: Response) => {
       const geoQuery = `SELECT name, ST_AsGeoJSON(ST_ForceRHR(st_transform(geom,4326)))::json as geometry FROM cities`;
-
+      console.log("get geocoder");
       pool
         .query(geoQuery)
         .then((resp) => res.status(StatusCodes.OK).send(resp.rows))

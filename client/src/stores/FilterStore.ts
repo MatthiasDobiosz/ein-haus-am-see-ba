@@ -3,23 +3,31 @@ import { LngLatLike } from "react-map-gl";
 import { action, makeObservable, observable } from "mobx";
 import { Filter } from "../components/Sidebar/Filter/Filters";
 import { RootStore } from "./RootStore";
+import { FilterGroup } from "./../components/Sidebar/Filter/Filters";
 
 class FilterStore {
+  allFilterGroups: FilterGroup[];
   // all active filter layer objects
   allFilterLayers: Filter[];
-  // set of alle filternames
+  // set of all filternames
   activeFilters: Set<string>;
   rootStore: RootStore;
   constructor(rootStore: RootStore) {
+    this.allFilterGroups = [];
     this.allFilterLayers = [];
     this.activeFilters = new Set();
     this.rootStore = rootStore;
 
     makeObservable(this, {
+      allFilterGroups: observable,
       allFilterLayers: observable,
       activeFilters: observable,
+      addNewFilterToGroup: action,
       addFilter: action,
       removeFilter: action,
+      removeFilterFromGroup: action,
+      updateGroups: action,
+      getFilterGroup: false,
       getFilterLayer: false,
       getFilterLayerBuffer: false,
       clearAllFilters: action,
@@ -27,19 +35,89 @@ class FilterStore {
       calculatePointCoordsForFeatures: false,
       convertPolygonCoordsToPixelCoords: action,
       convertPolygonCoordsToPixelCoordsNew: action,
+      getUniqueLayerName: false,
+      validateGroupName: false,
+      getAllActiveTags: false,
+      getRelevanceValue: false,
       rootStore: false,
     });
   }
 
+  addNewFilterToGroup = (
+    filter: Filter,
+    newGroup: boolean,
+    groupName: string,
+    relevance?: number
+  ): boolean => {
+    if (newGroup && groupName && relevance) {
+      if (this.addFilter(filter, groupName)) {
+        this.allFilterGroups.push({
+          groupName: groupName,
+          groupID: this.allFilterGroups.length + 1,
+          filters: this.allFilterLayers.filter(
+            (filter) => filter.group === groupName
+          ),
+          groupRelevance: relevance,
+        });
+        console.log("Successfully added new Group");
+        return true;
+      } else {
+        return false;
+      }
+    } else if (!newGroup && groupName) {
+      const filterGroup = this.allFilterGroups.find((group) => {
+        if (group.groupName === groupName) {
+          return group;
+        }
+      });
+      if (filterGroup) {
+        if (this.addFilter(filter, groupName)) {
+          filterGroup.filters = this.allFilterLayers.filter(
+            (filter) => filter.group === groupName
+          );
+          console.log("succesfully added to existing group");
+          return true;
+        } else {
+          return false;
+        }
+      } else {
+        console.error("Could not find Filtergroup with corresponding name");
+        return false;
+      }
+    }
+    return false;
+  };
+
   // function to add single filter to context array
-  addFilter = (filterLayer: Filter): void => {
-    //dont add if filter with that name already exists
-    //TODO: show error message to user that he cant create more than one filter of the same category
-    if (!this.activeFilters.has(filterLayer.layername)) {
+  addFilter = (filterLayer: Filter, groupname: string): boolean => {
+    //dont add if filter of same category already exists within a group
+    const groupIndex = this.allFilterGroups.findIndex((group) => {
+      return group.groupName === groupname;
+    });
+    // filter is the first of its group
+    if (groupIndex > -1) {
+      const alreadyExistsWithinGroup = this.allFilterGroups[
+        groupIndex
+      ].filters.find((filter) => {
+        return filter.tagName === filterLayer.tagName;
+      });
+      if (alreadyExistsWithinGroup) {
+        return false;
+      } else {
+        this.allFilterLayers.push(filterLayer);
+        const newActiveFilters = this.activeFilters;
+        newActiveFilters.add(filterLayer.layername);
+        this.activeFilters = newActiveFilters;
+        return true;
+      }
+    }
+    // Check if group already has same filter
+    else {
       this.allFilterLayers.push(filterLayer);
       const newActiveFilters = this.activeFilters;
       newActiveFilters.add(filterLayer.layername);
       this.activeFilters = newActiveFilters;
+      return true;
     }
   };
 
@@ -52,6 +130,54 @@ class FilterStore {
     const newActiveFilters = this.activeFilters;
     newActiveFilters.delete(layerName);
     this.activeFilters = newActiveFilters;
+    this.updateGroups();
+  }
+
+  removeFilterFromGroup(layerName: string): void {
+    const correspondingFilterGroup = this.allFilterGroups.find((group) => {
+      return group.filters.find((filter) => {
+        return filter.layername === layerName;
+      });
+    });
+    if (correspondingFilterGroup) {
+      if (correspondingFilterGroup.filters.length === 1) {
+        this.allFilterGroups = this.allFilterGroups.filter((filtergroup) => {
+          return !(
+            filtergroup.groupName === correspondingFilterGroup.groupName
+          );
+        });
+      } else {
+        this.allFilterGroups.forEach((group) => {
+          group.filters = group.filters.filter((filter) => {
+            return !(filter.layername === layerName);
+          });
+        });
+      }
+    }
+    console.log(this.allFilterGroups);
+  }
+
+  updateGroups(): void {
+    this.allFilterGroups.forEach((group) => {
+      group.filters = this.allFilterLayers.filter(
+        (filter) => filter.group === group.groupName
+      );
+    });
+    this.allFilterGroups = this.allFilterGroups.filter((group) => {
+      return !(group.filters.length === 0);
+    });
+  }
+
+  getFilterGroup(layerName: string): FilterGroup | null {
+    const filtergroup = this.allFilterGroups.find((group) => {
+      group.filters.find((filter) => {
+        return filter.layername === layerName;
+      });
+    });
+    if (filtergroup) {
+      return filtergroup;
+    }
+    return null;
   }
 
   getFilterLayer(name: string): Filter | null {
@@ -64,6 +190,7 @@ class FilterStore {
     return null;
   }
 
+  //FIXME: Hier muss dann über die Gruppen gefiltert werden um richtigen Buffer zu kriegen
   getFilterLayerBuffer(name: string): number | null {
     const filter = this.allFilterLayers.find((filterLayer) => {
       return filterLayer.layername === name;
@@ -75,6 +202,7 @@ class FilterStore {
   }
 
   clearAllFilters(): void {
+    this.allFilterGroups = [];
     this.allFilterLayers = [];
     this.activeFilters.clear();
   }
@@ -87,6 +215,7 @@ class FilterStore {
     this.allFilterLayers.forEach((filterLayer) => {
       this.calculatePointCoordsForFeatures(filterLayer);
     });
+    this.updateGroups();
   }
 
   calculatePointCoordsForFeatures(filterLayer: Filter): void {
@@ -186,6 +315,40 @@ class FilterStore {
       console.error("Geometry is not a Polygon or Multipolygon");
     }
     // layer.Points.push(flattened);
+  }
+
+  getUniqueLayerName(filterName: string, groupName: string): string {
+    return filterName + " - " + groupName;
+  }
+
+  validateGroupName(groupName: string): boolean {
+    const existingGroup = this.allFilterGroups.find((group) => {
+      return group.groupName === groupName;
+    });
+    if (existingGroup || groupName === "") {
+      return false;
+    }
+    return true;
+  }
+
+  getAllActiveTags(): string[] {
+    const tags: string[] = [];
+    this.allFilterLayers.forEach((filter) => {
+      if (!tags.includes(filter.tagName)) {
+        tags.push(filter.tagName);
+      }
+    });
+    return tags;
+  }
+
+  getRelevanceValue(filter: Filter): number | null {
+    const filterGroup = this.allFilterGroups.find((group) => {
+      return group.groupName === filter.group;
+    });
+    if (filterGroup) {
+      return filterGroup.groupRelevance;
+    }
+    return null;
   }
 }
 

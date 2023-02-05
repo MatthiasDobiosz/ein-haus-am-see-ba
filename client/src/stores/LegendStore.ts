@@ -39,6 +39,7 @@ class LegendStore {
     this.legendItems = [];
   }
 
+  //FIXME: Könnte hier tatsächlich so passen, da theoretisch bei mehreren Gleichen Layern immer die erste geholt wird und der Name so gleich bleitb
   addItem(layerName: string, color: string): void {
     this.legendItems.push({ layerName: layerName, color: color });
   }

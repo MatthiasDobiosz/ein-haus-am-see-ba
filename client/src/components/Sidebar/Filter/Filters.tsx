@@ -9,7 +9,7 @@ import {
 import { observer } from "mobx-react";
 import { Point } from "react-map-gl";
 import rootStore from "../../../stores/RootStore";
-import { FilterItem } from "./FilterItem";
+import { FilterGroupItem } from "./FilterGroupItem";
 
 // every relevance has a specific weight
 export enum FilterRelevance {
@@ -33,26 +33,38 @@ export enum FilterRelevance {
  */
 export interface Filter {
   layername: string;
+  tagName: string;
   distance: number;
   measurement: string;
-  relevanceValue: number;
   wanted: boolean;
   points: Point[][];
   features: Feature<Polygon | MultiPolygon, GeoJsonProperties>[];
   originalData: FeatureCollection<Geometry> | null;
+  group: string;
 }
 
+export interface FilterGroup {
+  groupName: string;
+  groupID: number;
+  filters: Filter[];
+  groupRelevance: number;
+}
+
+//FIXME: Hier können dann auch Gruppenkomponenten hinzugeüfgt werden oder auch nur Gruppen
 /**
  * Filters Component that maps the list of currently active filters
  */
 export const Filters = observer((): JSX.Element => {
   return (
     <div>
-      {rootStore.filterStore.allFilterLayers.length > 0 ? (
-        <ul className="text-[0.9em] list-none pt-0 pr-[5px] pb-[10px] pl-[5px]">
-          {rootStore.filterStore.allFilterLayers.map((filterLayer) => {
+      {rootStore.filterStore.allFilterGroups.length > 0 ? (
+        <ul className="text-[0.9em] pt-0 pr-[5px] pb-[10px] pl-[5px]">
+          {rootStore.filterStore.allFilterGroups.map((filterGroup) => {
             return (
-              <FilterItem key={filterLayer.layername} filter={filterLayer} />
+              <FilterGroupItem
+                filtergroup={filterGroup}
+                key={filterGroup.groupName}
+              />
             );
           })}
         </ul>
