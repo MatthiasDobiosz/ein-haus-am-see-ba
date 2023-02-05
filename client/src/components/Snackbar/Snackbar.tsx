@@ -7,7 +7,7 @@ import rootStore from "../../stores/RootStore";
 export const Snackbar = observer((): JSX.Element => {
   return (
     <div
-      className={`min-w-[250px] text-[#fff] text-center rounded-[2px] p-[16px] fixed z-3 left-[15px] bottom-[30px] text-[17px] snackbarActive`}
+      className={`min-w-[250px] text-[#fff] text-center rounded-[2px] p-[16px] fixed z-3 left-[15px] bottom-[30px] text-[17px] snackbarActive z-[10000]`}
       style={{ backgroundColor: rootStore.snackbarStore.snackbarColor }}
     >
       {rootStore.snackbarStore.message}
