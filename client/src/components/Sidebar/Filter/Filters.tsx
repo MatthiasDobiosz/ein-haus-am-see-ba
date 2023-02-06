@@ -48,6 +48,7 @@ export interface FilterGroup {
   groupID: number;
   filters: Filter[];
   groupRelevance: number;
+  active: boolean;
 }
 
 //FIXME: Hier können dann auch Gruppenkomponenten hinzugeüfgt werden oder auch nur Gruppen

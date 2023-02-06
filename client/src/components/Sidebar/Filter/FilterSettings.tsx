@@ -46,7 +46,11 @@ export const FilterSettings = observer(
       if (props.newGroup) {
         //Check if groupname already exists
         if (!rootStore.filterStore.validateGroupName(groupname)) {
-          props.setError(`Group with name ${groupname} already exists!`);
+          if (groupname === "") {
+            props.setError(`No Groupname set`);
+          } else {
+            props.setError(`Group with name ${groupname} already exists!`);
+          }
           //FIXME: display error
         } else {
           const newFilter: Filter = {

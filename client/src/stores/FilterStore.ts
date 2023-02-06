@@ -27,7 +27,9 @@ class FilterStore {
       removeFilter: action,
       removeFilterFromGroup: action,
       updateGroups: action,
+      toggleFiltergroupActive: action,
       getFilterGroup: false,
+      filtergroupsActive: false,
       getFilterLayer: false,
       getFilterLayerBuffer: false,
       clearAllFilters: action,
@@ -58,6 +60,7 @@ class FilterStore {
             (filter) => filter.group === groupName
           ),
           groupRelevance: relevance,
+          active: true,
         });
         console.log("Successfully added new Group");
         return true;
@@ -123,6 +126,7 @@ class FilterStore {
 
   // function to remove single filter from context array
   removeFilter(layerName: string): void {
+    console.log("Lösche Filter: ", layerName);
     this.allFilterLayers = this.allFilterLayers.filter(
       (prevFilterLayer) => !(prevFilterLayer.layername === layerName)
     );
@@ -134,11 +138,7 @@ class FilterStore {
   }
 
   removeFilterFromGroup(layerName: string): void {
-    const correspondingFilterGroup = this.allFilterGroups.find((group) => {
-      return group.filters.find((filter) => {
-        return filter.layername === layerName;
-      });
-    });
+    const correspondingFilterGroup = this.getFilterGroup(layerName);
     if (correspondingFilterGroup) {
       if (correspondingFilterGroup.filters.length === 1) {
         this.allFilterGroups = this.allFilterGroups.filter((filtergroup) => {
@@ -168,16 +168,35 @@ class FilterStore {
     });
   }
 
+  toggleFiltergroupActive(groupname: string) {
+    this.allFilterGroups.forEach((group) => {
+      if (group.groupName === groupname) {
+        group.active = !group.active;
+      }
+    });
+  }
+
   getFilterGroup(layerName: string): FilterGroup | null {
-    const filtergroup = this.allFilterGroups.find((group) => {
-      group.filters.find((filter) => {
+    const filterGroup = this.allFilterGroups.find((group) => {
+      return group.filters.find((filter) => {
         return filter.layername === layerName;
       });
     });
-    if (filtergroup) {
-      return filtergroup;
+    if (filterGroup) {
+      return filterGroup;
     }
     return null;
+  }
+
+  filtergroupsActive(): boolean {
+    const filterGroup = this.allFilterGroups.find((group) => {
+      return group.active === true;
+    });
+    if (filterGroup) {
+      return true;
+    } else {
+      return false;
+    }
   }
 
   getFilterLayer(name: string): Filter | null {
@@ -333,8 +352,12 @@ class FilterStore {
 
   getAllActiveTags(): string[] {
     const tags: string[] = [];
+
     this.allFilterLayers.forEach((filter) => {
-      if (!tags.includes(filter.tagName)) {
+      if (
+        !tags.includes(filter.tagName) &&
+        this.getFilterGroup(filter.layername)?.active
+      ) {
         tags.push(filter.tagName);
       }
     });

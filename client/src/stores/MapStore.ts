@@ -9,7 +9,7 @@ import {
   fetchDataFromPostGISSingle,
   fetchOsmDataFromServer,
 } from "../network/networkUtils";
-import { Filter } from "../components/Sidebar/Filter/Filters";
+import { Filter, FilterGroup } from "../components/Sidebar/Filter/Filters";
 import {
   Feature,
   FeatureCollection,
@@ -72,6 +72,8 @@ class MapStore {
       showPOILocations: false,
       showDataOnMap: false,
       removeData: false,
+      removeGroupData: false,
+      updateData: false,
       resetMapData: false,
       preprocessGeoData: false,
       preprocessGeoDataNew: false,
@@ -96,7 +98,7 @@ class MapStore {
     if (visualType !== this.visualType) {
       this.visualType = visualType;
 
-      if (this.rootStore.filterStore.activeFilters.size > 0) {
+      if (this.rootStore.filterStore.filtergroupsActive()) {
         this.loadMapData();
       } else {
         this.rootStore.snackbarStore.displayHandler(
@@ -484,6 +486,7 @@ class MapStore {
         } else {
           const bounds = getViewportPolygon(this.map, 500);
           const activeTags = this.rootStore.filterStore.getAllActiveTags();
+          console.log(activeTags);
           const firstTag = activeTags[0];
           const lastTag = activeTags[activeTags.length - 1];
           const allResults = await Promise.allSettled(
@@ -522,7 +525,6 @@ class MapStore {
               SnackbarType.ERROR
             );
           }
-          this.showAreasOnMap();
         }
       }
     }
@@ -552,12 +554,66 @@ class MapStore {
 
     if (this.visualType === VisualType.OVERLAY) {
       this.mapLayerManager?.removeCanvasSource("overlaySource");
-      if (this.rootStore.filterStore.activeFilters.size > 0) {
+      if (this.rootStore.filterStore.filtergroupsActive()) {
+        this.addAreaOverlay();
+      }
+    } else {
+      //only remove source if removed tag was the only one of this kind
+      if (
+        !this.rootStore.filterStore.getAllActiveTags().includes(filter.tagName)
+      ) {
+        this.mapLayerManager?.removeGeojsonSource(filter.tagName);
+      }
+    }
+  }
+
+  updateData(filterGroup: FilterGroup): void {
+    if (this.visualType === VisualType.OVERLAY) {
+      this.mapLayerManager?.removeCanvasSource("overlaySource");
+      if (this.rootStore.filterStore.filtergroupsActive()) {
         this.addAreaOverlay();
       }
     } else {
       //console.log("removeGeojson");
-      this.mapLayerManager?.removeGeojsonSource(filter.layername);
+      //only remove source if removed tag was the only one of this kind
+      if (this.rootStore.filterStore.filtergroupsActive()) {
+        this.loadMapData();
+      } else {
+        filterGroup.filters.forEach((filter) => {
+          if (
+            !this.rootStore.filterStore
+              .getAllActiveTags()
+              .includes(filter.tagName)
+          ) {
+            this.mapLayerManager?.removeGeojsonSource(filter.tagName);
+          }
+        });
+      }
+    }
+  }
+
+  removeGroupData(filterGroup: FilterGroup): void {
+    filterGroup.filters.forEach((filter) => {
+      this.rootStore.filterStore.removeFilter(filter.layername);
+    });
+    if (this.visualType === VisualType.OVERLAY) {
+      this.mapLayerManager?.removeCanvasSource("overlaySource");
+      if (this.rootStore.filterStore.filtergroupsActive()) {
+        this.addAreaOverlay();
+      }
+    } else {
+      //console.log("removeGeojson");
+      //only remove source if removed tag was the only one of this kind
+
+      filterGroup.filters.forEach((filter) => {
+        if (
+          !this.rootStore.filterStore
+            .getAllActiveTags()
+            .includes(filter.tagName)
+        ) {
+          this.mapLayerManager?.removeGeojsonSource(filter.tagName);
+        }
+      });
     }
   }
 
@@ -777,10 +833,12 @@ import { buffer } from '@turf/buffer';
 
     // check that there is data to create an overlay for the map
     // FIXME: Hier evtl. check ausbessern
-    if (this.rootStore.filterStore.allFilterLayers.length > 0) {
+    if (this.rootStore.filterStore.filtergroupsActive()) {
       if (this.map) {
         createOverlay(
-          this.rootStore.filterStore.allFilterGroups,
+          this.rootStore.filterStore.allFilterGroups.filter(
+            (group) => group.active === true
+          ),
           this.map,
           this,
           this.rootStore.legendStore

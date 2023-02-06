@@ -135,7 +135,7 @@ export const Heading = observer((): JSX.Element => {
       <button
         type="button"
         className={`p-[0.6em] cursor-pointer overflow-hidden border-0 rounded-[2px] shadow bg-lightgreen text-whitesmoke hover:bg-darkgreen active:bg-darkgreen ${
-          rootStore.filterStore.activeFilters.size > 0 ? "" : "button-disabled"
+          rootStore.filterStore.filtergroupsActive() ? "" : "button-disabled"
         }`}
       >
         Lade Daten manuell
