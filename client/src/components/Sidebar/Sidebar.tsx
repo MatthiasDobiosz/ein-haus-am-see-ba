@@ -1,9 +1,8 @@
 import { HiOutlineArrowNarrowLeft } from "react-icons/hi";
 import { SidebarContext } from "./SidebarContext";
 import { useContext } from "react";
-import { SidebarCategory } from "./SidebarCategory";
-import { Filters } from "./Filter/Filters";
 import { observer } from "mobx-react";
+import { SidebarPanelFilters } from "./SidebarPanelFilters";
 
 interface SidebarProps {
   /** determines whether sidebar is currently active */
@@ -36,36 +35,7 @@ export const Sidebar = observer((props: SidebarProps): JSX.Element => {
           Filterauswahl
         </h2>
       </div>
-      <div>
-        <SidebarCategory
-          title={"Natur"}
-          items={["Parks und Grünflächen", "Wald", "Fluss"]}
-        />
-        <SidebarCategory
-          title={"Gastronomie"}
-          items={["Restaurant", "Cafe", "Bar"]}
-        />
-        <SidebarCategory
-          title={"Öffentliche Verkehrsmittel"}
-          items={["Bushaltestelle", "Bahnhof"]}
-        />
-        <SidebarCategory
-          title={"Einkaufsmöglichkeiten"}
-          items={["Supermarkt", "Einkaufszentrum"]}
-        />
-
-        <SidebarCategory
-          title={"Bildung"}
-          items={["Universität und Hochschule", "Schule"]}
-        />
-
-        <SidebarCategory
-          title={"Sonstiges"}
-          items={["Autobahn", "Parkplatz"]}
-        />
-      </div>
-      <hr className="border-t-[3px] border-solid border-[#bbb]" />
-      <Filters />
+      <SidebarPanelFilters toggleSidebar={toggleSidebar} />
     </div>
   );
 });

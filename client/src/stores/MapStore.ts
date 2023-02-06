@@ -851,7 +851,9 @@ import { buffer } from '@turf/buffer';
     if (this.rootStore.filterStore.filtergroupsActive()) {
       if (this.map) {
         createOverlay(
-          this.rootStore.filterStore.allFilterGroups,
+          this.rootStore.filterStore.allFilterGroups.filter(
+            (group) => group.active === true
+          ),
           this.map,
           this,
           this.rootStore.legendStore

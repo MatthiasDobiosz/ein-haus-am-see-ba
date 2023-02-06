@@ -1,7 +1,6 @@
 import { observer } from "mobx-react";
 import { City } from "./Geocoder";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
+import { HiMagnifyingGlass } from "react-icons/hi2";
 import rootStore from "../../stores/RootStore";
 
 interface GeocoderCityProps {
@@ -22,7 +21,7 @@ export const GeocoderCity = observer((props: GeocoderCityProps) => {
       onClick={() => setLocation()}
     >
       <div className="pl-[12px] border-none text-[15px]">
-        <FontAwesomeIcon icon={faMagnifyingGlass} />
+        <HiMagnifyingGlass />
       </div>
       <div className="pl-2">
         <p className="text-[15px]">{name}</p>

@@ -1,12 +1,8 @@
 import { observer } from "mobx-react";
 import { FilterItem } from "./FilterItem";
 import { FilterGroup } from "./Filters";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faEllipsisVertical,
-  faEye,
-  faEyeSlash,
-} from "@fortawesome/free-solid-svg-icons";
+import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
+import { HiEllipsisVertical } from "react-icons/hi2";
 import { useState } from "react";
 import rootStore from "../../../stores/RootStore";
 import { SnackbarType } from "../../../stores/SnackbarStore";
@@ -46,14 +42,10 @@ export const FilterGroupItem = observer(
         </div>
         <div className="absolute top-2 right-2">
           <button onClick={() => toggleFiltergroupActive()} className="pr-2">
-            {filtergroupActive ? (
-              <FontAwesomeIcon icon={faEyeSlash} />
-            ) : (
-              <FontAwesomeIcon icon={faEye} />
-            )}
+            {filtergroupActive ? <AiFillEyeInvisible /> : <AiFillEye />}
           </button>
           <button onClick={() => setEditingOpen(!editingOpen)}>
-            <FontAwesomeIcon icon={faEllipsisVertical} />
+            <HiEllipsisVertical />
           </button>
         </div>
         <ul className="text-[0.9em] list-none pt-0 pr-[5px] pb-[10px] pl-[5px]">

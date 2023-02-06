@@ -150,6 +150,35 @@ export const FilterSettings = observer(
       }
     };
 
+    const setMeasureAndDistance = (value: string) => {
+      if (value === "km") {
+        if (distance > 2) {
+          props.setError("Es sind maximal 2km Umkreis erlaubt");
+        } else {
+          setDistance((prevDistance) => prevDistance * 1000);
+          setMeasure(value);
+        }
+      } else {
+        if (distance > 2000) {
+          props.setError("Es sind maximal 2km Umkreis erlaubt");
+        } else {
+          setDistance((prevDistance) => prevDistance / 1000);
+          setMeasure(value);
+        }
+      }
+    };
+
+    const setAllowedDistance = (value: number) => {
+      if (
+        (measure === "km" && value < 2) ||
+        (measure === "m" && value < 2000)
+      ) {
+        setDistance(value);
+      } else {
+        props.setError("Es sind maximal 2km Umkreis erlaubt");
+      }
+    };
+
     if (!open) {
       return null;
     }
@@ -167,13 +196,13 @@ export const FilterSettings = observer(
                 type="text"
                 defaultValue="500"
                 pattern="\d"
-                onChange={(e) => setDistance(Number(e.target.value))}
+                onChange={(e) => setAllowedDistance(Number(e.target.value))}
                 className="p-[6px] mr-[8px] w-[8vw] h-[4vh] border-[1px] border-solid border-[#808080] rounded-[2px]"
               />
               <div>
                 <select
                   defaultValue={"m"}
-                  onChange={(e) => setMeasure(e.target.value)}
+                  onChange={(e) => setMeasureAndDistance(e.target.value)}
                   className="border-[1px] border-solid border-[#000000]"
                 >
                   <option value="m">m</option>

@@ -10,9 +10,6 @@
     "format": "yarn prettier src/*.tsx --write"
   },
   "dependencies": {
-    "@fortawesome/fontawesome-svg-core": "^6.2.1",
-    "@fortawesome/free-solid-svg-icons": "^6.2.1",
-    "@fortawesome/react-fontawesome": "^0.2.0",
     "@mapbox/geojson-coords": "0.0.1",
     "@mapbox/mapbox-gl-geocoder": "^5.0.1",
     "@turf/buffer": "^6.5.0",

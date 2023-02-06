@@ -43,6 +43,7 @@ class FilterStore {
       getAllInactiveLayers: false,
       getAllActiveTags: false,
       getRelevanceValue: false,
+      changeSingleFilter: action,
       rootStore: false,
     });
   }
@@ -128,7 +129,6 @@ class FilterStore {
 
   // function to remove single filter from context array
   removeFilter(layerName: string): void {
-    console.log("Lösche Filter: ", layerName);
     this.allFilterLayers = this.allFilterLayers.filter(
       (prevFilterLayer) => !(prevFilterLayer.layername === layerName)
     );
@@ -394,6 +394,22 @@ class FilterStore {
       return filterGroup.groupRelevance;
     }
     return null;
+  }
+
+  changeSingleFilter(
+    layername: string,
+    distance: number,
+    measure: string,
+    wanted: boolean
+  ): void {
+    this.allFilterLayers.forEach((filter) => {
+      if (filter.layername === layername) {
+        filter.distance = distance;
+        filter.measurement = measure;
+        filter.wanted = wanted;
+      }
+    });
+    this.updateGroups();
   }
 }
 

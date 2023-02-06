@@ -1,8 +1,7 @@
 import { observer } from "mobx-react";
 import { useEffect, useState } from "react";
 import axios from "../../network/axiosInterceptor";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
+import { HiMagnifyingGlass } from "react-icons/hi2";
 import { GeocoderCity } from "./GeocoderCity";
 
 export interface City {
@@ -71,7 +70,7 @@ export const Geocoder = observer(() => {
           }`}
           onMouseEnter={() => setIsSearchActive(true)}
         >
-          <FontAwesomeIcon icon={faMagnifyingGlass} />
+          <HiMagnifyingGlass />
         </div>
       </div>
       {currentCities.length > 0 && (
