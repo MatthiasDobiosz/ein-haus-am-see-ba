@@ -124,12 +124,15 @@ export const Heading = observer((): JSX.Element => {
             rootStore.mapStore.setVisualType(
               e.target.value === "Overlay"
                 ? VisualType.OVERLAY
-                : VisualType.NORMAL
+                : e.target.value === "Normal"
+                ? VisualType.NORMAL
+                : VisualType.BOTH
             )
           }
         >
           <option value="Overlay">Gebiete</option>
           <option value="Normal">Orte</option>
+          <option value="Both">Beides</option>
         </select>
       </div>
       <button

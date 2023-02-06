@@ -35,7 +35,7 @@ import { SnackbarType } from "./SnackbarStore";
 export const enum VisualType {
   NORMAL,
   OVERLAY,
-  //HEATMAP
+  BOTH,
 }
 
 class MapStore {
@@ -66,6 +66,8 @@ class MapStore {
       toggleDbType: action,
       setPerformanceViewActive: action,
       mapLayerManager: false,
+      loadOverlayMapData: false,
+      loadPOIMapData: false,
       loadMapData: false,
       showAreasOnMap: false,
       showPOILocations: false,
@@ -123,6 +125,145 @@ class MapStore {
 
   setPerformanceViewActive() {
     this.performanceViewActive = this.performanceViewActive ? false : true;
+  }
+
+  async loadOverlayMapData(): Promise<void> {
+    if (this.map) {
+      const bounds = getViewportPolygon(this.map, 500);
+      const activeFilters = this.rootStore.filterStore.getAllActiveLayers();
+      console.log(activeFilters.length);
+      const firstLayer = activeFilters[0].layername;
+      const lastLayer = activeFilters[activeFilters.length - 1].layername;
+      const allResults = await Promise.allSettled(
+        activeFilters.map(async (filter) => {
+          const query = osmTagCollection.getQueryForCategoryPostGIS(
+            filter.tagName
+          );
+          const bufferValue =
+            this.rootStore.filterStore.getFilterLayerBuffer(filter.layername) ||
+            0;
+          const data = await fetchDataFromPostGISBuffer(
+            bounds,
+            query,
+            bufferValue,
+            true,
+            filter.layername === firstLayer,
+            filter.layername === lastLayer
+          );
+          //console.log(data);
+          if (data) {
+            console.log(data);
+
+            startPerformanceMeasure("LoadingSingleFilter");
+            this.preprocessGeoDataNew(data, filter.layername);
+            endPerformanceMeasure("LoadingSingleFilter");
+          }
+        })
+      );
+
+      endPerformanceMeasure("LoadingAllFilters");
+      this.rootStore.snackbarStore.closeHandler();
+
+      let success = true;
+      for (const res of allResults) {
+        if (res.status === "rejected") {
+          success = false;
+          break;
+        }
+      }
+      if (!success) {
+        this.rootStore.snackbarStore.displayHandler(
+          "Nicht alle Daten konnten erfolgreich geladen werden",
+          1500,
+          SnackbarType.ERROR
+        );
+      }
+      this.showAreasOnMap();
+      console.log("done");
+      const inactiveFilters = this.rootStore.filterStore.getAllInactiveLayers();
+      console.log(inactiveFilters.length);
+
+      const inactiveResults = await Promise.allSettled(
+        inactiveFilters.map(async (filter) => {
+          const query = osmTagCollection.getQueryForCategoryPostGIS(
+            filter.tagName
+          );
+          const bufferValue =
+            this.rootStore.filterStore.getFilterLayerBuffer(filter.layername) ||
+            0;
+          const data = await fetchDataFromPostGISBuffer(
+            bounds,
+            query,
+            bufferValue,
+            this.visualType === VisualType.OVERLAY
+          );
+          //console.log(data);
+          if (data) {
+            this.preprocessGeoDataNew(data, filter.layername);
+          }
+        })
+      );
+
+      let inactiveSuccess = true;
+      for (const res of inactiveResults) {
+        if (res.status === "rejected") {
+          inactiveSuccess = false;
+          break;
+        }
+      }
+      if (!inactiveSuccess) {
+        this.rootStore.snackbarStore.displayHandler(
+          "Nicht alle Daten konnten erfolgreich geladen werden",
+          1500,
+          SnackbarType.ERROR
+        );
+      }
+    }
+  }
+
+  async loadPOIMapData(): Promise<void> {
+    if (this.map) {
+      const bounds = getViewportPolygon(this.map, 500);
+      const activeTags = this.rootStore.filterStore.getAllActiveTags();
+      const firstTag = activeTags[0];
+      const lastTag = activeTags[activeTags.length - 1];
+      const allResults = await Promise.allSettled(
+        activeTags.map(async (tag) => {
+          const query = osmTagCollection.getQueryForCategoryPostGIS(tag);
+          const data = await fetchDataFromPostGISBuffer(
+            bounds,
+            query,
+            0,
+            false,
+            tag === firstTag,
+            tag === lastTag
+          );
+          //console.log(data);
+          if (data) {
+            console.log(data);
+            this.showDataOnMap(data, tag);
+          }
+        })
+      );
+
+      endPerformanceMeasure("LoadingAllFilters");
+      this.rootStore.snackbarStore.closeHandler();
+
+      let success = true;
+      for (const res of allResults) {
+        if (res.status === "rejected") {
+          success = false;
+          break;
+        }
+      }
+      if (!success) {
+        this.rootStore.snackbarStore.displayHandler(
+          "Nicht alle Daten konnten erfolgreich geladen werden",
+          1500,
+          SnackbarType.ERROR
+        );
+      }
+    }
   }
 
   async loadMapData(): Promise<void> {
@@ -345,147 +486,23 @@ class MapStore {
         this.showAreasOnMap();
       } else {
         startPerformanceMeasure("LoadingAllFilters");
-        if (this.visualType === VisualType.OVERLAY) {
-          const bounds = getViewportPolygon(this.map, 500);
-          const activeFilters = this.rootStore.filterStore.getAllActiveLayers();
-          console.log(activeFilters.length);
-          const firstLayer = activeFilters[0].layername;
-          const lastLayer = activeFilters[activeFilters.length - 1].layername;
-          const allResults = await Promise.allSettled(
-            activeFilters.map(async (filter) => {
-              const query = osmTagCollection.getQueryForCategoryPostGIS(
-                filter.tagName
-              );
-              const bufferValue =
-                this.rootStore.filterStore.getFilterLayerBuffer(
-                  filter.layername
-                ) || 0;
-              const data = await fetchDataFromPostGISBuffer(
-                bounds,
-                query,
-                bufferValue,
-                this.visualType === VisualType.OVERLAY,
-                filter.layername === firstLayer,
-                filter.layername === lastLayer
-              );
-              //console.log(data);
-              if (data) {
-                console.log(data);
-
-                startPerformanceMeasure("LoadingSingleFilter");
-                this.preprocessGeoDataNew(data, filter.layername);
-                endPerformanceMeasure("LoadingSingleFilter");
-              }
-            })
-          );
-
-          endPerformanceMeasure("LoadingAllFilters");
-          this.rootStore.snackbarStore.closeHandler();
-
-          let success = true;
-          for (const res of allResults) {
-            if (res.status === "rejected") {
-              success = false;
-              break;
-            }
-          }
-          if (!success) {
-            this.rootStore.snackbarStore.displayHandler(
-              "Nicht alle Daten konnten erfolgreich geladen werden",
-              1500,
-              SnackbarType.ERROR
-            );
-          }
-          this.showAreasOnMap();
-          console.log("done");
-          const inactiveFilters =
-            this.rootStore.filterStore.getAllInactiveLayers();
-          console.log(inactiveFilters.length);
-
-          const inactiveResults = await Promise.allSettled(
-            inactiveFilters.map(async (filter) => {
-              const query = osmTagCollection.getQueryForCategoryPostGIS(
-                filter.tagName
-              );
-              const bufferValue =
-                this.rootStore.filterStore.getFilterLayerBuffer(
-                  filter.layername
-                ) || 0;
-              const data = await fetchDataFromPostGISBuffer(
-                bounds,
-                query,
-                bufferValue,
-                this.visualType === VisualType.OVERLAY
-              );
-              //console.log(data);
-              if (data) {
-                this.preprocessGeoDataNew(data, filter.layername);
-              }
-            })
-          );
-
-          let inactiveSuccess = true;
-          for (const res of inactiveResults) {
-            if (res.status === "rejected") {
-              inactiveSuccess = false;
-              break;
-            }
-          }
-          if (!inactiveSuccess) {
-            this.rootStore.snackbarStore.displayHandler(
-              "Nicht alle Daten konnten erfolgreich geladen werden",
-              1500,
-              SnackbarType.ERROR
-            );
-          }
+        if (this.visualType === VisualType.BOTH) {
+          await this.loadOverlayMapData();
+          this.loadPOIMapData();
+        } else if (this.visualType === VisualType.OVERLAY) {
+          this.loadOverlayMapData();
         } else {
-          const bounds = getViewportPolygon(this.map, 500);
-          const activeTags = this.rootStore.filterStore.getAllActiveTags();
-          const firstTag = activeTags[0];
-          const lastTag = activeTags[activeTags.length - 1];
-          const allResults = await Promise.allSettled(
-            activeTags.map(async (tag) => {
-              const query = osmTagCollection.getQueryForCategoryPostGIS(tag);
-              const data = await fetchDataFromPostGISBuffer(
-                bounds,
-                query,
-                0,
-                this.visualType === VisualType.OVERLAY,
-                tag === firstTag,
-                tag === lastTag
-              );
-              //console.log(data);
-              if (data) {
-                console.log(data);
-                this.showDataOnMap(data, tag);
-              }
-            })
-          );
-
-          endPerformanceMeasure("LoadingAllFilters");
-          this.rootStore.snackbarStore.closeHandler();
-
-          let success = true;
-          for (const res of allResults) {
-            if (res.status === "rejected") {
-              success = false;
-              break;
-            }
-          }
-          if (!success) {
-            this.rootStore.snackbarStore.displayHandler(
-              "Nicht alle Daten konnten erfolgreich geladen werden",
-              1500,
-              SnackbarType.ERROR
-            );
-          }
+          this.loadPOIMapData();
         }
       }
     }
   }
 
   showAreasOnMap(): void {
-    if (this.visualType === VisualType.OVERLAY) {
+    if (
+      this.visualType === VisualType.OVERLAY ||
+      this.visualType === VisualType.BOTH
+    ) {
       if (this.mapLayerManager?.geojsonSourceActive) {
         this.mapLayerManager?.removeAllDataFromMap();
       }
@@ -506,7 +523,18 @@ class MapStore {
   removeData(filter: Filter): void {
     this.rootStore.filterStore.removeFilter(filter.layername);
 
-    if (this.visualType === VisualType.OVERLAY) {
+    if (this.visualType === VisualType.BOTH) {
+      this.mapLayerManager?.removeCanvasSource("overlaySource");
+      //only remove source if removed tag was the only one of this kind
+      if (
+        !this.rootStore.filterStore.getAllActiveTags().includes(filter.tagName)
+      ) {
+        this.mapLayerManager?.removeGeojsonSource(filter.tagName);
+      }
+      if (this.rootStore.filterStore.filtergroupsActive()) {
+        this.addAreaOverlay();
+      }
+    } else if (this.visualType === VisualType.OVERLAY) {
       this.mapLayerManager?.removeCanvasSource("overlaySource");
       if (this.rootStore.filterStore.filtergroupsActive()) {
         this.addAreaOverlay();
@@ -522,7 +550,23 @@ class MapStore {
   }
 
   updateData(filterGroup: FilterGroup): void {
-    if (this.visualType === VisualType.OVERLAY) {
+    if (this.visualType === VisualType.BOTH) {
+      this.mapLayerManager?.removeCanvasSource("overlaySource");
+      if (this.rootStore.filterStore.filtergroupsActive()) {
+        this.addAreaOverlay();
+        this.loadPOIMapData();
+      } else {
+        filterGroup.filters.forEach((filter) => {
+          if (
+            !this.rootStore.filterStore
+              .getAllActiveTags()
+              .includes(filter.tagName)
+          ) {
+            this.mapLayerManager?.removeGeojsonSource(filter.tagName);
+          }
+        });
+      }
+    } else if (this.visualType === VisualType.OVERLAY) {
       this.mapLayerManager?.removeCanvasSource("overlaySource");
       if (this.rootStore.filterStore.filtergroupsActive()) {
         this.addAreaOverlay();
@@ -550,7 +594,24 @@ class MapStore {
     filterGroup.filters.forEach((filter) => {
       this.rootStore.filterStore.removeFilter(filter.layername);
     });
-    if (this.visualType === VisualType.OVERLAY) {
+    if (this.visualType === VisualType.BOTH) {
+      this.mapLayerManager?.removeCanvasSource("overlaySource");
+      //console.log("removeGeojson");
+      //only remove source if removed tag was the only one of this kind
+
+      filterGroup.filters.forEach((filter) => {
+        if (
+          !this.rootStore.filterStore
+            .getAllActiveTags()
+            .includes(filter.tagName)
+        ) {
+          this.mapLayerManager?.removeGeojsonSource(filter.tagName);
+        }
+      });
+      if (this.rootStore.filterStore.filtergroupsActive()) {
+        this.addAreaOverlay();
+      }
+    } else if (this.visualType === VisualType.OVERLAY) {
       this.mapLayerManager?.removeCanvasSource("overlaySource");
       if (this.rootStore.filterStore.filtergroupsActive()) {
         this.addAreaOverlay();

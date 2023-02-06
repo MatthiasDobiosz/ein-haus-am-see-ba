@@ -51,7 +51,16 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
       //! overlay needs to be updated all the time unfortunately as long as i can't find a way
       //! to draw the canvas bigger than the screen and also retain correct pixel corrdinates :(
       //!  -> would probably require view matrix transformations
-      if (visualType === VisualType.OVERLAY) {
+      if (visualType === VisualType.BOTH) {
+        // this is a threshold to avoid firing events with small moves
+        if (distance < moveTreshold) {
+          // if below the treshold only update overlay
+          rootStore.mapStore.addAreaOverlay();
+        } else {
+          // if greater than the treshold load new data from the internet as well
+          rootStore.mapStore.loadMapData();
+        }
+      } else if (visualType === VisualType.OVERLAY) {
         rootStore.filterStore.recalculateScreenCoords();
         // this is a threshold to avoid firing events with small moves
         if (distance < moveTreshold) {
@@ -75,7 +84,24 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
     if (map) {
       const newZoom = map.getZoom();
 
-      if (visualType === VisualType.OVERLAY) {
+      if (visualType === VisualType.BOTH) {
+        rootStore.filterStore.recalculateScreenCoords();
+
+        if (newZoom <= minRequiredZoomLevel) {
+          // performance optimization - dont show/update overlay below a certain zoomlevel
+
+          rootStore.snackbarStore.displayHandler(
+            "Die aktuelle Zoomstufe ist zu niedrig, um Daten zu aktualisieren!",
+            2000,
+            SnackbarType.WARNING
+          );
+          return;
+        } else if (Math.abs(newZoom - currentMapZoom) <= zoomTreshold) {
+          rootStore.mapStore.addAreaOverlay();
+          return;
+        }
+        rootStore.mapStore.loadMapData();
+      } else if (visualType === VisualType.OVERLAY) {
         rootStore.filterStore.recalculateScreenCoords();
 
         if (newZoom <= minRequiredZoomLevel) {
