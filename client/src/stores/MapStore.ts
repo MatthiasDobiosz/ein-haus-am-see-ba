@@ -66,7 +66,6 @@ class MapStore {
       toggleDbType: action,
       setPerformanceViewActive: action,
       mapLayerManager: false,
-      loadMapDataOverpass: false,
       loadMapData: false,
       showAreasOnMap: false,
       showPOILocations: false,
@@ -124,91 +123,6 @@ class MapStore {
 
   setPerformanceViewActive() {
     this.performanceViewActive = this.performanceViewActive ? false : true;
-  }
-
-  async loadMapDataOverpass(): Promise<void> {
-    startPerformanceMeasure("The whole workflow PostGIS");
-    if (this.rootStore.filterStore.activeFilters.size === 0) {
-      return;
-    }
-
-    // give feedback to the user
-    // FIXME: Do that in component to get snackbarContext
-    //showSnackbar("Daten werden geladen...", SnackbarType.INFO, undefined, true);
-    this.rootStore.snackbarStore.displayHandler(
-      "Daten werden geladen...",
-      undefined,
-      SnackbarType.INFO
-    );
-
-    if (this.map) {
-      const bounds = getViewportBoundsString(this.map, 500);
-
-      const allResults = await Promise.allSettled(
-        Array.from(this.rootStore.filterStore.activeFilters).map(
-          async (tag) => {
-            // get overpass query for each tag
-            const query = osmTagCollection.getQueryForCategory(tag);
-
-            //TODO check if already locally loaded this tag; only fetch if not!
-            //TODO also check that bounds are nearly the same!
-            //! doesnt work like this because filterlayer has already been created before in main!
-            /*
-          if (FilterManager.activeFilters.has(tag)) {
-            console.log("loadin locally");
-            const layer = FilterManager.getFilterLayer(tag);
-            console.log("tag", tag);
-            console.log(layer);
-            this.showDataOnMap(layer?.Features, tag);
-            return;
-          }*/
-
-            //Benchmark.startMeasure("Fetching data from osm");
-            // request data from osm
-            const data = await fetchOsmDataFromServer(bounds, query);
-            //Benchmark.stopMeasure("Fetching data from osm");
-
-            //console.log("data from server:", data);
-
-            if (data) {
-              //const filterLayer = this.preprocessGeoData(data, tag);
-
-              // get the filterlayer for this tag that has already been created at this point
-              const layer = this.rootStore.filterStore.getFilterLayer(tag);
-              if (layer) {
-                layer.originalData = data;
-              }
-
-              //console.log(this.selectedVisualType);
-              if (this.visualType === VisualType.NORMAL) {
-                this.showDataOnMap(data, tag);
-              } else {
-                this.preprocessGeoData(data, tag);
-              }
-            }
-          }
-        )
-      );
-
-      this.rootStore.snackbarStore.closeHandler();
-
-      let success = true;
-      for (const res of allResults) {
-        if (res.status === "rejected") {
-          success = false;
-          break;
-        }
-      }
-      if (!success) {
-        this.rootStore.snackbarStore.displayHandler(
-          "Nicht alle Daten konnten erfolgreich geladen werden",
-          1500,
-          SnackbarType.ERROR
-        );
-      }
-
-      this.showAreasOnMap();
-    }
   }
 
   async loadMapData(): Promise<void> {
@@ -431,10 +345,10 @@ class MapStore {
         this.showAreasOnMap();
       } else {
         startPerformanceMeasure("LoadingAllFilters");
-        //FIXME: Hier langt es wahrscheinlich nicht, alle tags zu holen, wir brauchen eigtl. alle Tags + ihre zugehörige Gruppe um z.B. den richtigen Buffer zu holen
         if (this.visualType === VisualType.OVERLAY) {
           const bounds = getViewportPolygon(this.map, 500);
-          const activeFilters = this.rootStore.filterStore.allFilterLayers;
+          const activeFilters = this.rootStore.filterStore.getAllActiveLayers();
+          console.log(activeFilters.length);
           const firstLayer = activeFilters[0].layername;
           const lastLayer = activeFilters[activeFilters.length - 1].layername;
           const allResults = await Promise.allSettled(
@@ -483,10 +397,50 @@ class MapStore {
             );
           }
           this.showAreasOnMap();
+          console.log("done");
+          const inactiveFilters =
+            this.rootStore.filterStore.getAllInactiveLayers();
+          console.log(inactiveFilters.length);
+
+          const inactiveResults = await Promise.allSettled(
+            inactiveFilters.map(async (filter) => {
+              const query = osmTagCollection.getQueryForCategoryPostGIS(
+                filter.tagName
+              );
+              const bufferValue =
+                this.rootStore.filterStore.getFilterLayerBuffer(
+                  filter.layername
+                ) || 0;
+              const data = await fetchDataFromPostGISBuffer(
+                bounds,
+                query,
+                bufferValue,
+                this.visualType === VisualType.OVERLAY
+              );
+              //console.log(data);
+              if (data) {
+                this.preprocessGeoDataNew(data, filter.layername);
+              }
+            })
+          );
+
+          let inactiveSuccess = true;
+          for (const res of inactiveResults) {
+            if (res.status === "rejected") {
+              inactiveSuccess = false;
+              break;
+            }
+          }
+          if (!inactiveSuccess) {
+            this.rootStore.snackbarStore.displayHandler(
+              "Nicht alle Daten konnten erfolgreich geladen werden",
+              1500,
+              SnackbarType.ERROR
+            );
+          }
         } else {
           const bounds = getViewportPolygon(this.map, 500);
           const activeTags = this.rootStore.filterStore.getAllActiveTags();
-          console.log(activeTags);
           const firstTag = activeTags[0];
           const lastTag = activeTags[activeTags.length - 1];
           const allResults = await Promise.allSettled(
@@ -836,9 +790,7 @@ import { buffer } from '@turf/buffer';
     if (this.rootStore.filterStore.filtergroupsActive()) {
       if (this.map) {
         createOverlay(
-          this.rootStore.filterStore.allFilterGroups.filter(
-            (group) => group.active === true
-          ),
+          this.rootStore.filterStore.allFilterGroups,
           this.map,
           this,
           this.rootStore.legendStore

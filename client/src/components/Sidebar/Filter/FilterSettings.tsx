@@ -21,7 +21,9 @@ export const FilterSettings = observer(
     const { value, open, onClose } = props;
     const [distance, setDistance] = useState(500);
     const [measure, setMeasure] = useState("m");
-    const [relevance, setRelevance] = useState(FilterRelevance.important);
+    const [relevance, setRelevance] = useState(
+      FilterRelevance.notVeryImportant
+    );
     const [wanted, setWanted] = useState(true);
     const [groupname, setGroupname] = useState("");
 

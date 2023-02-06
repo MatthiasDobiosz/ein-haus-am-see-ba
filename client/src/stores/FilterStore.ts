@@ -39,6 +39,8 @@ class FilterStore {
       convertPolygonCoordsToPixelCoordsNew: action,
       getUniqueLayerName: false,
       validateGroupName: false,
+      getAllActiveLayers: false,
+      getAllInactiveLayers: false,
       getAllActiveTags: false,
       getRelevanceValue: false,
       rootStore: false,
@@ -348,6 +350,26 @@ class FilterStore {
       return false;
     }
     return true;
+  }
+
+  getAllActiveLayers(): Filter[] {
+    const activeFilters: Filter[] = [];
+    this.allFilterGroups.forEach((group) => {
+      if (group.active) {
+        activeFilters.push(...group.filters);
+      }
+    });
+    return activeFilters;
+  }
+
+  getAllInactiveLayers(): Filter[] {
+    const inactiveFilters: Filter[] = [];
+    this.allFilterGroups.forEach((group) => {
+      if (!group.active) {
+        inactiveFilters.push(...group.filters);
+      }
+    });
+    return inactiveFilters;
   }
 
   getAllActiveTags(): string[] {
