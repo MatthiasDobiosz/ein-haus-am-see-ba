@@ -53,6 +53,19 @@ export const Heading = observer((): JSX.Element => {
     rootStore.mapStore.loadMapData();
   };
 
+  const setVisualType = (value: string) => {
+    if (value === "Overlay") {
+      rootStore.mapStore.setVisualType(VisualType.OVERLAY);
+      rootStore.legendStore.showOverlayLegend();
+    } else if (value === "Normal") {
+      rootStore.mapStore.setVisualType(VisualType.NORMAL);
+      rootStore.legendStore.hideOverlayLegend();
+    } else {
+      rootStore.mapStore.setVisualType(VisualType.BOTH);
+      rootStore.legendStore.showOverlayLegend();
+    }
+  };
+
   return (
     <nav
       role="navigation"
@@ -120,15 +133,7 @@ export const Heading = observer((): JSX.Element => {
         <select
           className="italic opacity-[0.7] leading-[24px] pl-[2px] pr-[2px] pt-[3px] pb-[3px] cursor-pointer rounded-[4px] inline w-[100%]"
           defaultValue={"Overlay"}
-          onChange={(e) =>
-            rootStore.mapStore.setVisualType(
-              e.target.value === "Overlay"
-                ? VisualType.OVERLAY
-                : e.target.value === "Normal"
-                ? VisualType.NORMAL
-                : VisualType.BOTH
-            )
-          }
+          onChange={(e) => setVisualType(e.target.value)}
         >
           <option value="Overlay">Gebiete</option>
           <option value="Normal">Orte</option>

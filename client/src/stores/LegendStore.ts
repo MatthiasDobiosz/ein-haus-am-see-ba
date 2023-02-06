@@ -11,20 +11,25 @@ export interface LegendObject {
 
 class LegendStore {
   isLegendActive: boolean;
+  isOverlayLegendActive: boolean;
   legendItems: LegendObject[];
   rootStore: RootStore;
 
   constructor(rootStore: RootStore) {
     this.isLegendActive = false;
+    this.isOverlayLegendActive = true;
     this.legendItems = [];
     this.rootStore = rootStore;
 
     makeObservable(this, {
       isLegendActive: observable,
+      isOverlayLegendActive: observable,
       legendItems: observable,
       rootStore: false,
       showLegend: action,
+      showOverlayLegend: action,
       hideLegend: action,
+      hideOverlayLegend: action,
       addItem: action,
       removeItem: action,
     });
@@ -34,9 +39,17 @@ class LegendStore {
     this.isLegendActive = true;
   }
 
+  showOverlayLegend(): void {
+    this.isOverlayLegendActive = true;
+  }
+
   hideLegend(): void {
     this.isLegendActive = false;
     this.legendItems = [];
+  }
+
+  hideOverlayLegend(): void {
+    this.isOverlayLegendActive = false;
   }
 
   //FIXME: Könnte hier tatsächlich so passen, da theoretisch bei mehreren Gleichen Layern immer die erste geholt wird und der Name so gleich bleitb

@@ -5,6 +5,7 @@ import { observer } from "mobx-react";
 import rootStore from "../stores/RootStore";
 import { Legend } from "./Map/Legend";
 import { PerformanceChart } from "./PerformanceChart";
+import { OverlayLegend } from "./Map/OverlayLegend";
 
 interface MainSectionProps {
   isSidebarOpen: boolean;
@@ -29,6 +30,9 @@ export const MainSection = observer((props: MainSectionProps) => {
       <Sidebar isSidebarOpen={isSidebarOpen} />
       <MapOverlay isSidebarOpen={isSidebarOpen} />
       {rootStore.snackbarStore.isDisplayed && <Snackbar />}
+      {rootStore.legendStore.isOverlayLegendActive && (
+        <OverlayLegend left={rootStore.legendStore.isLegendActive} />
+      )}
       {rootStore.legendStore.isLegendActive && <Legend />}
     </div>
   );
