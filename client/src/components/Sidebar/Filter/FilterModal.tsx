@@ -32,6 +32,10 @@ export const FilterModal = observer(
       setErrorMessage(errorMessage);
     };
 
+    const goBack = () => {
+      setNewGroup(null);
+    };
+
     const hideError = () => {
       setError(false);
       setErrorMessage("");
@@ -43,15 +47,6 @@ export const FilterModal = observer(
 
     if (!open) {
       return null;
-    }
-
-    if (error) {
-      return createPortal(
-        <div className="fixed z-[1000] left-0 top-0 w-[100%] h-[100%] overflow-auto bg-[#00000066] block">
-          <ErrorModal errorMessage={errorMessage} closeError={hideError} />
-        </div>,
-        portalDiv
-      );
     }
 
     if (props.editing && props.filter) {
@@ -79,15 +74,23 @@ export const FilterModal = observer(
     }
 
     return createPortal(
-      <div className="fixed z-[1000] left-0 top-0 w-[100%] h-[100%] overflow-auto bg-[#00000066] block">
-        <FilterSettings
-          value={value}
-          open={open}
-          onClose={onClose}
-          newGroup={newGroup}
-          setError={showError}
-        />
-      </div>,
+      <>
+        <div className="fixed z-[1000] left-0 top-0 w-[100%] h-[100%] overflow-auto bg-[#00000066] block">
+          <FilterSettings
+            value={value}
+            open={open}
+            onClose={onClose}
+            newGroup={newGroup}
+            setError={showError}
+            goBack={goBack}
+          />
+        </div>
+        {error && (
+          <div className="fixed z-[1000] left-0 top-0 w-[100%] h-[100%] overflow-auto bg-[#00000066] block">
+            <ErrorModal errorMessage={errorMessage} closeError={hideError} />
+          </div>
+        )}
+      </>,
       portalDiv
     );
   }

@@ -1,5 +1,6 @@
 import { observer } from "mobx-react";
 import { Dispatch, SetStateAction, useState } from "react";
+import { AiOutlineClose } from "react-icons/ai";
 import rootStore from "../../../stores/RootStore";
 import { SnackbarType } from "../../../stores/SnackbarStore";
 
@@ -14,6 +15,7 @@ interface FilterSettingsProps {
   onClose: Dispatch<SetStateAction<boolean>>;
   newGroup: boolean;
   setError: (errorMessage: string) => void;
+  goBack: () => void;
 }
 
 export const FilterSettings = observer(
@@ -185,75 +187,47 @@ export const FilterSettings = observer(
 
     return (
       <div className="bg-[#fff] my-[5%] mx-auto p-0 relative rounded-[8px] w-[40vw] modal-content">
-        <h2 className="flex justify-center py-[12px] px-0 bg-[#5cb85c] text-[#fff] text-[1.5em] font-bold rounded-t-[8px] rounded-r-[8px]">
-          {value}
-        </h2>
+        <div className="relative">
+          <h2 className="flex justify-center py-[12px] px-0 bg-[#5cb85c] text-[#fff] text-[1.5em] font-bold rounded-t-[8px] rounded-r-[8px]">
+            {value}
+          </h2>
+          <button
+            className="absolute top-[20%] right-4 text-[24px]"
+            onClick={() => props.onClose(true)}
+          >
+            <AiOutlineClose color="#fff" />
+          </button>
+        </div>
         <div className="pt-[16px] pb-[2px] px-[16px] flex justify-center">
           <form>
             <div className="flex items-center">
-              <p className="my-[16px] text-[16px] pr-[12px]">Entfernung: </p>
-              <input
-                type="text"
-                defaultValue="500"
-                pattern="\d"
-                onChange={(e) => setAllowedDistance(Number(e.target.value))}
-                className="p-[6px] mr-[8px] w-[8vw] h-[4vh] border-[1px] border-solid border-[#808080] rounded-[2px]"
-              />
-              <div>
-                <select
-                  defaultValue={"m"}
-                  onChange={(e) => setMeasureAndDistance(e.target.value)}
-                  className="border-[1px] border-solid border-[#000000]"
-                >
-                  <option value="m">m</option>
-                  <option value="km">km</option>
-                </select>
-              </div>
-            </div>
-            <div className="hidden">
-              Die Entfernung kann leider im Moment höchstens 700 m sein!
-            </div>
-            {props.newGroup && (
-              <div className="flex items-center">
-                <p className="my-[16px] text-[16px] pr-[12px]">Relevanz</p>
-                <div>
-                  <select
-                    defaultValue={"optional"}
-                    onChange={(e) => setRelevanceValue(e.target.value)}
-                    className="border-[1px] border-solid border-[#000000]"
-                  >
-                    <option value="optional">optional</option>
-                    <option value="wichtig">wichtig</option>
-                    <option value="sehr wichtig">sehr wichtig</option>
-                  </select>
-                </div>
-              </div>
-            )}
-            <div className="flex items-center">
               {props.newGroup ? (
                 <>
-                  <p className="my-[16px] text-[16px] pr-[12px]">
-                    Gruppenname:
+                  <p className="my-[16px] text-[16px] pr-[12px] w-[12em]">
+                    Name der Filtergruppe:
                   </p>
                   <input
                     type="text"
                     defaultValue=""
                     onChange={(e) => setGroupname(e.target.value)}
-                    className="p-[6px] mr-[8px] w-[8vw] h-[2vh] border-[1px] border-solid border-[#808080] rounded-[2px]"
+                    className="p-[6px] mr-[8px] w-[8vw] h-[3vh] border-[1px] border-solid border-[#808080] rounded-[2px]"
+                    required
                   />
                 </>
               ) : (
                 <>
-                  <p className="my-[16px] text-[16px] pr-[12px]">Gruppe:</p>
+                  <p className="my-[16px] text-[16px] pr-[12px] w-[12em]">
+                    Zugehörige Gruppe:
+                  </p>
                   <select
                     defaultValue={""}
                     onChange={(e) => {
                       console.log(e.target.value);
                       setGroupname(e.target.value);
                     }}
-                    className="border-[1px] border-solid border-[#000000]"
+                    className="border-[1px] h-[3vh] border-solid border-[#000000]"
                   >
-                    <option value="">Choose a group</option>
+                    <option value="">Wähle eine Gruppe aus</option>
                     {rootStore.filterStore.allFilterGroups.map((group) => {
                       return (
                         <option value={group.groupName} key={group.groupName}>
@@ -265,7 +239,51 @@ export const FilterSettings = observer(
                 </>
               )}
             </div>
-            <div className="my-[16px]">
+            <div className="flex items-center">
+              <p className="my-[16px] text-[16px] pr-[12px] w-[12em] text-center">
+                Umkreis:{" "}
+              </p>
+              <input
+                type="text"
+                defaultValue="500"
+                pattern="\d"
+                onChange={(e) => setAllowedDistance(Number(e.target.value))}
+                className="p-[6px] mr-[8px] w-[8vw] h-[3vh] border-[1px] border-solid border-[#808080] rounded-[2px]"
+                required
+              />
+              <div>
+                <select
+                  defaultValue={"m"}
+                  onChange={(e) => setMeasureAndDistance(e.target.value)}
+                  className="border-[1px] border-solid border-[#000000] h-[3vh]"
+                >
+                  <option value="m">m</option>
+                  <option value="km">km</option>
+                </select>
+              </div>
+            </div>
+            <div className="hidden">
+              Die Entfernung kann leider im Moment höchstens 700 m sein!
+            </div>
+            {props.newGroup && (
+              <div className="flex items-center">
+                <p className="my-[16px] text-[16px] pr-[12px] w-[12em] text-center">
+                  Relevanz
+                </p>
+                <div>
+                  <select
+                    defaultValue={"optional"}
+                    onChange={(e) => setRelevanceValue(e.target.value)}
+                    className="border-[1px] border-solid border-[#000000] h-[3vh]"
+                  >
+                    <option value="optional">optional</option>
+                    <option value="wichtig">wichtig</option>
+                    <option value="sehr wichtig">sehr wichtig</option>
+                  </select>
+                </div>
+              </div>
+            )}
+            <div className="my-[16px] ml-[6em]">
               <p className="text-[16px] mr-[12px] my-[16px]">
                 Dieses Kriterium soll:{" "}
               </p>
@@ -300,9 +318,9 @@ export const FilterSettings = observer(
           <button
             type="button"
             className="mb-[1em] p-[0.8em] w-[10vw] cursor-pointer overflow-hidden border-0 outline-none rounded-[4px] bg-[#e8e8e8] text-[#000000] hover:bg-[#e2dede] active:bg-[#e2dede]"
-            onClick={() => onClose(false)}
+            onClick={() => props.goBack()}
           >
-            Abbrechen
+            Zurück
           </button>
           <button
             type="button"
