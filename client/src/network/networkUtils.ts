@@ -4,6 +4,7 @@ import {
   FeatureCollection,
   GeometryObject,
   MultiPolygon,
+  Point,
   Polygon,
 } from "geojson";
 import {
@@ -157,7 +158,6 @@ export async function fetchDataFromPostGISIndex(
     });
 
     let url = "/postGISIndex?" + params.toString();
-
     if (first) {
       url += "&first=true";
     }
@@ -183,6 +183,24 @@ export async function fetchDataFromPostGISIndex(
   }
 }
 
+export async function fetchHouseDataFromPostGIS(
+  mapBounds: string
+): Promise<FeatureCollection<Point, any> | null> {
+  try {
+    const params = new URLSearchParams({
+      bounds: mapBounds,
+    });
+
+    const url = "/getHouses?" + params.toString();
+    console.log(url);
+    const response = await axios.get(url, { timeout: 20000 });
+    return response.data as FeatureCollection<Point, any>;
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+}
+
 export async function fetchDataFromPostGISBuffer(
   mapBounds: string,
   condition: string,
@@ -201,6 +219,7 @@ export async function fetchDataFromPostGISBuffer(
       });
 
       url = "/postGISBuffer?" + params.toString();
+      console.log(url);
     } else {
       const params = new URLSearchParams({
         bounds: mapBounds,

@@ -1,6 +1,4 @@
 import { observer } from "mobx-react";
-import rootStore from "../../stores/RootStore";
-import { LegendItem } from "./LegendItem";
 
 interface OverlayLegendProps {
   left: boolean;

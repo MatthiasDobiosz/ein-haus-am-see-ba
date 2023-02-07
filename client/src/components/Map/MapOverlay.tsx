@@ -7,6 +7,10 @@ import rootStore from "../../stores/RootStore";
 import { VisualType } from "../../stores/MapStore";
 import { observer } from "mobx-react";
 import { Geocoder } from "./Geocoder";
+import { fetchHouseDataFromPostGIS } from "../../network/networkUtils";
+import { getViewportPolygon } from "./mapUtils";
+import { Feature, Point } from "geojson";
+import { CustomMarker } from "./CustomMarker";
 
 interface MapOverlayProps {
   /* dynamically change width depending on sidebarState */
@@ -25,6 +29,8 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
     new LngLat(12.101624, 49.013432)
   );
   const [currentMapZoom, setCurrentMapZoom] = useState(initialZoomLevel);
+  const [showHouses, setShowHouses] = useState(false);
+  const [houses, setHouses] = useState<Feature<Point, any>[]>([]);
   const { isSidebarOpen } = props;
   const minRequiredZoomLevel = 7;
   const map = rootStore.mapStore.map;
@@ -43,10 +49,27 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
     }
   };*/
 
+  async function fetchHouses() {
+    console.log("hey");
+    console.log(map);
+    if (map) {
+      const bounds = getViewportPolygon(map, 0);
+      const data = await fetchHouseDataFromPostGIS(bounds);
+      if (data?.features) {
+        setHouses(data?.features);
+      }
+    }
+  }
+
   const onMapDragEnd = () => {
     if (map) {
       // Uses the Haversine Formula to calculate difference between tow latLng coords in meters
       const distance = currentMapCenter.distanceTo(map.getCenter());
+
+      console.log(currentMapZoom);
+      if (currentMapZoom > 17) {
+        fetchHouses();
+      }
 
       //! overlay needs to be updated all the time unfortunately as long as i can't find a way
       //! to draw the canvas bigger than the screen and also retain correct pixel corrdinates :(
@@ -84,6 +107,12 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
     if (map) {
       const newZoom = map.getZoom();
 
+      if (newZoom > 17) {
+        setShowHouses(true);
+        fetchHouses();
+      } else {
+        setShowHouses(false);
+      }
       if (visualType === VisualType.BOTH) {
         rootStore.filterStore.recalculateScreenCoords();
 
@@ -132,6 +161,7 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
         }
         //rootStore.mapStore.loadMapData();
       }
+      setCurrentMapZoom(newZoom);
     }
   };
 
@@ -181,6 +211,10 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
         >
           <NavigationControl position={"top-right"} visualizePitch={true} />
           <AttributionControl position={"bottom-right"} />
+          {showHouses &&
+            houses.map((house, i) => {
+              return <CustomMarker house={house} key={i} />;
+            })}
         </Map>
         <canvas id="texture_canvas">
           Your browser does not seem to support HTML5 canvas.
