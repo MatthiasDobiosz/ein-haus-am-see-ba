@@ -31,6 +31,8 @@ import {
   startPerformanceMeasure,
 } from "../../../shared/benchmarking";
 import { SnackbarType } from "./SnackbarStore";
+import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
+import mapboxgl from "mapbox-gl";
 
 export const enum VisualType {
   NORMAL,
@@ -91,6 +93,19 @@ class MapStore {
       this.mapLayerManager = new MapLayerManager(
         this,
         this.rootStore.legendStore
+      );
+      this.map.addControl(
+        new MapboxGeocoder({
+          accessToken: process.env.MAPBOX_TOKEN,
+          mapboxgl: mapboxgl,
+          limit: 10,
+          minLength: 4,
+          zoom: 12,
+          placeholder: "Ort suchen",
+          countries: "de",
+          collapsed: true,
+        }),
+        "top-left"
       );
     }
   }
@@ -591,15 +606,15 @@ class MapStore {
   }
 
   removeGroupData(filterGroup: FilterGroup): void {
+    const filters = filterGroup.filters;
     filterGroup.filters.forEach((filter) => {
       this.rootStore.filterStore.removeFilter(filter.layername);
     });
     if (this.visualType === VisualType.BOTH) {
       this.mapLayerManager?.removeCanvasSource("overlaySource");
-      //console.log("removeGeojson");
+      console.log(filters.length);
       //only remove source if removed tag was the only one of this kind
-
-      filterGroup.filters.forEach((filter) => {
+      filters.forEach((filter) => {
         if (
           !this.rootStore.filterStore
             .getAllActiveTags()
@@ -620,7 +635,7 @@ class MapStore {
       //console.log("removeGeojson");
       //only remove source if removed tag was the only one of this kind
 
-      filterGroup.filters.forEach((filter) => {
+      filters.forEach((filter) => {
         if (
           !this.rootStore.filterStore
             .getAllActiveTags()
@@ -836,6 +851,7 @@ class MapStore {
      *    relevance: 0.8,  //="very important"
      *    name: "Park",import { lineCategories } from './../../../dist/client/src/osmTagCollection';
 import { buffer } from '@turf/buffer';
+import { MapboxGeocoder } from '@mapbox/mapbox-gl-geocoder';
 
      *    wanted: true,
      *  },

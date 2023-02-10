@@ -29,7 +29,7 @@ const pool = new Pool({
   user: "postgres",
   port: 5432,
   password: "syn27X!L",
-  database: "osm_houses",
+  database: "osm_categories",
   max: 100,
   connectionTimeoutMillis: 0,
   idleTimeoutMillis: 0,

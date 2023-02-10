@@ -19,14 +19,14 @@ export const MainSection = observer((props: MainSectionProps) => {
 
   if (rootStore.mapStore.performanceViewActive) {
     return (
-      <div className="h-[calc(100vh-50px)] w-[100vw] flex justify-center items-center">
+      <div className="h-[100vh] w-[100vw] flex justify-center items-center">
         <PerformanceChart />
       </div>
     );
   }
 
   return (
-    <div className="h-[calc(100vh-50px)] w-[100vw] flex justify-end items-center">
+    <div className="h-[100vh] w-[100vw] flex justify-end items-center">
       <Sidebar isSidebarOpen={isSidebarOpen} />
       <MapOverlay isSidebarOpen={isSidebarOpen} />
       {rootStore.snackbarStore.isDisplayed && <Snackbar />}

@@ -21,6 +21,13 @@ export const enum TagNames {
   Parks = "Parks und Grünflächen",
   Forest = "Wald",
   River = "Fluss",
+  Kindergarten = "Kindergarten",
+  Hospital = "Krankenhaus",
+  Clinic = "Klinik",
+  Pharmacy = "Apotheke",
+  Cinema = "Kino",
+  Theatre = "Theater",
+  Lake = "See",
 }
 export const TagColors = new Map([
   ["Bar", "#7209b7"],
@@ -37,6 +44,13 @@ export const TagColors = new Map([
   ["Autobahn", "#f4a261"],
   ["Fluss", "#1d3557"],
   ["Wald", "#386641"],
+  ["Kindergarten", "#f20089"],
+  ["Krankenhaus", "#9E3749"],
+  ["Klinik", "#C77785"],
+  ["Apotheke", "#E24BE4"],
+  ["Kino", "#25BEAB"],
+  ["Theater", "#7BBE25"],
+  ["See", "#312A8C"],
 ]);
 
 class TagCollection {
@@ -96,6 +110,27 @@ class TagCollection {
 
       case TagNames.River:
         return "river";
+
+      case TagNames.Kindergarten:
+        return "kindergarten";
+
+      case TagNames.Hospital:
+        return "hospital";
+
+      case TagNames.Clinic:
+        return "clinic";
+
+      case TagNames.Pharmacy:
+        return "pharmacy";
+
+      case TagNames.Cinema:
+        return "cinema";
+
+      case TagNames.Theatre:
+        return "theatre";
+
+      case TagNames.Lake:
+        return "lake";
 
       default:
         throw new Error(

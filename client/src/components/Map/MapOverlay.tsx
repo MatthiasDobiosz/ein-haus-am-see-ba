@@ -1,16 +1,17 @@
 import mapboxgl, { LngLat } from "mapbox-gl";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import Map, { AttributionControl, NavigationControl } from "react-map-gl";
 import { initialZoomLevel } from "./mapboxConfig";
 import { SnackbarType } from "./../../stores/SnackbarStore";
 import rootStore from "../../stores/RootStore";
 import { VisualType } from "../../stores/MapStore";
 import { observer } from "mobx-react";
-import { Geocoder } from "./Geocoder";
+import { AiOutlineMenu } from "react-icons/ai";
 import { fetchHouseDataFromPostGIS } from "../../network/networkUtils";
 import { getViewportPolygon } from "./mapUtils";
 import { Feature, Point } from "geojson";
 import { CustomMarker } from "./CustomMarker";
+import { SidebarContext } from "../Sidebar/SidebarContext";
 
 interface MapOverlayProps {
   /* dynamically change width depending on sidebarState */
@@ -25,13 +26,13 @@ const moveTreshold = 1000; // map center difference in meters
  * Component that returns Mapbox Map with specified settings
  */
 export const MapOverlay = observer((props: MapOverlayProps) => {
+  const { isSidebarOpen, setSidebarState } = useContext(SidebarContext);
   const [currentMapCenter, setCurrentMapCenter] = useState<LngLat>(
     new LngLat(12.101624, 49.013432)
   );
   const [currentMapZoom, setCurrentMapZoom] = useState(initialZoomLevel);
   const [showHouses, setShowHouses] = useState(false);
   const [houses, setHouses] = useState<Feature<Point, any>[]>([]);
-  const { isSidebarOpen } = props;
   const minRequiredZoomLevel = 7;
   const map = rootStore.mapStore.map;
   const visualType = rootStore.mapStore.visualType;
@@ -60,6 +61,10 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
       }
     }
   }
+
+  const handleSidebarOpen = () => {
+    setSidebarState(!isSidebarOpen);
+  };
 
   const onMapDragEnd = () => {
     if (map) {
@@ -173,10 +178,15 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
 
   return (
     <div
-      className="h-[calc(100vh-50px)] flex justify-start items-center transition-width ease-in-out duration-500 relative"
+      className="h-[100vh] flex justify-start items-center transition-width ease-in-out duration-500 relative"
       style={{ width: isSidebarOpen ? "70%" : "100%" }}
     >
-      <Geocoder />
+      <button
+        className="absolute p-3 mt-[1em] ml-[0.5em] text-[1.4em] text-[#fff] z-50 top-20 inline-flex flex-row bg-[#fa6400] font-semibold justify-center w-auto border-solid border-[1px] border-[#ffffffcc] hover:bg-[#fb8332] rounded-[10%]"
+        onClick={() => handleSidebarOpen()}
+      >
+        <AiOutlineMenu /> <span className="pl-2">Menu</span>
+      </button>
       <div className="w-[100%] h-[100%]">
         <Map
           ref={(ref) => ref && rootStore.mapStore.setMap(ref.getMap())}

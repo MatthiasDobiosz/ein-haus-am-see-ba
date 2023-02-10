@@ -171,13 +171,10 @@ export const FilterSettings = observer(
     };
 
     const setAllowedDistance = (value: number) => {
-      if (
-        (measure === "km" && value < 2) ||
-        (measure === "m" && value < 2000)
-      ) {
+      if (value <= 2000) {
         setDistance(value);
       } else {
-        props.setError("Es sind maximal 2km Umkreis erlaubt");
+        props.setError("Es sind maximal 2000m Umkreis möglich");
       }
     };
 
@@ -248,19 +245,10 @@ export const FilterSettings = observer(
                 defaultValue="500"
                 pattern="\d"
                 onChange={(e) => setAllowedDistance(Number(e.target.value))}
-                className="p-[6px] mr-[8px] w-[8vw] h-[3vh] border-[1px] border-solid border-[#808080] rounded-[2px]"
+                className="p-[6px] mr-[8px] w-[4em] h-[3vh] border-[1px] border-solid border-[#808080] rounded-[2px]"
                 required
               />
-              <div>
-                <select
-                  defaultValue={"m"}
-                  onChange={(e) => setMeasureAndDistance(e.target.value)}
-                  className="border-[1px] border-solid border-[#000000] h-[3vh]"
-                >
-                  <option value="m">m</option>
-                  <option value="km">km</option>
-                </select>
-              </div>
+              <span>Meter</span>
             </div>
             <div className="hidden">
               Die Entfernung kann leider im Moment höchstens 700 m sein!

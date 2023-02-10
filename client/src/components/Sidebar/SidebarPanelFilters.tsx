@@ -13,7 +13,7 @@ export const SidebarPanelFilters = observer(
         <div>
           <SidebarCategory
             title={"Natur"}
-            items={["Parks und Grünflächen", "Wald", "Fluss"]}
+            items={["Parks und Grünflächen", "Wald", "Fluss", "See"]}
           />
           <SidebarCategory
             title={"Gastronomie"}
@@ -30,8 +30,15 @@ export const SidebarPanelFilters = observer(
 
           <SidebarCategory
             title={"Bildung"}
-            items={["Universität und Hochschule", "Schule"]}
+            items={["Universität und Hochschule", "Schule", "Kindergarten"]}
           />
+
+          <SidebarCategory
+            title={"Gesundheitswesen"}
+            items={["Krankenhaus", "Klinik", "Apotheke"]}
+          />
+
+          <SidebarCategory title={"Freizeit"} items={["Kino", "Theater"]} />
 
           <SidebarCategory
             title={"Sonstiges"}
