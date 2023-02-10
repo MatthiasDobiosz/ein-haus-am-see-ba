@@ -120,7 +120,6 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
       className="h-[calc(100vh-50px)] flex justify-start items-center transition-width ease-in-out duration-500 relative"
       style={{ width: isSidebarOpen ? "70%" : "100%" }}
     >
-      <Geocoder />
       <div className="w-[100%] h-[100%]">
         <Map
           ref={(ref) => ref && rootStore.mapStore.setMap(ref.getMap())}

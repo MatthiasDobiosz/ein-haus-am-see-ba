@@ -31,6 +31,8 @@ import {
   startPerformanceMeasure,
 } from "../../../shared/benchmarking";
 import { SnackbarType } from "./SnackbarStore";
+import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
+import mapboxgl from "mapbox-gl";
 
 export const enum VisualType {
   NORMAL,
@@ -88,6 +90,20 @@ class MapStore {
       this.mapLayerManager = new MapLayerManager(
         this,
         this.rootStore.legendStore
+      );
+      this.map.addControl(
+        new MapboxGeocoder({
+          accessToken: process.env.MAPBOX_TOKEN,
+          mapboxgl: mapboxgl,
+          limit: 10,
+          minLength: 4,
+          zoom: 12,
+          placeholder: "Ort suchen",
+          countries: "de",
+          collapsed: true,
+          types: "poi",
+        }),
+        "top-left"
       );
     }
   }
