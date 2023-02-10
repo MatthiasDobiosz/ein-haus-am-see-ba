@@ -1,12 +1,17 @@
 import mapboxgl, { LngLat } from "mapbox-gl";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import Map, { AttributionControl, NavigationControl } from "react-map-gl";
 import { initialZoomLevel } from "./mapboxConfig";
 import { SnackbarType } from "./../../stores/SnackbarStore";
 import rootStore from "../../stores/RootStore";
 import { VisualType } from "../../stores/MapStore";
 import { observer } from "mobx-react";
-import { Geocoder } from "./Geocoder";
+import { AiOutlineMenu } from "react-icons/ai";
+import { fetchHouseDataFromPostGIS } from "../../network/networkUtils";
+import { getViewportPolygon } from "./mapUtils";
+import { Feature, Point } from "geojson";
+import { CustomMarker } from "./CustomMarker";
+import { SidebarContext } from "../Sidebar/SidebarContext";
 
 interface MapOverlayProps {
   /* dynamically change width depending on sidebarState */
@@ -21,11 +26,13 @@ const moveTreshold = 1000; // map center difference in meters
  * Component that returns Mapbox Map with specified settings
  */
 export const MapOverlay = observer((props: MapOverlayProps) => {
+  const { isSidebarOpen, setSidebarState } = useContext(SidebarContext);
   const [currentMapCenter, setCurrentMapCenter] = useState<LngLat>(
     new LngLat(12.101624, 49.013432)
   );
   const [currentMapZoom, setCurrentMapZoom] = useState(initialZoomLevel);
-  const { isSidebarOpen } = props;
+  const [showHouses, setShowHouses] = useState(false);
+  const [houses, setHouses] = useState<Feature<Point, any>[]>([]);
   const minRequiredZoomLevel = 7;
   const map = rootStore.mapStore.map;
   const visualType = rootStore.mapStore.visualType;
@@ -43,15 +50,45 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
     }
   };*/
 
+  async function fetchHouses() {
+    console.log("hey");
+    console.log(map);
+    if (map) {
+      const bounds = getViewportPolygon(map, 0);
+      const data = await fetchHouseDataFromPostGIS(bounds);
+      if (data?.features) {
+        setHouses(data?.features);
+      }
+    }
+  }
+
+  const handleSidebarOpen = () => {
+    setSidebarState(!isSidebarOpen);
+  };
+
   const onMapDragEnd = () => {
     if (map) {
       // Uses the Haversine Formula to calculate difference between tow latLng coords in meters
       const distance = currentMapCenter.distanceTo(map.getCenter());
 
+      console.log(currentMapZoom);
+      if (currentMapZoom > 17) {
+        fetchHouses();
+      }
+
       //! overlay needs to be updated all the time unfortunately as long as i can't find a way
       //! to draw the canvas bigger than the screen and also retain correct pixel corrdinates :(
       //!  -> would probably require view matrix transformations
-      if (visualType === VisualType.OVERLAY) {
+      if (visualType === VisualType.BOTH) {
+        // this is a threshold to avoid firing events with small moves
+        if (distance < moveTreshold) {
+          // if below the treshold only update overlay
+          rootStore.mapStore.addAreaOverlay();
+        } else {
+          // if greater than the treshold load new data from the internet as well
+          rootStore.mapStore.loadMapData();
+        }
+      } else if (visualType === VisualType.OVERLAY) {
         rootStore.filterStore.recalculateScreenCoords();
         // this is a threshold to avoid firing events with small moves
         if (distance < moveTreshold) {
@@ -75,7 +112,30 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
     if (map) {
       const newZoom = map.getZoom();
 
-      if (visualType === VisualType.OVERLAY) {
+      if (newZoom > 17) {
+        setShowHouses(true);
+        fetchHouses();
+      } else {
+        setShowHouses(false);
+      }
+      if (visualType === VisualType.BOTH) {
+        rootStore.filterStore.recalculateScreenCoords();
+
+        if (newZoom <= minRequiredZoomLevel) {
+          // performance optimization - dont show/update overlay below a certain zoomlevel
+
+          rootStore.snackbarStore.displayHandler(
+            "Die aktuelle Zoomstufe ist zu niedrig, um Daten zu aktualisieren!",
+            2000,
+            SnackbarType.WARNING
+          );
+          return;
+        } else if (Math.abs(newZoom - currentMapZoom) <= zoomTreshold) {
+          rootStore.mapStore.addAreaOverlay();
+          return;
+        }
+        rootStore.mapStore.loadMapData();
+      } else if (visualType === VisualType.OVERLAY) {
         rootStore.filterStore.recalculateScreenCoords();
 
         if (newZoom <= minRequiredZoomLevel) {
@@ -106,6 +166,7 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
         }
         //rootStore.mapStore.loadMapData();
       }
+      setCurrentMapZoom(newZoom);
     }
   };
 
@@ -117,10 +178,15 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
 
   return (
     <div
-      className="h-[calc(100vh-50px)] flex justify-start items-center transition-width ease-in-out duration-500 relative"
+      className="h-[100vh] flex justify-start items-center transition-width ease-in-out duration-500 relative"
       style={{ width: isSidebarOpen ? "70%" : "100%" }}
     >
-      <Geocoder />
+      <button
+        className="absolute p-3 mt-[1em] ml-[0.5em] text-[1.4em] text-[#fff] z-50 top-20 inline-flex flex-row bg-[#fa6400] font-semibold justify-center w-auto border-solid border-[1px] border-[#ffffffcc] hover:bg-[#fb8332] rounded-[10%]"
+        onClick={() => handleSidebarOpen()}
+      >
+        <AiOutlineMenu /> <span className="pl-2">Menu</span>
+      </button>
       <div className="w-[100%] h-[100%]">
         <Map
           ref={(ref) => ref && rootStore.mapStore.setMap(ref.getMap())}
@@ -155,6 +221,10 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
         >
           <NavigationControl position={"top-right"} visualizePitch={true} />
           <AttributionControl position={"bottom-right"} />
+          {showHouses &&
+            houses.map((house, i) => {
+              return <CustomMarker house={house} key={i} />;
+            })}
         </Map>
         <canvas id="texture_canvas">
           Your browser does not seem to support HTML5 canvas.

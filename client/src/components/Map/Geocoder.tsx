@@ -1,8 +1,7 @@
 import { observer } from "mobx-react";
 import { useEffect, useState } from "react";
 import axios from "../../network/axiosInterceptor";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
+import { HiMagnifyingGlass } from "react-icons/hi2";
 import { GeocoderCity } from "./GeocoderCity";
 
 export interface City {
@@ -53,16 +52,10 @@ export const Geocoder = observer(() => {
 
   return (
     <div
-      className="absolute p-0 border-none mt-[8px] mr-[16px] ml-[16px] text-[25px] z-50 top-2 flex flex-col"
+      className="absolute p-0 border-none mt-[8px] mr-[16px] ml-[16px] text-[18px] z-50 top-2 flex flex-col"
       onMouseLeave={() => setDisabled()}
     >
       <div className="flex flex-row searchBox">
-        <div
-          className="p-[6px] text-[25px] bg-[#fff]"
-          onMouseEnter={() => setIsSearchActive(true)}
-        >
-          <FontAwesomeIcon icon={faMagnifyingGlass} />
-        </div>
         <input
           type="text"
           placeholder="search city.."
@@ -71,6 +64,14 @@ export const Geocoder = observer(() => {
           className={`searchInput w-0 ${isSearchActive ? "active" : ""}`}
           value={currentText}
         />
+        <div
+          className={`p-[6px] text-[25px] bg-[#fff] ${
+            isSearchActive ? "" : "rounded-[50%]"
+          }`}
+          onMouseEnter={() => setIsSearchActive(true)}
+        >
+          <HiMagnifyingGlass />
+        </div>
       </div>
       {currentCities.length > 0 && (
         <div className=" flex flex-col ">

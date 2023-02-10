@@ -9,7 +9,7 @@ import {
   fetchDataFromPostGISSingle,
   fetchOsmDataFromServer,
 } from "../network/networkUtils";
-import { Filter } from "../components/Sidebar/Filter/Filters";
+import { Filter, FilterGroup } from "../components/Sidebar/Filter/Filters";
 import {
   Feature,
   FeatureCollection,
@@ -31,11 +31,13 @@ import {
   startPerformanceMeasure,
 } from "../../../shared/benchmarking";
 import { SnackbarType } from "./SnackbarStore";
+import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
+import mapboxgl from "mapbox-gl";
 
 export const enum VisualType {
   NORMAL,
   OVERLAY,
-  //HEATMAP
+  BOTH,
 }
 
 class MapStore {
@@ -66,12 +68,15 @@ class MapStore {
       toggleDbType: action,
       setPerformanceViewActive: action,
       mapLayerManager: false,
-      loadMapDataOverpass: false,
+      loadOverlayMapData: false,
+      loadPOIMapData: false,
       loadMapData: false,
       showAreasOnMap: false,
       showPOILocations: false,
       showDataOnMap: false,
       removeData: false,
+      removeGroupData: false,
+      updateData: false,
       resetMapData: false,
       preprocessGeoData: false,
       preprocessGeoDataNew: false,
@@ -89,6 +94,19 @@ class MapStore {
         this,
         this.rootStore.legendStore
       );
+      this.map.addControl(
+        new MapboxGeocoder({
+          accessToken: process.env.MAPBOX_TOKEN,
+          mapboxgl: mapboxgl,
+          limit: 10,
+          minLength: 4,
+          zoom: 12,
+          placeholder: "Ort suchen",
+          countries: "de",
+          collapsed: true,
+        }),
+        "top-left"
+      );
     }
   }
 
@@ -96,7 +114,7 @@ class MapStore {
     if (visualType !== this.visualType) {
       this.visualType = visualType;
 
-      if (this.rootStore.filterStore.activeFilters.size > 0) {
+      if (this.rootStore.filterStore.filtergroupsActive()) {
         this.loadMapData();
       } else {
         this.rootStore.snackbarStore.displayHandler(
@@ -124,70 +142,41 @@ class MapStore {
     this.performanceViewActive = this.performanceViewActive ? false : true;
   }
 
-  async loadMapDataOverpass(): Promise<void> {
-    startPerformanceMeasure("The whole workflow PostGIS");
-    if (this.rootStore.filterStore.activeFilters.size === 0) {
-      return;
-    }
-
-    // give feedback to the user
-    // FIXME: Do that in component to get snackbarContext
-    //showSnackbar("Daten werden geladen...", SnackbarType.INFO, undefined, true);
-    this.rootStore.snackbarStore.displayHandler(
-      "Daten werden geladen...",
-      undefined,
-      SnackbarType.INFO
-    );
-
+  async loadOverlayMapData(): Promise<void> {
     if (this.map) {
-      const bounds = getViewportBoundsString(this.map, 500);
-
+      const bounds = getViewportPolygon(this.map, 500);
+      const activeFilters = this.rootStore.filterStore.getAllActiveLayers();
+      console.log(activeFilters.length);
+      const firstLayer = activeFilters[0].layername;
+      const lastLayer = activeFilters[activeFilters.length - 1].layername;
       const allResults = await Promise.allSettled(
-        Array.from(this.rootStore.filterStore.activeFilters).map(
-          async (tag) => {
-            // get overpass query for each tag
-            const query = osmTagCollection.getQueryForCategory(tag);
+        activeFilters.map(async (filter) => {
+          const query = osmTagCollection.getQueryForCategoryPostGIS(
+            filter.tagName
+          );
+          const bufferValue =
+            this.rootStore.filterStore.getFilterLayerBuffer(filter.layername) ||
+            0;
+          const data = await fetchDataFromPostGISBuffer(
+            bounds,
+            query,
+            bufferValue,
+            true,
+            filter.layername === firstLayer,
+            filter.layername === lastLayer
+          );
+          //console.log(data);
+          if (data) {
+            console.log(data);
 
-            //TODO check if already locally loaded this tag; only fetch if not!
-            //TODO also check that bounds are nearly the same!
-            //! doesnt work like this because filterlayer has already been created before in main!
-            /*
-          if (FilterManager.activeFilters.has(tag)) {
-            console.log("loadin locally");
-            const layer = FilterManager.getFilterLayer(tag);
-            console.log("tag", tag);
-            console.log(layer);
-            this.showDataOnMap(layer?.Features, tag);
-            return;
-          }*/
-
-            //Benchmark.startMeasure("Fetching data from osm");
-            // request data from osm
-            const data = await fetchOsmDataFromServer(bounds, query);
-            //Benchmark.stopMeasure("Fetching data from osm");
-
-            //console.log("data from server:", data);
-
-            if (data) {
-              //const filterLayer = this.preprocessGeoData(data, tag);
-
-              // get the filterlayer for this tag that has already been created at this point
-              const layer = this.rootStore.filterStore.getFilterLayer(tag);
-              if (layer) {
-                layer.originalData = data;
-              }
-
-              //console.log(this.selectedVisualType);
-              if (this.visualType === VisualType.NORMAL) {
-                this.showDataOnMap(data, tag);
-              } else {
-                this.preprocessGeoData(data, tag);
-              }
-            }
+            startPerformanceMeasure("LoadingSingleFilter");
+            this.preprocessGeoDataNew(data, filter.layername);
+            endPerformanceMeasure("LoadingSingleFilter");
           }
-        )
+        })
       );
 
+      endPerformanceMeasure("LoadingAllFilters");
       this.rootStore.snackbarStore.closeHandler();
 
       let success = true;
@@ -204,8 +193,91 @@ class MapStore {
           SnackbarType.ERROR
         );
       }
-
       this.showAreasOnMap();
+      console.log("done");
+      const inactiveFilters = this.rootStore.filterStore.getAllInactiveLayers();
+      console.log(inactiveFilters.length);
+
+      const inactiveResults = await Promise.allSettled(
+        inactiveFilters.map(async (filter) => {
+          const query = osmTagCollection.getQueryForCategoryPostGIS(
+            filter.tagName
+          );
+          const bufferValue =
+            this.rootStore.filterStore.getFilterLayerBuffer(filter.layername) ||
+            0;
+          const data = await fetchDataFromPostGISBuffer(
+            bounds,
+            query,
+            bufferValue,
+            this.visualType === VisualType.OVERLAY
+          );
+          //console.log(data);
+          if (data) {
+            this.preprocessGeoDataNew(data, filter.layername);
+          }
+        })
+      );
+
+      let inactiveSuccess = true;
+      for (const res of inactiveResults) {
+        if (res.status === "rejected") {
+          inactiveSuccess = false;
+          break;
+        }
+      }
+      if (!inactiveSuccess) {
+        this.rootStore.snackbarStore.displayHandler(
+          "Nicht alle Daten konnten erfolgreich geladen werden",
+          1500,
+          SnackbarType.ERROR
+        );
+      }
+    }
+  }
+
+  async loadPOIMapData(): Promise<void> {
+    if (this.map) {
+      const bounds = getViewportPolygon(this.map, 500);
+      const activeTags = this.rootStore.filterStore.getAllActiveTags();
+      const firstTag = activeTags[0];
+      const lastTag = activeTags[activeTags.length - 1];
+      const allResults = await Promise.allSettled(
+        activeTags.map(async (tag) => {
+          const query = osmTagCollection.getQueryForCategoryPostGIS(tag);
+          const data = await fetchDataFromPostGISBuffer(
+            bounds,
+            query,
+            0,
+            false,
+            tag === firstTag,
+            tag === lastTag
+          );
+          //console.log(data);
+          if (data) {
+            console.log(data);
+            this.showDataOnMap(data, tag);
+          }
+        })
+      );
+
+      endPerformanceMeasure("LoadingAllFilters");
+      this.rootStore.snackbarStore.closeHandler();
+
+      let success = true;
+      for (const res of allResults) {
+        if (res.status === "rejected") {
+          success = false;
+          break;
+        }
+      }
+      if (!success) {
+        this.rootStore.snackbarStore.displayHandler(
+          "Nicht alle Daten konnten erfolgreich geladen werden",
+          1500,
+          SnackbarType.ERROR
+        );
+      }
     }
   }
 
@@ -302,6 +374,7 @@ class MapStore {
         }
         this.showAreasOnMap();
       } else if (this.dbType === DBType.POSTGISSINGLE) {
+        //FIXME: Union Query nicht wert extra auf Filtergruppen umzustellen.. bräuchte eigenen Workflow
         startPerformanceMeasure("LoadingAllFilters");
         const bounds = getViewportPolygon(this.map, 500);
         //get Tags for active Filters
@@ -428,62 +501,23 @@ class MapStore {
         this.showAreasOnMap();
       } else {
         startPerformanceMeasure("LoadingAllFilters");
-        const bounds = getViewportPolygon(this.map, 500);
-        const activeTags = Array.from(this.rootStore.filterStore.activeFilters);
-        const firstTag = activeTags[0];
-        const lastTag = activeTags[activeTags.length - 1];
-        const allResults = await Promise.allSettled(
-          activeTags.map(async (tag) => {
-            const query = osmTagCollection.getQueryForCategoryPostGIS(tag);
-            const bufferValue =
-              this.rootStore.filterStore.getFilterLayerBuffer(tag) || 0;
-            const data = await fetchDataFromPostGISBuffer(
-              bounds,
-              query,
-              bufferValue,
-              this.visualType === VisualType.OVERLAY,
-              tag === firstTag,
-              tag === lastTag
-            );
-            //console.log(data);
-            if (data) {
-              console.log(data);
-
-              if (this.visualType === VisualType.NORMAL) {
-                this.showDataOnMap(data, tag);
-              } else {
-                startPerformanceMeasure("LoadingSingleFilter");
-                this.preprocessGeoDataNew(data, tag);
-                endPerformanceMeasure("LoadingSingleFilter");
-              }
-            }
-          })
-        );
-
-        endPerformanceMeasure("LoadingAllFilters");
-        this.rootStore.snackbarStore.closeHandler();
-
-        let success = true;
-        for (const res of allResults) {
-          if (res.status === "rejected") {
-            success = false;
-            break;
-          }
+        if (this.visualType === VisualType.BOTH) {
+          await this.loadOverlayMapData();
+          this.loadPOIMapData();
+        } else if (this.visualType === VisualType.OVERLAY) {
+          this.loadOverlayMapData();
+        } else {
+          this.loadPOIMapData();
         }
-        if (!success) {
-          this.rootStore.snackbarStore.displayHandler(
-            "Nicht alle Daten konnten erfolgreich geladen werden",
-            1500,
-            SnackbarType.ERROR
-          );
-        }
-        this.showAreasOnMap();
       }
     }
   }
 
   showAreasOnMap(): void {
-    if (this.visualType === VisualType.OVERLAY) {
+    if (
+      this.visualType === VisualType.OVERLAY ||
+      this.visualType === VisualType.BOTH
+    ) {
       if (this.mapLayerManager?.geojsonSourceActive) {
         this.mapLayerManager?.removeAllDataFromMap();
       }
@@ -492,6 +526,7 @@ class MapStore {
     }
   }
 
+  // FIXME: wird jetzt glaub ich sowieso nicht mehr genutzt
   showPOILocations(): void {
     const filterLayers = this.rootStore.filterStore.allFilterLayers;
     for (let index = 0; index < filterLayers.length; index++) {
@@ -503,17 +538,116 @@ class MapStore {
   removeData(filter: Filter): void {
     this.rootStore.filterStore.removeFilter(filter.layername);
 
-    if (this.visualType === VisualType.OVERLAY) {
+    if (this.visualType === VisualType.BOTH) {
       this.mapLayerManager?.removeCanvasSource("overlaySource");
-      if (this.rootStore.filterStore.activeFilters.size > 0) {
+      //only remove source if removed tag was the only one of this kind
+      if (
+        !this.rootStore.filterStore.getAllActiveTags().includes(filter.tagName)
+      ) {
+        this.mapLayerManager?.removeGeojsonSource(filter.tagName);
+      }
+      if (this.rootStore.filterStore.filtergroupsActive()) {
+        this.addAreaOverlay();
+      }
+    } else if (this.visualType === VisualType.OVERLAY) {
+      this.mapLayerManager?.removeCanvasSource("overlaySource");
+      if (this.rootStore.filterStore.filtergroupsActive()) {
+        this.addAreaOverlay();
+      }
+    } else {
+      //only remove source if removed tag was the only one of this kind
+      if (
+        !this.rootStore.filterStore.getAllActiveTags().includes(filter.tagName)
+      ) {
+        this.mapLayerManager?.removeGeojsonSource(filter.tagName);
+      }
+    }
+  }
+
+  updateData(filterGroup: FilterGroup): void {
+    if (this.visualType === VisualType.BOTH) {
+      this.mapLayerManager?.removeCanvasSource("overlaySource");
+      if (this.rootStore.filterStore.filtergroupsActive()) {
+        this.addAreaOverlay();
+        this.loadPOIMapData();
+      } else {
+        filterGroup.filters.forEach((filter) => {
+          if (
+            !this.rootStore.filterStore
+              .getAllActiveTags()
+              .includes(filter.tagName)
+          ) {
+            this.mapLayerManager?.removeGeojsonSource(filter.tagName);
+          }
+        });
+      }
+    } else if (this.visualType === VisualType.OVERLAY) {
+      this.mapLayerManager?.removeCanvasSource("overlaySource");
+      if (this.rootStore.filterStore.filtergroupsActive()) {
         this.addAreaOverlay();
       }
     } else {
       //console.log("removeGeojson");
-      this.mapLayerManager?.removeGeojsonSource(filter.layername);
+      //only remove source if removed tag was the only one of this kind
+      if (this.rootStore.filterStore.filtergroupsActive()) {
+        this.loadMapData();
+      } else {
+        filterGroup.filters.forEach((filter) => {
+          if (
+            !this.rootStore.filterStore
+              .getAllActiveTags()
+              .includes(filter.tagName)
+          ) {
+            this.mapLayerManager?.removeGeojsonSource(filter.tagName);
+          }
+        });
+      }
     }
   }
 
+  removeGroupData(filterGroup: FilterGroup): void {
+    const filters = filterGroup.filters;
+    filterGroup.filters.forEach((filter) => {
+      this.rootStore.filterStore.removeFilter(filter.layername);
+    });
+    if (this.visualType === VisualType.BOTH) {
+      this.mapLayerManager?.removeCanvasSource("overlaySource");
+      console.log(filters.length);
+      //only remove source if removed tag was the only one of this kind
+      filters.forEach((filter) => {
+        if (
+          !this.rootStore.filterStore
+            .getAllActiveTags()
+            .includes(filter.tagName)
+        ) {
+          this.mapLayerManager?.removeGeojsonSource(filter.tagName);
+        }
+      });
+      if (this.rootStore.filterStore.filtergroupsActive()) {
+        this.addAreaOverlay();
+      }
+    } else if (this.visualType === VisualType.OVERLAY) {
+      this.mapLayerManager?.removeCanvasSource("overlaySource");
+      if (this.rootStore.filterStore.filtergroupsActive()) {
+        this.addAreaOverlay();
+      }
+    } else {
+      //console.log("removeGeojson");
+      //only remove source if removed tag was the only one of this kind
+
+      filters.forEach((filter) => {
+        if (
+          !this.rootStore.filterStore
+            .getAllActiveTags()
+            .includes(filter.tagName)
+        ) {
+          this.mapLayerManager?.removeGeojsonSource(filter.tagName);
+        }
+      });
+    }
+  }
+
+  //FIXME: Removen der Daten sollte dann eigtl. passen wenn alles andere stimmt
   resetMapData(): void {
     this.rootStore.filterStore.clearAllFilters();
     this.mapLayerManager?.removeAllDataFromMap();
@@ -524,6 +658,7 @@ class MapStore {
     );
   }
 
+  //FIXME: Hier statt tagName dann einzigartigen Namen übergeben
   showDataOnMap(data: any, tagName: string): void {
     startPerformanceMeasure("RemoveExistingLayers");
     if (this.map?.getSource("overlaySource")) {
@@ -716,6 +851,7 @@ class MapStore {
      *    relevance: 0.8,  //="very important"
      *    name: "Park",import { lineCategories } from './../../../dist/client/src/osmTagCollection';
 import { buffer } from '@turf/buffer';
+import { MapboxGeocoder } from '@mapbox/mapbox-gl-geocoder';
 
      *    wanted: true,
      *  },
@@ -727,10 +863,13 @@ import { buffer } from '@turf/buffer';
      */
 
     // check that there is data to create an overlay for the map
-    if (this.rootStore.filterStore.allFilterLayers.length > 0) {
+    // FIXME: Hier evtl. check ausbessern
+    if (this.rootStore.filterStore.filtergroupsActive()) {
       if (this.map) {
         createOverlay(
-          this.rootStore.filterStore.allFilterLayers,
+          this.rootStore.filterStore.allFilterGroups.filter(
+            (group) => group.active === true
+          ),
           this.map,
           this,
           this.rootStore.legendStore

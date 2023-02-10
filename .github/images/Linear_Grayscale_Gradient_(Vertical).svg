@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" width="40" height="180">
+<title>Linear Grayscale Gradient (Vertical)</title>
+<desc>A linear grayscale gradient</desc>
+<defs>
+<linearGradient id="linearGradient5212" x1="25" y1="180" x2="25" gradientUnits="userSpaceOnUse">
+<stop stop-color="#000" offset="0" />
+<stop stop-color="#fff" offset="1" />
+</linearGradient>
+</defs>
+<rect x="0" y="0" width="40" height="180" fill="url(#linearGradient5212)" stroke="none" />
+</svg>

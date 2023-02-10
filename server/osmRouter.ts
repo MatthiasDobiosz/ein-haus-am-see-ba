@@ -8,6 +8,7 @@ import {
   Feature,
   FeatureCollection,
   Geometry,
+  Point,
   Polygon,
   MultiPolygon,
 } from "geojson";
@@ -28,7 +29,7 @@ const pool = new Pool({
   user: "postgres",
   port: 5432,
   password: "syn27X!L",
-  database: "osm_geo",
+  database: "osm_categories",
   max: 100,
   connectionTimeoutMillis: 0,
   idleTimeoutMillis: 0,
@@ -491,6 +492,36 @@ export default class OsmRouter {
       }
     });
 
+    this.osmRouter.get("/getHouses", (req: Request, res: Response) => {
+      const bounds = req.query.bounds?.toString();
+      if (bounds) {
+        const housesQuery =
+          "SELECT ST_AsGeoJSON(ST_Centroid(ST_ForceRHR(st_transform(geom,4326))))::json as geometry, jsonb_build_object('address',address,'street',street,'name', name, 'kind',kind, 'id', way_id) as properties " +
+          `FROM houses WHERE ST_Within(houses.geom,st_transform(ST_GeographyFromText('POLYGON((${bounds}))')::geometry,3857))`;
+
+        pool
+          .query(housesQuery)
+          .then((resp) => {
+            const allFeatures: Feature<Geometry, any>[] = resp.rows;
+            allFeatures.forEach((feature) => {
+              feature.type = "Feature";
+            });
+            const featureCollection = {
+              type: "FeatureCollection",
+              features: allFeatures,
+            };
+
+            const options = { precision: 4, coordinates: 2, mutate: true };
+            const truncatedData: FeatureCollection<Point, any> = truncate(
+              featureCollection,
+              options
+            );
+            res.status(StatusCodes.OK).send(truncatedData);
+          })
+          .catch((e) => console.error(e));
+      }
+    });
+
     this.osmRouter.get("/postGISNoBuffer", (req: Request, res: Response) => {
       const bounds = req.query.bounds?.toString();
       const query = req.query.osmQuery?.toString();
@@ -595,7 +626,7 @@ export default class OsmRouter {
 
     this.osmRouter.get("/geocoder", (req: Request, res: Response) => {
       const geoQuery = `SELECT name, ST_AsGeoJSON(ST_ForceRHR(st_transform(geom,4326)))::json as geometry FROM cities`;
-
+      console.log("get geocoder");
       pool
         .query(geoQuery)
         .then((resp) => res.status(StatusCodes.OK).send(resp.rows))

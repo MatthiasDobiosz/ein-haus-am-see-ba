@@ -11,7 +11,6 @@ function App() {
 
   return (
     <SidebarContext.Provider value={{ isSidebarOpen, setSidebarState }}>
-      <Heading />
       <MainSection isSidebarOpen={isSidebarOpen} />
     </SidebarContext.Provider>
   );

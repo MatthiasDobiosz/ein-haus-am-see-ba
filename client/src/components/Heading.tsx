@@ -53,6 +53,19 @@ export const Heading = observer((): JSX.Element => {
     rootStore.mapStore.loadMapData();
   };
 
+  const setVisualType = (value: string) => {
+    if (value === "Overlay") {
+      rootStore.mapStore.setVisualType(VisualType.OVERLAY);
+      rootStore.legendStore.showOverlayLegend();
+    } else if (value === "Normal") {
+      rootStore.mapStore.setVisualType(VisualType.NORMAL);
+      rootStore.legendStore.hideOverlayLegend();
+    } else {
+      rootStore.mapStore.setVisualType(VisualType.BOTH);
+      rootStore.legendStore.showOverlayLegend();
+    }
+  };
+
   return (
     <nav
       role="navigation"
@@ -120,22 +133,17 @@ export const Heading = observer((): JSX.Element => {
         <select
           className="italic opacity-[0.7] leading-[24px] pl-[2px] pr-[2px] pt-[3px] pb-[3px] cursor-pointer rounded-[4px] inline w-[100%]"
           defaultValue={"Overlay"}
-          onChange={(e) =>
-            rootStore.mapStore.setVisualType(
-              e.target.value === "Overlay"
-                ? VisualType.OVERLAY
-                : VisualType.NORMAL
-            )
-          }
+          onChange={(e) => setVisualType(e.target.value)}
         >
           <option value="Overlay">Gebiete</option>
           <option value="Normal">Orte</option>
+          <option value="Both">Beides</option>
         </select>
       </div>
       <button
         type="button"
         className={`p-[0.6em] cursor-pointer overflow-hidden border-0 rounded-[2px] shadow bg-lightgreen text-whitesmoke hover:bg-darkgreen active:bg-darkgreen ${
-          rootStore.filterStore.activeFilters.size > 0 ? "" : "button-disabled"
+          rootStore.filterStore.filtergroupsActive() ? "" : "button-disabled"
         }`}
       >
         Lade Daten manuell
