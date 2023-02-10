@@ -30,36 +30,6 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
-      "/postGISSingle": {
-        target: "http://localhost:3200",
-        changeOrigin: true,
-        secure: false,
-      },
-      "/postGISIndex": {
-        target: "http://localhost:3200",
-        changeOrigin: true,
-        secure: false,
-      },
-      "/postGISBuffer": {
-        target: "http://localhost:3200",
-        changeOrigin: true,
-        secure: false,
-      },
-      "/postGISNoBuffer": {
-        target: "http://localhost:3200",
-        changeOrigin: true,
-        secure: false,
-      },
-      "/backendLogs": {
-        target: "http://localhost:3200",
-        changeOrigin: true,
-        secure: false,
-      },
-      "/geocoder": {
-        target: "http://localhost:3200",
-        changeOrigin: true,
-        secure: false,
-      },
     },
   },
 });
