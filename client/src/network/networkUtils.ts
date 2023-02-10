@@ -1,15 +1,6 @@
 import axios from "./axiosInterceptor";
 import osmtogeojson from "osmtogeojson";
-import {
-  FeatureCollection,
-  GeometryObject,
-  MultiPolygon,
-  Polygon,
-} from "geojson";
-import {
-  endPerformanceMeasure,
-  startPerformanceMeasure,
-} from "../../../shared/benchmarking";
+import { FeatureCollection, GeometryObject } from "geojson";
 
 export async function uploadLogs(logs: any): Promise<void> {
   try {
@@ -72,162 +63,24 @@ export async function fetchOsmDataFromClientVersion(
 
 export async function fetchOsmDataFromServer(
   mapBounds: string,
-  query: string,
-  first?: boolean,
-  last?: boolean
+  query: string
 ): Promise<FeatureCollection<GeometryObject, any> | null> {
   try {
     const params = new URLSearchParams({
       bounds: mapBounds,
       osmQuery: query,
     });
-    let url = "/osmRequestCache?" + params.toString();
-    if (first) {
-      url += "&first=true";
-    }
-    if (last) {
-      url += "&last=true";
-    }
+    const url = "/osmRequestCache?" + params.toString();
     console.log(url);
 
-    if (first) {
-      startPerformanceMeasure("RequestClient");
-    }
     // set a timeout of 7 seconds
     const response = await axios.get(url, { timeout: 20000 });
-    if (last) {
-      endPerformanceMeasure("RequestClient");
-    }
     //startPerformanceMeasure("Osm2Geo");
     //console.log(response.data);
     const geoJson = osmtogeojson(response.data);
     //console.log(geoJson);
     //endPerformanceMeasure("Osm2Geo");
     return geoJson as FeatureCollection<GeometryObject, any>;
-  } catch (error) {
-    console.error(error);
-    return null;
-  }
-}
-
-export async function fetchDataFromPostGISSingle(
-  mapBounds: string,
-  conditions: string[],
-  bufferValue: string[]
-): Promise<FeatureCollection<Polygon | MultiPolygon, any> | null> {
-  try {
-    const conditionsQuery = encodeURIComponent(JSON.stringify(conditions));
-    const bufferValues = encodeURIComponent(JSON.stringify(bufferValue));
-
-    const params = new URLSearchParams({
-      bounds: mapBounds,
-    });
-
-    const url =
-      "/postGISSingle?" +
-      params.toString() +
-      "&conditions=" +
-      conditionsQuery +
-      "&bufferValue=" +
-      bufferValues;
-
-    console.log(url);
-
-    // set a timeout of 7 seconds
-    startPerformanceMeasure("RequestClient");
-    const response = await axios.get(url, { timeout: 20000 });
-    endPerformanceMeasure("RequestClient");
-    return response.data as FeatureCollection<Polygon | MultiPolygon, any>;
-  } catch (error) {
-    console.error(error);
-    return null;
-  }
-}
-
-export async function fetchDataFromPostGISIndex(
-  mapBounds: string,
-  condition: string,
-  first?: boolean,
-  last?: boolean
-): Promise<FeatureCollection<GeometryObject, any> | null> {
-  try {
-    const params = new URLSearchParams({
-      bounds: mapBounds,
-      osmQuery: condition,
-    });
-
-    let url = "/postGISIndex?" + params.toString();
-
-    if (first) {
-      url += "&first=true";
-    }
-    if (last) {
-      url += "&last=true";
-    }
-
-    console.log(url);
-
-    // set a timeout of 7 seconds
-    if (first) {
-      startPerformanceMeasure("RequestClient");
-    }
-    const response = await axios.get(url, { timeout: 20000 });
-    //console.log(response);
-    if (last) {
-      endPerformanceMeasure("RequestClient");
-    }
-    return response.data as FeatureCollection<GeometryObject, any>;
-  } catch (error) {
-    console.error(error);
-    return null;
-  }
-}
-
-export async function fetchDataFromPostGISBuffer(
-  mapBounds: string,
-  condition: string,
-  bufferValue: number,
-  overlay: boolean,
-  first?: boolean,
-  last?: boolean
-): Promise<FeatureCollection<Polygon | MultiPolygon, any> | null> {
-  try {
-    let url = "";
-    if (overlay) {
-      const params = new URLSearchParams({
-        bounds: mapBounds,
-        osmQuery: condition,
-        bufferValue: bufferValue.toString(),
-      });
-
-      url = "/postGISBuffer?" + params.toString();
-    } else {
-      const params = new URLSearchParams({
-        bounds: mapBounds,
-        osmQuery: condition,
-        bufferValue: bufferValue.toString(),
-      });
-
-      url = "/postGISNoBuffer?" + params.toString();
-    }
-
-    if (first) {
-      url += "&first=true";
-    }
-    if (last) {
-      url += "&last=true";
-    }
-
-    // set a timeout of 7 seconds
-    if (first) {
-      startPerformanceMeasure("RequestClient");
-    }
-    const response = await axios.get(url, { timeout: 20000 });
-    //console.log(response);
-    if (last) {
-      endPerformanceMeasure("RequestClient");
-    }
-    return response.data as FeatureCollection<Polygon | MultiPolygon, any>;
   } catch (error) {
     console.error(error);
     return null;
