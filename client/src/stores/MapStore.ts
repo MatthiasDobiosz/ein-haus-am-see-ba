@@ -3,28 +3,11 @@ import { RootStore } from "./RootStore";
 import { MapboxMap } from "react-map-gl";
 import MapLayerManager from "./../mapLayerMangager";
 import osmTagCollection from "../osmTagCollection";
-import {
-  fetchDataFromPostGISBuffer,
-  fetchDataFromPostGISIndex,
-  fetchDataFromPostGISSingle,
-  fetchOsmDataFromServer,
-} from "../network/networkUtils";
+import { fetchDataFromPostGISBuffer } from "../network/networkUtils";
 import { Filter, FilterGroup } from "../components/Sidebar/Filter/Filters";
-import {
-  Feature,
-  FeatureCollection,
-  GeoJsonProperties,
-  Geometry,
-  MultiPolygon,
-  Polygon,
-} from "geojson";
-import truncate from "@turf/truncate";
-import { addBufferToFeature } from "../components/Map/turfUtils";
+import { FeatureCollection, MultiPolygon, Polygon } from "geojson";
 import { createOverlay } from "../overlayCreation/canvasRenderer";
-import {
-  getViewportBoundsString,
-  getViewportPolygon,
-} from "../components/Map/mapUtils";
+import { getViewportPolygon } from "../components/Map/mapUtils";
 import {
   DBType,
   endPerformanceMeasure,
@@ -47,7 +30,6 @@ class MapStore {
   rootStore: RootStore;
   dbType: DBType;
   performanceViewActive: boolean;
-  isFlying: boolean;
 
   constructor(rootStore: RootStore) {
     this.map = null;
@@ -56,7 +38,6 @@ class MapStore {
     this.rootStore = rootStore;
     this.dbType = DBType.POSTGISSINGLE;
     this.performanceViewActive = false;
-    this.isFlying = false;
 
     makeObservable(this, {
       map: observable,
@@ -79,11 +60,8 @@ class MapStore {
       updateData: false,
       resetMapData: false,
       preprocessGeoData: false,
-      preprocessGeoDataNew: false,
       addAreaOverlay: false,
       rootStore: false,
-      flyToLocation: false,
-      isFlying: observable,
     });
   }
 
@@ -147,8 +125,6 @@ class MapStore {
       const bounds = getViewportPolygon(this.map, 500);
       const activeFilters = this.rootStore.filterStore.getAllActiveLayers();
       console.log(activeFilters.length);
-      const firstLayer = activeFilters[0].layername;
-      const lastLayer = activeFilters[activeFilters.length - 1].layername;
       const allResults = await Promise.allSettled(
         activeFilters.map(async (filter) => {
           const query = osmTagCollection.getQueryForCategoryPostGIS(
@@ -161,16 +137,14 @@ class MapStore {
             bounds,
             query,
             bufferValue,
-            true,
-            filter.layername === firstLayer,
-            filter.layername === lastLayer
+            true
           );
           //console.log(data);
           if (data) {
             console.log(data);
 
             startPerformanceMeasure("LoadingSingleFilter");
-            this.preprocessGeoDataNew(data, filter.layername);
+            this.preprocessGeoData(data, filter.layername);
             endPerformanceMeasure("LoadingSingleFilter");
           }
         })
@@ -214,7 +188,7 @@ class MapStore {
           );
           //console.log(data);
           if (data) {
-            this.preprocessGeoDataNew(data, filter.layername);
+            this.preprocessGeoData(data, filter.layername);
           }
         })
       );
@@ -240,8 +214,6 @@ class MapStore {
     if (this.map) {
       const bounds = getViewportPolygon(this.map, 500);
       const activeTags = this.rootStore.filterStore.getAllActiveTags();
-      const firstTag = activeTags[0];
-      const lastTag = activeTags[activeTags.length - 1];
       const allResults = await Promise.allSettled(
         activeTags.map(async (tag) => {
           const query = osmTagCollection.getQueryForCategoryPostGIS(tag);
@@ -249,9 +221,7 @@ class MapStore {
             bounds,
             query,
             0,
-            false,
-            tag === firstTag,
-            tag === lastTag
+            false
           );
           //console.log(data);
           if (data) {
@@ -296,219 +266,15 @@ class MapStore {
       SnackbarType.INFO
     );
 
-    if (this.map && !this.isFlying) {
-      console.log(this.dbType);
-      if (this.dbType === DBType.OVERPASS) {
-        const bounds = getViewportBoundsString(this.map, 500);
-        startPerformanceMeasure("LoadingAllFilters");
-        const activeTags = Array.from(this.rootStore.filterStore.activeFilters);
-        const firstTag = activeTags[0];
-        const lastTag = activeTags[activeTags.length - 1];
-        const allResults = await Promise.allSettled(
-          activeTags.map(async (tag) => {
-            // get overpass query for each tag
-            const query = osmTagCollection.getQueryForCategory(tag);
-
-            //TODO check if already locally loaded this tag; only fetch if not!
-            //TODO also check that bounds are nearly the same!
-            //! doesnt work like this because filterlayer has already been created before in main!
-            /*
-            if (FilterManager.activeFilters.has(tag)) {
-              console.log("loadin locally");
-              const layer = FilterManager.getFilterLayer(tag);
-              console.log("tag", tag);
-              console.log(layer);
-              this.showDataOnMap(layer?.Features, tag);
-              return;
-            }*/
-
-            //Benchmark.startMeasure("Fetching data from osm");
-            // request data from osm
-            const data = await fetchOsmDataFromServer(
-              bounds,
-              query,
-              tag === firstTag,
-              tag === lastTag
-            );
-            //console.log("Overpass: ", data);
-            //Benchmark.stopMeasure("Fetching data from osm");
-
-            if (data) {
-              console.log(data);
-              //const filterLayer = this.preprocessGeoData(data, tag);
-
-              // get the filterlayer for this tag that has already been created at this point
-              const layer = this.rootStore.filterStore.getFilterLayer(tag);
-              if (layer) {
-                layer.originalData = data;
-              }
-
-              //console.log(this.selectedVisualType);
-              if (this.visualType === VisualType.NORMAL) {
-                this.showDataOnMap(data, tag);
-              } else {
-                startPerformanceMeasure("LoadingSingleFilter");
-                this.preprocessGeoData(data, tag);
-                endPerformanceMeasure("LoadingSingleFilter");
-              }
-            }
-          })
-        );
-
-        endPerformanceMeasure("LoadingAllFilters");
-        this.rootStore.snackbarStore.closeHandler();
-
-        let success = true;
-        for (const res of allResults) {
-          if (res.status === "rejected") {
-            success = false;
-            break;
-          }
-        }
-        if (!success) {
-          this.rootStore.snackbarStore.displayHandler(
-            "Nicht alle Daten konnten erfolgreich geladen werden",
-            1500,
-            SnackbarType.ERROR
-          );
-        }
-        this.showAreasOnMap();
-      } else if (this.dbType === DBType.POSTGISSINGLE) {
-        //FIXME: Union Query nicht wert extra auf Filtergruppen umzustellen.. bräuchte eigenen Workflow
-        startPerformanceMeasure("LoadingAllFilters");
-        const bounds = getViewportPolygon(this.map, 500);
-        //get Tags for active Filters
-        const tags = Array.from(this.rootStore.filterStore.activeFilters);
-        const queryInformation = osmTagCollection.getQueryForPostGISAll(tags);
-        const bufferValues: string[] = [];
-        for (let i = 0; i < tags.length; i++) {
-          const buffer = this.rootStore.filterStore
-            .getFilterLayerBuffer(tags[i])
-            ?.toString();
-          if (buffer) {
-            bufferValues.push(buffer);
-          }
-        }
-
-        const data = await fetchDataFromPostGISSingle(
-          bounds,
-          queryInformation,
-          bufferValues
-        );
-
-        if (data) {
-          //const filterLayer = this.preprocessGeoData(data, tag);
-
-          // loop through the active tags, get their respective data and show it on the map
-          console.log(data);
-          for (let i = 0; i <= tags.length; i++) {
-            const layer = this.rootStore.filterStore.getFilterLayer(tags[i]);
-            if (layer) {
-              const filteredFeatures = data.features.filter(function (feature) {
-                if (feature) {
-                  return (
-                    feature.properties.subclass ===
-                    osmTagCollection.getSubclass(tags[i])
-                  );
-                } else {
-                  return false;
-                }
-              });
-              const filteredData: FeatureCollection<
-                Polygon | MultiPolygon,
-                GeoJsonProperties
-              > = {
-                type: "FeatureCollection",
-                features: filteredFeatures,
-              };
-
-              layer.originalData = filteredData;
-
-              if (this.visualType === VisualType.NORMAL) {
-                this.showDataOnMap(filteredData, tags[i]);
-              } else {
-                startPerformanceMeasure("LoadingSingleFilter");
-                this.preprocessGeoDataNew(filteredData, tags[i]);
-                endPerformanceMeasure("LoadingSingleFilter");
-              }
-            }
-          }
-        }
-        endPerformanceMeasure("LoadingAllFilters");
-        this.rootStore.snackbarStore.closeHandler();
-        const success = true;
-        if (!success) {
-          this.rootStore.snackbarStore.displayHandler(
-            "Nicht alle Daten konnten erfolgreich geladen werden",
-            1500,
-            SnackbarType.ERROR
-          );
-        }
-
-        this.showAreasOnMap();
-      } else if (this.dbType === DBType.POSTGISINDEX) {
-        startPerformanceMeasure("LoadingAllFilters");
-        const bounds = getViewportPolygon(this.map, 500);
-        const activeTags = Array.from(this.rootStore.filterStore.activeFilters);
-        const firstTag = activeTags[0];
-        const lastTag = activeTags[activeTags.length - 1];
-        const allResults = await Promise.allSettled(
-          activeTags.map(async (tag) => {
-            const query = osmTagCollection.getQueryForCategoryPostGIS(tag);
-            const data = await fetchDataFromPostGISIndex(
-              bounds,
-              query,
-              tag === firstTag,
-              tag === lastTag
-            );
-            //console.log(data);
-            if (data) {
-              console.log(data);
-              const layer = this.rootStore.filterStore.getFilterLayer(tag);
-
-              if (layer) {
-                layer.originalData = data;
-              }
-
-              if (this.visualType === VisualType.NORMAL) {
-                this.showDataOnMap(data, tag);
-              } else {
-                startPerformanceMeasure("LoadingSingleFilter");
-                this.preprocessGeoData(data, tag);
-                endPerformanceMeasure("LoadingSingleFilter");
-              }
-            }
-          })
-        );
-
-        endPerformanceMeasure("LoadingAllFilters");
-        this.rootStore.snackbarStore.closeHandler();
-
-        let success = true;
-        for (const res of allResults) {
-          if (res.status === "rejected") {
-            success = false;
-            break;
-          }
-        }
-        if (!success) {
-          this.rootStore.snackbarStore.displayHandler(
-            "Nicht alle Daten konnten erfolgreich geladen werden",
-            1500,
-            SnackbarType.ERROR
-          );
-        }
-        this.showAreasOnMap();
+    if (this.map) {
+      startPerformanceMeasure("LoadingAllFilters");
+      if (this.visualType === VisualType.BOTH) {
+        await this.loadOverlayMapData();
+        this.loadPOIMapData();
+      } else if (this.visualType === VisualType.OVERLAY) {
+        this.loadOverlayMapData();
       } else {
-        startPerformanceMeasure("LoadingAllFilters");
-        if (this.visualType === VisualType.BOTH) {
-          await this.loadOverlayMapData();
-          this.loadPOIMapData();
-        } else if (this.visualType === VisualType.OVERLAY) {
-          this.loadOverlayMapData();
-        } else {
-          this.loadPOIMapData();
-        }
+        this.loadPOIMapData();
       }
     }
   }
@@ -687,99 +453,6 @@ class MapStore {
   //! most of the data preprocessing could (and probably should) already happen on the server!
   //! (maybe after the data has been fetched and before being saved in Redis)
   preprocessGeoData(
-    data: FeatureCollection<Geometry, any>,
-    dataName: string
-  ): Filter | null {
-    //* split up multipoints, multilinestrings and multipolygons into normal ones
-    //const flattenedData = mapboxUtils.flattenMultiGeometry(data);
-
-    //Benchmark.startMeasure("truncate geodata");
-
-    // truncate geojson precision to yy4 decimals;
-    // this increases performance and the perfectly exact coords aren't necessary for the area overlay
-    const options = { precision: 4, coordinates: 2, mutate: true };
-    const truncatedData: FeatureCollection<Geometry, any> = truncate(
-      data,
-      options
-    );
-    //Benchmark.stopMeasure("truncate geodata");
-    const layer = this.rootStore.filterStore.getFilterLayer(dataName);
-    if (!layer) {
-      return null;
-    }
-
-    //! reset arrays for this layer
-    //TODO the new and the old information (if any) could probably be merged somehow to improve this
-    layer.points.length = 0;
-    layer.features.length = 0;
-    // add buffer to filterlayer
-    for (let index = 0; index < truncatedData.features.length; index++) {
-      const feature = truncatedData.features[index];
-      if (feature.geometry.type === "MultiLineString") {
-        for (let i = 0; i < feature.geometry.coordinates.length; i++) {
-          const singleFeature: Feature<Geometry, any> = {
-            type: "Feature",
-            geometry: {
-              type: "LineString",
-              coordinates: feature.geometry.coordinates[i],
-            },
-            properties: {},
-          };
-          const bufferedPoly = addBufferToFeature(
-            singleFeature,
-            layer.distance,
-            "meters"
-          );
-          layer.features.push(bufferedPoly);
-          //console.log(bufferedPoly.geometry.coordinates);
-          this.rootStore.filterStore.convertPolygonCoordsToPixelCoords(
-            bufferedPoly,
-            layer
-          );
-        }
-      } else {
-        const bufferedPoly = addBufferToFeature(
-          feature,
-          layer.distance,
-          "meters"
-        );
-        layer.features.push(bufferedPoly);
-
-        //console.log(bufferedPoly.geometry.coordinates);
-        this.rootStore.filterStore.convertPolygonCoordsToPixelCoords(
-          bufferedPoly,
-          layer
-        );
-      }
-    }
-
-    /*
-    //! Benchmarking version: two for loops to be able to measure the performance of both separately
-    Benchmark.startMeasure("buffer all Polygons of layer");
-    // add buffer to filterlayer
-    for (let index = 0; index < truncatedData.features.length; index++) {
-      const feature = truncatedData.features[index];
-      const bufferedPoly = addBufferToFeature(feature, layer.Distance, "meters");
-
-      layer.Features.push(bufferedPoly);
-    }
-    Benchmark.stopMeasure("buffer all Polygons of layer");
-
-    Benchmark.startMeasure("convert all Polygons to pixel coords");
-    // convert to pixels
-    for (let index = 0; index < layer.Features.length; index++) {
-      const element = layer.Features[index];
-      mapboxUtils.convertPolygonCoordsToPixelCoords(element, layer);
-    }
-    Benchmark.stopMeasure("convert all Polygons to pixel coords");
-    */
-
-    return layer;
-  }
-
-  //! most of the data preprocessing could (and probably should) already happen on the server!
-  //! (maybe after the data has been fetched and before being saved in Redis)
-  preprocessGeoDataNew(
     data: FeatureCollection<Polygon | MultiPolygon, any>,
     dataName: string
   ): Filter | null {
@@ -880,18 +553,6 @@ import { MapboxGeocoder } from '@mapbox/mapbox-gl-geocoder';
         "Creating an overlay is not possible because overlayData is empty!"
       );
     }
-  }
-
-  flyToLocation(coordinates: number[]): void {
-    this.isFlying = true;
-    this.map?.flyTo({
-      center: [coordinates[0], coordinates[1]],
-      essential: true,
-    });
-    this.map?.once("moveend", () => {
-      this.isFlying = false;
-      this.loadMapData();
-    });
   }
 }
 

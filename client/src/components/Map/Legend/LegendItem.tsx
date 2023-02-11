@@ -1,5 +1,5 @@
 import { observer } from "mobx-react";
-import { LegendObject } from "../../stores/LegendStore";
+import { LegendObject } from "../../../stores/LegendStore";
 
 interface LegendItemProps {
   legendItem: LegendObject;

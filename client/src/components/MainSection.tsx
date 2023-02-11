@@ -3,9 +3,9 @@ import { MapOverlay } from "./Map/MapOverlay";
 import { Snackbar } from "./Snackbar/Snackbar";
 import { observer } from "mobx-react";
 import rootStore from "../stores/RootStore";
-import { Legend } from "./Map/Legend";
+import { Legend } from "./Map/Legend/Legend";
 import { PerformanceChart } from "./PerformanceChart";
-import { OverlayLegend } from "./Map/OverlayLegend";
+import { OverlayLegend } from "./Map/Legend/OverlayLegend";
 
 interface MainSectionProps {
   isSidebarOpen: boolean;

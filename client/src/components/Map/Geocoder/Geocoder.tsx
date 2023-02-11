@@ -1,6 +1,6 @@
 import { observer } from "mobx-react";
 import { useEffect, useState } from "react";
-import axios from "../../network/axiosInterceptor";
+import axios from "../../../network/axiosInterceptor";
 import { HiMagnifyingGlass } from "react-icons/hi2";
 import { GeocoderCity } from "./GeocoderCity";
 

@@ -1,7 +1,6 @@
 import mapboxgl, { LngLat } from "mapbox-gl";
 import { useContext, useState } from "react";
 import Map, { AttributionControl, NavigationControl } from "react-map-gl";
-import { initialZoomLevel } from "./mapboxConfig";
 import { SnackbarType } from "./../../stores/SnackbarStore";
 import rootStore from "../../stores/RootStore";
 import { VisualType } from "../../stores/MapStore";
@@ -30,7 +29,7 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
   const [currentMapCenter, setCurrentMapCenter] = useState<LngLat>(
     new LngLat(12.101624, 49.013432)
   );
-  const [currentMapZoom, setCurrentMapZoom] = useState(initialZoomLevel);
+  const [currentMapZoom, setCurrentMapZoom] = useState(12);
   const [showHouses, setShowHouses] = useState(false);
   const [houses, setHouses] = useState<Feature<Point, any>[]>([]);
   const minRequiredZoomLevel = 7;

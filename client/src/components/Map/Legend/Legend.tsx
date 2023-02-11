@@ -1,5 +1,5 @@
 import { observer } from "mobx-react";
-import rootStore from "../../stores/RootStore";
+import rootStore from "../../../stores/RootStore";
 import { LegendItem } from "./LegendItem";
 
 export const Legend = observer((): JSX.Element => {

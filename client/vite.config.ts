@@ -6,56 +6,15 @@ import EnvironmentPlugin from "vite-plugin-environment";
 export default defineConfig({
   plugins: [react(), EnvironmentPlugin(["MAPBOX_TOKEN"])],
   server: {
+    host: true,
+    port: 5175,
     proxy: {
-      "/test": {
-        target: "http://localhost:3200",
-        changeOrigin: true,
-        secure: false,
-        // Debugging protocols for proxy requests
-        /*
-        configure: (proxy, _options) => {
-          proxy.on('error', (err, _req, _res) => {
-            console.log('proxy error', err);
-          });
-          proxy.on('proxyReq', (proxyReq, req, _res) => {
-            console.log('Sending Request to the Target:', req.method, req.url);
-          });
-          proxy.on('proxyRes', (proxyRes, req, _res) => {
-            console.log('Received Response from the Target:', proxyRes.statusCode, req.url);
-          });
-        },*/
-      },
-      "/osmRequestCache": {
-        target: "http://localhost:3200",
-        changeOrigin: true,
-        secure: false,
-      },
-      "/postGISSingle": {
-        target: "http://localhost:3200",
-        changeOrigin: true,
-        secure: false,
-      },
-      "/postGISIndex": {
-        target: "http://localhost:3200",
-        changeOrigin: true,
-        secure: false,
-      },
       "/postGISBuffer": {
         target: "http://localhost:3200",
         changeOrigin: true,
         secure: false,
       },
       "/postGISNoBuffer": {
-        target: "http://localhost:3200",
-        changeOrigin: true,
-        secure: false,
-      },
-      "/backendLogs": {
-        target: "http://localhost:3200",
-        changeOrigin: true,
-        secure: false,
-      },
-      "/geocoder": {
         target: "http://localhost:3200",
         changeOrigin: true,
         secure: false,
