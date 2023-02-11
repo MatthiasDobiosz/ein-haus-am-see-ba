@@ -1,12 +1,10 @@
 import mapboxgl, { LngLat } from "mapbox-gl";
 import { useState } from "react";
 import Map, { AttributionControl, NavigationControl } from "react-map-gl";
-import { initialZoomLevel } from "./mapboxConfig";
 import { SnackbarType } from "./../../stores/SnackbarStore";
 import rootStore from "../../stores/RootStore";
 import { VisualType } from "../../stores/MapStore";
 import { observer } from "mobx-react";
-import { Geocoder } from "./Geocoder";
 
 interface MapOverlayProps {
   /* dynamically change width depending on sidebarState */
@@ -24,7 +22,7 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
   const [currentMapCenter, setCurrentMapCenter] = useState<LngLat>(
     new LngLat(12.101624, 49.013432)
   );
-  const [currentMapZoom, setCurrentMapZoom] = useState(initialZoomLevel);
+  const [currentMapZoom, setCurrentMapZoom] = useState(12);
   const { isSidebarOpen } = props;
   const minRequiredZoomLevel = 7;
   const map = rootStore.mapStore.map;

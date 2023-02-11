@@ -26,7 +26,6 @@ class FilterStore {
       recalculateScreenCoords: false,
       calculatePointCoordsForFeatures: false,
       convertPolygonCoordsToPixelCoords: action,
-      convertPolygonCoordsToPixelCoordsNew: action,
       rootStore: false,
     });
   }
@@ -100,47 +99,6 @@ class FilterStore {
   }
 
   convertPolygonCoordsToPixelCoords(
-    polygon: Feature<Polygon | MultiPolygon, GeoJsonProperties>,
-    layer: Filter
-  ): void {
-    const coords = polygon.geometry.coordinates;
-    // check if this is a multidimensional array (i.e. a multipolygon or a normal one)
-    if (coords.length > 1) {
-      //console.log("Multipolygon: ", coords);
-
-      //const flattened: mapboxgl.Point[] = [];
-      for (const coordPart of coords) {
-        layer.points.push(
-          //@ts-expect-error idk
-          coordPart.map((coord: number[]) => {
-            try {
-              return this.rootStore.mapStore.map?.project(coord as LngLatLike);
-            } catch (error) {
-              console.log("Error in projecting coord: ", error);
-              return null;
-            }
-          })
-        );
-        //flattened.push(coordPart.map((coord: number[]) => mapboxUtils.convertToPixelCoord(coord)));
-      }
-      // layer.Points.push(flattened);
-    } else {
-      //@ts-expect-error idk
-      const pointData = coords[0].map((coord: number[]) => {
-        try {
-          return this.rootStore.mapStore.map?.project(coord as LngLatLike);
-        } catch (error) {
-          console.log("Error in projecting coord: ", error);
-          return null;
-        }
-      });
-
-      // @ts-expect-error: possbily null but worked before
-      layer.points.push(pointData);
-    }
-  }
-
-  convertPolygonCoordsToPixelCoordsNew(
     polygon: Feature<Polygon | MultiPolygon, GeoJsonProperties>,
     layer: Filter
   ): void {

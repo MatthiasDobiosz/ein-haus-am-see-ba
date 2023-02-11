@@ -24,10 +24,6 @@ import {
 import MapLayerManager from "../mapLayerMangager";
 import MapStore from "../stores/MapStore";
 import LegendStore from "../stores/LegendStore";
-import {
-  endPerformanceMeasure,
-  startPerformanceMeasure,
-} from "../../../shared/benchmarking";
 
 //import WebWorker from "worker-loader!../worker";
 
@@ -89,8 +85,6 @@ class CanvasRenderer {
 
     // calculate the blur size for this layer based on the distance the user specified
     this.calculateBlurSize(mapLayer.distance);
-
-    startPerformanceMeasure("RenderLayerPolygons");
 
     // apply a "feather"/blur - effect to everything that is drawn on the canvas from now on
     //this.ctx.filter = `blur(${this.currentBlurSize}px)`;
@@ -162,8 +156,6 @@ class CanvasRenderer {
       */
     }
 
-    endPerformanceMeasure("RenderLayerPolygons");
-
     /*
     console.log(`Render polys took ${renderPolyBenchmarks} ms`);
     console.log(`Blur all polys took ${blurBenchmarks} ms`);
@@ -180,11 +172,9 @@ class CanvasRenderer {
 
     await this.applyGaussianBlur();
 
-    startPerformanceMeasure("ReadAndSaveLayer");
     const blurredImage = await readImageFromCanvas(this.overlayCanvas);
     // save the blurred image for this layer
     this.allTextures.push(blurredImage);
-    endPerformanceMeasure("ReadAndSaveLayer");
   }
 
   //TODO: find a better function to bring the pixelDistance in relation to the blur size
@@ -212,13 +202,9 @@ class CanvasRenderer {
   }
 
   async applyGaussianBlur(): Promise<void> {
-    startPerformanceMeasure("GetImageFromCanvas");
     const img = await readImageFromCanvas(this.overlayCanvas);
-    endPerformanceMeasure("GetImageFromCanvas");
 
-    startPerformanceMeasure("BlurImage");
     const blurredCanvas = applyGaussianBlur(img, this.currentBlurSize);
-    endPerformanceMeasure("BlurImage");
 
     // draw the blurred canvas on the overlayCanvas
     this.ctx.drawImage(blurredCanvas, 0, 0);
@@ -370,9 +356,8 @@ class CanvasRenderer {
   }
 
   createOverlay(textures: HTMLImageElement[]): HTMLCanvasElement {
-    startPerformanceMeasure("CombiningTextures");
     this.combineOverlays(textures);
-    endPerformanceMeasure("CombiningTextures");
+
     return this.overlayCanvas;
   }
 
@@ -427,17 +412,14 @@ export async function createOverlay(
 ): Promise<void> {
   const renderer = new CanvasRenderer(map);
 
-  startPerformanceMeasure("CreateCanvasLayer");
-  startPerformanceMeasure("RenderAllPolygons");
   const allRenderProcesses = data.map((layer: Filter) => {
     return renderer.renderPolygons(layer);
   });
   await Promise.all(allRenderProcesses);
-  endPerformanceMeasure("RenderAllPolygons");
+
   //console.log("Current number of saved textures in canvasRenderer: ", renderer.allTextures.length);
 
   const resultCanvas = renderer.createOverlay(renderer.allTextures);
-  endPerformanceMeasure("CreateCanvasLayer");
 
   applyAlphaMask(resultCanvas, map, new MapLayerManager(mapStore, legendStore));
 
