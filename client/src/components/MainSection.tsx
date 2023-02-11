@@ -4,7 +4,6 @@ import { Snackbar } from "./Snackbar/Snackbar";
 import { observer } from "mobx-react";
 import rootStore from "../stores/RootStore";
 import { Legend } from "./Map/Legend/Legend";
-import { PerformanceChart } from "./PerformanceChart";
 import { OverlayLegend } from "./Map/Legend/OverlayLegend";
 
 interface MainSectionProps {
@@ -16,14 +15,6 @@ interface MainSectionProps {
  */
 export const MainSection = observer((props: MainSectionProps) => {
   const { isSidebarOpen } = props;
-
-  if (rootStore.mapStore.performanceViewActive) {
-    return (
-      <div className="h-[100vh] w-[100vw] flex justify-center items-center">
-        <PerformanceChart />
-      </div>
-    );
-  }
 
   return (
     <div className="h-[100vh] w-[100vw] flex justify-end items-center">

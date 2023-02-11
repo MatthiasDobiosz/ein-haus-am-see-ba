@@ -5,11 +5,6 @@ import "../vendors/fast-gauss-blur.js";
 import { MapboxMap } from "react-map-gl";
 import { getViewportBounds } from "../components/Map/mapUtils";
 import MapLayerManager from "../mapLayerMangager";
-import {
-  endPerformanceMeasure,
-  evaluateMeasure,
-  startPerformanceMeasure,
-} from "../../../shared/benchmarking.js";
 
 export function clearCanvasPart(
   ctx: CanvasRenderingContext2D,
@@ -88,8 +83,6 @@ export function makeAlphaMask(
     console.warn("no 2d context in make alpha mask");
     return;
   }
-
-  startPerformanceMeasure("CreateAlphaMask");
   context.drawImage(canvas, 0, 0);
 
   const imageData = context.getImageData(0, 0, c.width, c.height);
@@ -118,15 +111,9 @@ export function makeAlphaMask(
   }
 
   context.putImageData(imageData, 0, 0);
-  endPerformanceMeasure("CreateAlphaMask");
-
-  startPerformanceMeasure("AddLayerToMap");
   //* add canvas with opacity 0.7 (i.e. 70% overlay, 30% map background) which makes the overlay clearly visible
   //* even for lighter grey but still allows the user to see the map background everywhere
   addCanvasOverlay(c, overlayOpacity, map, mapLayerManager);
-  endPerformanceMeasure("AddLayerToMap");
-  endPerformanceMeasure("Workflow");
-  evaluateMeasure();
 }
 
 // function taken from previous bachelor thesis from Julien Wachter

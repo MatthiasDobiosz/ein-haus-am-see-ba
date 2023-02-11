@@ -24,10 +24,6 @@ import {
 import MapLayerManager from "../mapLayerMangager";
 import MapStore from "../stores/MapStore";
 import LegendStore from "../stores/LegendStore";
-import {
-  endPerformanceMeasure,
-  startPerformanceMeasure,
-} from "../../../shared/benchmarking";
 import { applyMerge, setupMergeFilter } from "../webgl/mergeFilter";
 //import WebWorker from "worker-loader!../worker";
 
@@ -88,7 +84,6 @@ class CanvasRenderer {
     );
     this.weights.push(relevance);
     this.calculateBlurSize(mapLayer[0].distance);
-    startPerformanceMeasure("RenderLayerPolygons");
     if (mapLayer.length === 1) {
       // calculate the blur size for this layer based on the distance the user specified
 
@@ -139,15 +134,11 @@ class CanvasRenderer {
         this.ctx.fill("evenodd");
       }
 
-      endPerformanceMeasure("RenderLayerPolygons");
-
       await this.applyGaussianBlur();
 
-      startPerformanceMeasure("ReadAndSaveLayer");
       const blurredImage = await readImageFromCanvas(this.overlayCanvas);
       // save the blurred image for this layer
       this.allTextures.push(blurredImage);
-      endPerformanceMeasure("ReadAndSaveLayer");
     } else {
       console.log("else");
       const images: HTMLImageElement[] = [];
@@ -222,8 +213,6 @@ class CanvasRenderer {
         images.push(layerImage);
       }
 
-      endPerformanceMeasure("RenderLayerPolygons");
-
       this.ctx.clearRect(
         0,
         0,
@@ -232,11 +221,9 @@ class CanvasRenderer {
       );
       this.applyColorMerge(images);
       await this.applyGaussianBlur();
-      startPerformanceMeasure("ReadAndSaveLayer");
       const blurredImage = await readImageFromCanvas(this.overlayCanvas);
       // save the blurred image for this layer
       this.allTextures.push(blurredImage);
-      endPerformanceMeasure("ReadAndSaveLayer");
     }
   }
 
@@ -269,13 +256,9 @@ class CanvasRenderer {
     this.ctx.drawImage(mergedCanvas, 0, 0);
   }
   async applyGaussianBlur(): Promise<void> {
-    startPerformanceMeasure("GetImageFromCanvas");
     const img = await readImageFromCanvas(this.overlayCanvas);
-    endPerformanceMeasure("GetImageFromCanvas");
 
-    startPerformanceMeasure("BlurImage");
     const blurredCanvas = applyGaussianBlur(img, this.currentBlurSize);
-    endPerformanceMeasure("BlurImage");
 
     // draw the blurred canvas on the overlayCanvas
     this.ctx.drawImage(blurredCanvas, 0, 0);
@@ -427,9 +410,7 @@ class CanvasRenderer {
   }
 
   createOverlay(textures: HTMLImageElement[]): HTMLCanvasElement {
-    startPerformanceMeasure("CombiningTextures");
     this.combineOverlays(textures);
-    endPerformanceMeasure("CombiningTextures");
     return this.overlayCanvas;
   }
 
@@ -484,17 +465,13 @@ export async function createOverlay(
 ): Promise<void> {
   const renderer = new CanvasRenderer(map);
 
-  startPerformanceMeasure("CreateCanvasLayer");
-  startPerformanceMeasure("RenderAllPolygons");
   const allRenderProcesses = data.map((group) => {
     return renderer.renderPolygons(group.filters, group.groupRelevance);
   });
   await Promise.all(allRenderProcesses);
-  endPerformanceMeasure("RenderAllPolygons");
   //console.log("Current number of saved textures in canvasRenderer: ", renderer.allTextures.length);
 
   const resultCanvas = renderer.createOverlay(renderer.allTextures);
-  endPerformanceMeasure("CreateCanvasLayer");
 
   applyAlphaMask(resultCanvas, map, new MapLayerManager(mapStore, legendStore));
 

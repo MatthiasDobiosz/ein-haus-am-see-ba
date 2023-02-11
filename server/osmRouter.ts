@@ -10,11 +10,6 @@ import {
   Polygon,
   MultiPolygon,
 } from "geojson";
-import {
-  DBType,
-  endPerformanceMeasure,
-  startPerformanceMeasure,
-} from "../shared/benchmarking.js";
 import truncate from "@turf/truncate";
 
 const { Pool } = pgk;
@@ -54,9 +49,6 @@ export default class OsmRouter {
       const bufferValue = req.query.bufferValue?.toString();
       const first = req.query.first?.toString();
       const last = req.query.last?.toString();
-      if (first) {
-        startPerformanceMeasure("RequestServer" + DBType.POSTGISBUFFER, true);
-      }
       if (bounds && query && bufferValue) {
         /** 
         const complexQuery =
@@ -151,9 +143,6 @@ export default class OsmRouter {
             type: "FeatureCollection",
             features: allFeatures,
           };
-          if (last) {
-            endPerformanceMeasure("RequestServer" + DBType.POSTGISBUFFER, true);
-          }
           const options = { precision: 4, coordinates: 2, mutate: true };
           const truncatedData: FeatureCollection<Polygon | MultiPolygon, any> =
             truncate(featureCollection, options);
@@ -198,9 +187,6 @@ export default class OsmRouter {
       const query = req.query.osmQuery?.toString();
       const first = req.query.first?.toString();
       const last = req.query.last?.toString();
-      if (first) {
-        startPerformanceMeasure("RequestServer" + DBType.POSTGISBUFFER, true);
-      }
       if (bounds && query) {
         /** 
         const complexQuery =
@@ -286,9 +272,6 @@ export default class OsmRouter {
             type: "FeatureCollection",
             features: allFeatures,
           };
-          if (last) {
-            endPerformanceMeasure("RequestServer" + DBType.POSTGISBUFFER, true);
-          }
           res.status(StatusCodes.OK).send(featureCollection);
         });
         // let roadFeatures: GeoJsonProperties[];

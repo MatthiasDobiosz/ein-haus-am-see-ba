@@ -8,11 +8,6 @@ import { Filter, FilterGroup } from "../components/Sidebar/Filter/Filters";
 import { FeatureCollection, MultiPolygon, Polygon } from "geojson";
 import { createOverlay } from "../overlayCreation/canvasRenderer";
 import { getViewportPolygon } from "../components/Map/mapUtils";
-import {
-  DBType,
-  endPerformanceMeasure,
-  startPerformanceMeasure,
-} from "../../../shared/benchmarking";
 import { SnackbarType } from "./SnackbarStore";
 import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
 import mapboxgl from "mapbox-gl";
@@ -28,26 +23,18 @@ class MapStore {
   visualType: VisualType;
   mapLayerManager: MapLayerManager | null;
   rootStore: RootStore;
-  dbType: DBType;
-  performanceViewActive: boolean;
 
   constructor(rootStore: RootStore) {
     this.map = null;
     this.visualType = VisualType.OVERLAY;
     this.mapLayerManager = null;
     this.rootStore = rootStore;
-    this.dbType = DBType.POSTGISSINGLE;
-    this.performanceViewActive = false;
 
     makeObservable(this, {
       map: observable,
       visualType: observable,
-      dbType: observable,
-      performanceViewActive: observable,
       setMap: action,
       setVisualType: action,
-      toggleDbType: action,
-      setPerformanceViewActive: action,
       mapLayerManager: false,
       loadOverlayMapData: false,
       loadPOIMapData: false,
@@ -104,22 +91,6 @@ class MapStore {
     }
   }
 
-  toggleDbType() {
-    if (this.dbType === DBType.POSTGISSINGLE) {
-      this.dbType = DBType.POSTGISINDEX;
-    } else if (this.dbType === DBType.POSTGISINDEX) {
-      this.dbType = DBType.POSTGISBUFFER;
-    } else if (this.dbType === DBType.POSTGISBUFFER) {
-      this.dbType = DBType.OVERPASS;
-    } else {
-      this.dbType = DBType.POSTGISSINGLE;
-    }
-  }
-
-  setPerformanceViewActive() {
-    this.performanceViewActive = this.performanceViewActive ? false : true;
-  }
-
   async loadOverlayMapData(): Promise<void> {
     if (this.map) {
       const bounds = getViewportPolygon(this.map, 500);
@@ -142,15 +113,11 @@ class MapStore {
           //console.log(data);
           if (data) {
             console.log(data);
-
-            startPerformanceMeasure("LoadingSingleFilter");
             this.preprocessGeoData(data, filter.layername);
-            endPerformanceMeasure("LoadingSingleFilter");
           }
         })
       );
 
-      endPerformanceMeasure("LoadingAllFilters");
       this.rootStore.snackbarStore.closeHandler();
 
       let success = true;
@@ -231,7 +198,6 @@ class MapStore {
         })
       );
 
-      endPerformanceMeasure("LoadingAllFilters");
       this.rootStore.snackbarStore.closeHandler();
 
       let success = true;
@@ -252,7 +218,6 @@ class MapStore {
   }
 
   async loadMapData(): Promise<void> {
-    startPerformanceMeasure("Workflow");
     if (this.rootStore.filterStore.activeFilters.size === 0) {
       return;
     }
@@ -267,7 +232,6 @@ class MapStore {
     );
 
     if (this.map) {
-      startPerformanceMeasure("LoadingAllFilters");
       if (this.visualType === VisualType.BOTH) {
         await this.loadOverlayMapData();
         this.loadPOIMapData();
@@ -426,15 +390,11 @@ class MapStore {
 
   //FIXME: Hier statt tagName dann einzigartigen Namen übergeben
   showDataOnMap(data: any, tagName: string): void {
-    startPerformanceMeasure("RemoveExistingLayers");
     if (this.map?.getSource("overlaySource")) {
       this.mapLayerManager?.removeCanvasSource("overlaySource");
     }
     this.mapLayerManager?.removeAllLayersForSource(tagName);
 
-    endPerformanceMeasure("RemoveExistingLayers");
-
-    startPerformanceMeasure("AddNewGeoData");
     if (this.map?.getSource(tagName)) {
       // the source already exists, only update the data
       //console.log(`Source ${tagName} is already used! Updating it!`);
@@ -446,8 +406,6 @@ class MapStore {
     //show the source data on the map
 
     this.mapLayerManager?.addLayersForSource(tagName);
-
-    endPerformanceMeasure("AddNewGeoData");
   }
 
   //! most of the data preprocessing could (and probably should) already happen on the server!
