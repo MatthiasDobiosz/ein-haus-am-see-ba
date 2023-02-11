@@ -6,6 +6,7 @@ import EnvironmentPlugin from "vite-plugin-environment";
 export default defineConfig({
   plugins: [react(), EnvironmentPlugin(["MAPBOX_TOKEN"])],
   server: {
+    host: true,
     proxy: {
       "/test": {
         target: "http://localhost:3200",

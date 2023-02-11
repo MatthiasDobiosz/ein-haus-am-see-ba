@@ -3,7 +3,6 @@ import express, { NextFunction, Request, Response, Router } from "express";
 import { StatusCodes } from "http-status-codes";
 import querystring from "querystring";
 import * as ServerUtils from "./serverUtils.js";
-import RedisCache from "./redisCache.js";
 
 export default class OsmRouter {
   private readonly osmRouter: Router;
@@ -29,7 +28,6 @@ export default class OsmRouter {
      */
     this.osmRouter.get(
       "/osmRequestCache",
-      this.checkCache,
       async (req: Request, res: Response, next: NextFunction) => {
         const bounds = req.query.bounds?.toString();
         const query = req.query.osmQuery?.toString();
@@ -37,7 +35,7 @@ export default class OsmRouter {
         if (bounds && query) {
           // TODO show user some kind of progress information: progress bar or simply percentage / remaining time!
           //res.status(200).send("Got it! You sent: " + query + ",\n" + bounds);
-          const compositeKey = (bounds + "/" + query).trim().toLowerCase();
+          //const compositeKey = (bounds + "/" + query).trim().toLowerCase();
           const osmQuery = ServerUtils.buildOverpassQuery(bounds, query);
 
           try {
@@ -45,7 +43,7 @@ export default class OsmRouter {
             //console.log(encodedQuery);
             const geoData = await axios.get(
               // `https://overpass-api.de/api/interpreter?${encodedQuery}`, // official overpass api (online version)
-              `http://localhost:12346/api/interpreter?${encodedQuery}`, // local overpass api (docker image)
+              `http://overpass/api/interpreter?${encodedQuery}`, // local overpass api (docker image)
               //`http://localhost:${Config.OVERPASS_PORT}/api/interpreter?${encodedQuery}`, // hosted overpass api on project server
               { timeout: 12000 }
             );
@@ -58,10 +56,10 @@ export default class OsmRouter {
             });
 
             // cache data for one hour, this should be enough for a typical usecase
-            const cacheTime = 3600;
+            //const cacheTime = 3600;
             //! cache only for 15 minutes during study to prevent influencing the next participant!
             //const cacheTime = 900;
-            RedisCache.cacheData(compositeKey, geoData.data, cacheTime);
+            //RedisCache.cacheData(compositeKey, geoData.data, cacheTime);
 
             //this.saveGeoData(geoData.data, query);
             return res.status(StatusCodes.OK).json(geoData.data);
@@ -113,6 +111,7 @@ export default class OsmRouter {
     */
   }
 
+  /*
   //Express middleware function to check Redis Cache
   checkCache = async (
     req: Request,
@@ -137,7 +136,7 @@ export default class OsmRouter {
         next();
       }
     }
-  };
+  };*/
   //! only works in linux
   /*
   testNodeOsmium(): void {

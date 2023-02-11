@@ -78,57 +78,6 @@ export function getViewportBoundsString(
 }
 
 /**
- * Get the current bounding box as an array
- */
-export function getViewportPolygon(
-  map: MapboxMap,
-  additionalDistance?: number
-): string {
-  const currBounds = map.getBounds();
-  let southLat = currBounds.getSouth();
-  let westLng = currBounds.getWest();
-  let northLat = currBounds.getNorth();
-  let eastLng = currBounds.getEast();
-  if (additionalDistance) {
-    const bufferedBBox = bbox(
-      addBufferToFeature(
-        bboxPolygon([westLng, southLat, eastLng, northLat]),
-        additionalDistance
-      )
-    );
-
-    southLat = bufferedBBox[1];
-    westLng = bufferedBBox[0];
-    northLat = bufferedBBox[3];
-    eastLng = bufferedBBox[2];
-  }
-  const north = northLat.toString();
-  const west = westLng.toString();
-  const east = eastLng.toString();
-  const south = southLat.toString();
-  const boundsString =
-    west +
-    " " +
-    north +
-    "," +
-    east +
-    " " +
-    north +
-    "," +
-    east +
-    " " +
-    south +
-    "," +
-    west +
-    " " +
-    south +
-    "," +
-    west +
-    " " +
-    north;
-  return boundsString;
-}
-/**
  * Util-Function to convert LngLat coordinates to pixel coordinates on the screen.
  */
 export function convertToPixelCoord(

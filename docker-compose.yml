@@ -1,0 +1,26 @@
+version: "3.8"
+services:
+  # Create frontend container
+  web: # Name of our service
+    build: ./ # path to dockerfile
+    ports: # Port binding to host from docker container
+      - "5173:5173"
+      - "3200:3200"
+    container_name: web-docker
+    restart: always # What to do if container crashes
+    links:
+      - overpass
+  # Create backend container
+  overpass:
+    # specify the image here
+    image: wiktorn/overpass-api:latest
+    container_name: overpass
+    # uncomment if you want to build the image yourself
+    # build: .
+    ports:
+      - 12346:80
+    environment:
+      - OVERPASS_META=no
+      - OVERPASS_MODE=init
+      - OVERPASS_PLANET_URL=http://download.geofabrik.de/europe/germany/bayern-latest.osm.bz2
+      - OVERPASS_RULES_LOAD=50
