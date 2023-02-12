@@ -5,11 +5,11 @@ import { SnackbarType } from "./../../stores/SnackbarStore";
 import rootStore from "../../stores/RootStore";
 import { VisualType } from "../../stores/MapStore";
 import { observer } from "mobx-react";
-import { AiOutlineMenu } from "react-icons/ai";
 import { fetchHouseDataFromPostGIS } from "../../network/networkUtils";
 import { getViewportPolygon } from "./mapUtils";
 import { Feature, Point } from "geojson";
 import { CustomMarker } from "./CustomMarker";
+import { AiOutlineMenu } from "react-icons/ai";
 import { SidebarContext } from "../Sidebar/SidebarContext";
 
 interface MapOverlayProps {
@@ -18,8 +18,8 @@ interface MapOverlayProps {
 }
 
 // tresholds to prevent reloading when small movements are made (performance optimization)
-const zoomTreshold = 0.7; // zoom level difference -> update if a map zoom event changed more than this
-const moveTreshold = 1000; // map center difference in meters
+const zoomTreshold = 0.3; // zoom level difference -> update if a map zoom event changed more than this
+const moveTreshold = 500; // map center difference in meters
 
 /**
  * Component that returns Mapbox Map with specified settings
@@ -50,8 +50,6 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
   };*/
 
   async function fetchHouses() {
-    console.log("hey");
-    console.log(map);
     if (map) {
       const bounds = getViewportPolygon(map, 0);
       const data = await fetchHouseDataFromPostGIS(bounds);
@@ -97,7 +95,7 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
           // if greater than the treshold load new data from the internet as well
           rootStore.mapStore.loadMapData();
         }
-      } else {
+      } else if (visualType === VisualType.NORMAL) {
         if (distance < moveTreshold) {
           return;
         }
@@ -151,7 +149,7 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
           return;
         }
         rootStore.mapStore.loadMapData();
-      } else {
+      } else if (visualType === VisualType.NORMAL) {
         if (newZoom <= minRequiredZoomLevel) {
           rootStore.snackbarStore.displayHandler(
             "Die aktuelle Zoomstufe ist zu niedrig, um Daten zu aktualisieren!",
@@ -177,16 +175,19 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
 
   return (
     <div
-      className="h-[100vh] flex justify-start items-center transition-width ease-in-out duration-500 relative"
-      style={{ width: isSidebarOpen ? "70%" : "100%" }}
+      className={`h-[100vh] flex justify-start items-center transition-width ease-in-out duration-500 relative ${
+        isSidebarOpen ? "w-[72vw]" : "w-[100vw]"
+      }`}
     >
       <button
-        className="absolute p-3 mt-[1em] ml-[0.5em] text-[1.4em] text-[#fff] z-50 top-20 inline-flex flex-row bg-[#fa6400] font-semibold justify-center w-auto border-solid border-[1px] border-[#ffffffcc] hover:bg-[#fb8332] rounded-[10%]"
+        className={`absolute p-3  ml-[0.5em] mt-[0.5em] text-[1.4em] text-[#fff] z-50 top-0 left-[13em] inline-flex flex-row bg-[#fa6400] font-semibold justify-center w-auto border-solid border-[1px] border-[#ffffffcc] hover:bg-[#fb8332] rounded-[10%] ${
+          isSidebarOpen ? "opacity-0 menu-inv" : ""
+        }`}
         onClick={() => handleSidebarOpen()}
       >
-        <AiOutlineMenu /> <span className="pl-2">Menu</span>
+        <AiOutlineMenu /> <span className="pl-2">Filter</span>
       </button>
-      <div className="w-[100%] h-[100%]">
+      <div className={`h-[100%] ${isSidebarOpen ? "w-[72vw]" : "w-[100vw]"}`}>
         <Map
           ref={(ref) => ref && rootStore.mapStore.setMap(ref.getMap())}
           mapboxAccessToken={process.env.MAPBOX_TOKEN}
@@ -198,7 +199,10 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
             bearing: 0,
             pitch: 0,
           }}
-          style={{ width: "100%", height: "100%" }}
+          style={{
+            width: `${isSidebarOpen ? "72vw" : "100vw"}`,
+            height: "100%",
+          }}
           mapStyle="mapbox://styles/mapbox/streets-v11?optimize=true"
           dragPan={{ linearity: 0.3, maxSpeed: 1400, deceleration: 3000 }}
           dragRotate={false}

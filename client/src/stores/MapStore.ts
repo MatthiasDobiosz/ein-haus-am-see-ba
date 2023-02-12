@@ -16,18 +16,23 @@ export const enum VisualType {
   NORMAL,
   OVERLAY,
   BOTH,
+  NONE,
 }
 
 class MapStore {
   map: MapboxMap | null;
   visualType: VisualType;
   mapLayerManager: MapLayerManager | null;
+  overlayView: boolean;
+  poiView: boolean;
   rootStore: RootStore;
 
   constructor(rootStore: RootStore) {
     this.map = null;
     this.visualType = VisualType.OVERLAY;
     this.mapLayerManager = null;
+    this.overlayView = true;
+    this.poiView = false;
     this.rootStore = rootStore;
 
     makeObservable(this, {
@@ -35,6 +40,11 @@ class MapStore {
       visualType: observable,
       setMap: action,
       setVisualType: action,
+      changeVisualType: action,
+      setOverlayView: action,
+      setPoiView: action,
+      overlayView: observable,
+      poiView: observable,
       mapLayerManager: false,
       loadOverlayMapData: false,
       loadPOIMapData: false,
@@ -69,9 +79,16 @@ class MapStore {
           placeholder: "Ort suchen",
           countries: "de",
           collapsed: true,
+          flyTo: {},
         }),
         "top-left"
       );
+
+      this.map.on("moveend", ({ originalEvent }) => {
+        if (!originalEvent) {
+          this.loadMapData();
+        }
+      });
     }
   }
 
@@ -79,7 +96,10 @@ class MapStore {
     if (visualType !== this.visualType) {
       this.visualType = visualType;
 
-      if (this.rootStore.filterStore.filtergroupsActive()) {
+      if (visualType === VisualType.NONE) {
+        this.mapLayerManager?.removeAllDataFromMap();
+      } else if (this.rootStore.filterStore.filtergroupsActive()) {
+        console.log("setvisual");
         this.loadMapData();
       } else {
         this.rootStore.snackbarStore.displayHandler(
@@ -89,6 +109,32 @@ class MapStore {
         );
       }
     }
+  }
+
+  changeVisualType() {
+    if (this.overlayView && !this.poiView) {
+      this.setVisualType(VisualType.OVERLAY);
+      this.rootStore.legendStore.showOverlayLegend();
+    } else if (this.poiView && !this.overlayView) {
+      this.setVisualType(VisualType.NORMAL);
+      this.rootStore.legendStore.hideOverlayLegend();
+    } else if (this.poiView && this.overlayView) {
+      this.setVisualType(VisualType.BOTH);
+      this.rootStore.legendStore.showOverlayLegend();
+    } else {
+      this.setVisualType(VisualType.NONE);
+      this.rootStore.legendStore.hideOverlayLegend();
+    }
+  }
+
+  setOverlayView(overlayBool: boolean): void {
+    this.overlayView = overlayBool;
+    this.changeVisualType();
+  }
+
+  setPoiView(poiBool: boolean): void {
+    this.poiView = poiBool;
+    this.changeVisualType();
   }
 
   async loadOverlayMapData(): Promise<void> {
@@ -217,7 +263,8 @@ class MapStore {
     }
   }
 
-  async loadMapData(): Promise<void> {
+  loadMapData() {
+    console.log("loadMap");
     if (this.rootStore.filterStore.activeFilters.size === 0) {
       return;
     }
@@ -225,19 +272,23 @@ class MapStore {
     // give feedback to the user
     // FIXME: Do that in component to get snackbarContext
     //showSnackbar("Daten werden geladen...", SnackbarType.INFO, undefined, true);
-    this.rootStore.snackbarStore.displayHandler(
-      "Daten werden geladen...",
-      undefined,
-      SnackbarType.INFO
-    );
+    if (this.visualType === VisualType.NONE) {
+      this.rootStore.snackbarStore.displayHandler(
+        "Daten werden geladen...",
+        undefined,
+        SnackbarType.INFO
+      );
+    }
 
     if (this.map) {
       if (this.visualType === VisualType.BOTH) {
-        await this.loadOverlayMapData();
+        console.log("both");
+        this.loadOverlayMapData();
         this.loadPOIMapData();
       } else if (this.visualType === VisualType.OVERLAY) {
+        console.log("overlay");
         this.loadOverlayMapData();
-      } else {
+      } else if (this.visualType === VisualType.NORMAL) {
         this.loadPOIMapData();
       }
     }
@@ -284,7 +335,7 @@ class MapStore {
       if (this.rootStore.filterStore.filtergroupsActive()) {
         this.addAreaOverlay();
       }
-    } else {
+    } else if (this.visualType === VisualType.NORMAL) {
       //only remove source if removed tag was the only one of this kind
       if (
         !this.rootStore.filterStore.getAllActiveTags().includes(filter.tagName)
@@ -316,10 +367,11 @@ class MapStore {
       if (this.rootStore.filterStore.filtergroupsActive()) {
         this.addAreaOverlay();
       }
-    } else {
+    } else if (this.visualType === VisualType.NORMAL) {
       //console.log("removeGeojson");
       //only remove source if removed tag was the only one of this kind
       if (this.rootStore.filterStore.filtergroupsActive()) {
+        console.log("idk");
         this.loadMapData();
       } else {
         filterGroup.filters.forEach((filter) => {
@@ -361,7 +413,7 @@ class MapStore {
       if (this.rootStore.filterStore.filtergroupsActive()) {
         this.addAreaOverlay();
       }
-    } else {
+    } else if (this.visualType === VisualType.NORMAL) {
       //console.log("removeGeojson");
       //only remove source if removed tag was the only one of this kind
 

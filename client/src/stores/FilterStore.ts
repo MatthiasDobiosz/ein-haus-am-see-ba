@@ -44,6 +44,7 @@ class FilterStore {
       getAllActiveTags: false,
       getRelevanceValue: false,
       changeSingleFilter: action,
+      changeGroupRelevance: action,
       rootStore: false,
     });
   }
@@ -399,17 +400,25 @@ class FilterStore {
   changeSingleFilter(
     layername: string,
     distance: number,
-    measure: string,
     wanted: boolean
   ): void {
     this.allFilterLayers.forEach((filter) => {
       if (filter.layername === layername) {
         filter.distance = distance;
-        filter.measurement = measure;
         filter.wanted = wanted;
       }
     });
     this.updateGroups();
+  }
+
+  changeGroupRelevance(groupName: string, relevance: number) {
+    const group = this.allFilterGroups.find((group) => {
+      return group?.groupName === groupName;
+    });
+
+    if (group) {
+      group.groupRelevance = relevance;
+    }
   }
 }
 

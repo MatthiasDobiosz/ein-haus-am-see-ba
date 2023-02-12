@@ -73,7 +73,7 @@ export const Filters = observer((): JSX.Element => {
         <div className="p-[20px]">
           <p className="m-[14px]">Keine Filter sind im Moment aktiv.</p>
           <p className="m-[14px]">
-            Klicke auf eine der Kategorien oben, um Filter auszuwählen.
+            Gehe zur Filterauswahl und füge Filtergruppen hinzu.
           </p>
         </div>
       )}

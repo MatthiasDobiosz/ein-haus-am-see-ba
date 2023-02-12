@@ -1,6 +1,7 @@
 import { SidebarCategory } from "./SidebarCategory";
 import { Filters } from "./Filter/Filters";
 import { observer } from "mobx-react";
+import { ViewSettings } from "./ViewSettings";
 
 interface SidebarPanelFiltersProps {
   toggleSidebar: () => void;
@@ -46,7 +47,7 @@ export const SidebarPanelFilters = observer(
           />
         </div>
         <hr className="border-t-[3px] border-solid border-[#bbb]" />
-        <Filters />
+        <ViewSettings />
       </>
     );
   }

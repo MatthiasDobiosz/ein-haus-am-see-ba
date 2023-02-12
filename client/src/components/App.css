@@ -115,7 +115,76 @@ body {
   transition: 0.4s;
 }
 
+.cheronout {
+  animation: moveout 0.45s ease-in-out;
+}
+
+.cheronin {
+  animation: movein 0.45s ease-in-out;
+}
+
+.menu-inv {
+  -webkit-animation: fadeoutsimple 0.5s;
+  animation: fadeoutsimple 0.5s;
+}
+
+.slider {
+  -webkit-transition: 0.4s;
+  transition: 0.4s;
+}
+
+.slider::before {
+  position: absolute;
+  content: "";
+  height: 13px;
+  width: 13px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  -webkit-transition: 0.4s;
+  transition: 0.4s;
+}
+
+.switchinput:checked + .slider {
+  background-color: #2196f3;
+}
+
+.switchinput:focus + .slider {
+  box-shadow: 0 0 1px #2196f3;
+}
+
+.switchinput:checked + .slider:before {
+  -webkit-transform: translateX(13px);
+  -ms-transform: translateX(13px);
+  transform: translateX(13px);
+}
+
+.slider.round {
+  border-radius: 17px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
 /* Add Animation */
+
+@keyframes moveout {
+  from {
+    left: -16px;
+  }
+  to {
+    left: calc(25% - 16px);
+  }
+}
+
+@keyframes movein {
+  from {
+    left: calc(25% - 16px);
+  }
+  to {
+    left: -16px;
+  }
+}
 
 @-webkit-keyframes animateopen {
   from {
@@ -134,6 +203,26 @@ body {
 
   to {
     width: auto;
+  }
+}
+
+@-webkit-keyframes animateclose {
+  from {
+    width: 100vw;
+  }
+
+  to {
+    width: 75vw;
+  }
+}
+
+@keyframes animateclose {
+  from {
+    width: 100vw;
+  }
+
+  to {
+    width: 75vw;
   }
 }
 
@@ -181,6 +270,46 @@ body {
 
   to {
     bottom: 0;
+    opacity: 0;
+  }
+}
+
+@-webkit-keyframes fadeinsimple {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeinsimple {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@-webkit-keyframes fadeoutsimple {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes fadeoutsimple {
+  from {
+    opacity: 1;
+  }
+
+  to {
     opacity: 0;
   }
 }

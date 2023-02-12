@@ -27,7 +27,6 @@ export const SidebarItem = observer((props: SidebarItemProps): JSX.Element => {
           value={name}
           open
           onClose={() => setShowFilterModal(false)}
-          editing={false}
         />
       )}
     </>

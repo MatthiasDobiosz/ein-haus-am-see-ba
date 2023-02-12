@@ -38,6 +38,7 @@ export const FilterSettings = observer(
         );
         return;
       }
+      console.log("eight");
       rootStore.mapStore.loadMapData();
     }
 
@@ -51,9 +52,11 @@ export const FilterSettings = observer(
         //Check if groupname already exists
         if (!rootStore.filterStore.validateGroupName(groupname)) {
           if (groupname === "") {
-            props.setError(`No Groupname set`);
+            props.setError(`Kein Gruppenname angegeben`);
           } else {
-            props.setError(`Group with name ${groupname} already exists!`);
+            props.setError(
+              `Eine Gruppe mit dem Namen ${groupname} existiert bereits!`
+            );
           }
           //FIXME: display error
         } else {
@@ -94,7 +97,7 @@ export const FilterSettings = observer(
               performOsmQuery();
             }, 800);
           } else {
-            props.setError(`Filter could not be added`);
+            props.setError(`Filter konnte nicht hinzugefügt werden`);
           }
 
           // load map data automatically after 800ms (timeout so the snackbars wont overlap)
@@ -149,24 +152,6 @@ export const FilterSettings = observer(
         setRelevance(FilterRelevance.important);
       } else {
         setRelevance(FilterRelevance.veryImportant);
-      }
-    };
-
-    const setMeasureAndDistance = (value: string) => {
-      if (value === "km") {
-        if (distance > 2) {
-          props.setError("Es sind maximal 2km Umkreis erlaubt");
-        } else {
-          setDistance((prevDistance) => prevDistance * 1000);
-          setMeasure(value);
-        }
-      } else {
-        if (distance > 2000) {
-          props.setError("Es sind maximal 2km Umkreis erlaubt");
-        } else {
-          setDistance((prevDistance) => prevDistance / 1000);
-          setMeasure(value);
-        }
       }
     };
 

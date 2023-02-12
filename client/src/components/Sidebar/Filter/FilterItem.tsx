@@ -45,7 +45,6 @@ export const FilterItem = observer((props: FilterItemProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [newDistance, setNewDistance] = useState(filter.distance);
-  const [newMeasure, setNewMeasure] = useState(filter.measurement);
   const [newWanted, setNewWanted] = useState(filter.wanted);
 
   // removes the filter from the store and also from the map
@@ -58,14 +57,6 @@ export const FilterItem = observer((props: FilterItemProps) => {
     );
   };
 
-  const getCorrectDistance = () => {
-    if (filter.measurement === "km") {
-      return (filter.distance / 1000).toString();
-    } else {
-      return filter.distance.toString();
-    }
-  };
-
   async function performOsmQuery(): Promise<void> {
     if (rootStore.filterStore.activeFilters.size === 0) {
       rootStore.snackbarStore.displayHandler(
@@ -75,6 +66,7 @@ export const FilterItem = observer((props: FilterItemProps) => {
       );
       return;
     }
+    console.log("seven");
     rootStore.mapStore.loadMapData();
   }
 
@@ -85,12 +77,11 @@ export const FilterItem = observer((props: FilterItemProps) => {
     rootStore.filterStore.changeSingleFilter(
       props.filter.layername,
       newDistance,
-      newMeasure,
       newWanted
     );
 
     rootStore.snackbarStore.displayHandler(
-      "Filter wurde erfolgreich hinzugefügt!",
+      "Filter wurde erfolgreich bearbeitet!",
       1000,
       SnackbarType.SUCCESS
     );
@@ -100,16 +91,6 @@ export const FilterItem = observer((props: FilterItemProps) => {
     setTimeout(() => {
       performOsmQuery();
     }, 800);
-  };
-
-  const setMeasureAndDistance = (value: string) => {
-    if (value === "km") {
-      setNewDistance((prevDistance) => prevDistance * 1000);
-      setNewMeasure(value);
-    } else {
-      setNewDistance((prevDistance) => prevDistance / 1000);
-      setNewMeasure(value);
-    }
   };
 
   if (isEditing) {
@@ -126,19 +107,12 @@ export const FilterItem = observer((props: FilterItemProps) => {
               <div className="flex">
                 <input
                   type="text"
-                  defaultValue={getCorrectDistance()}
+                  defaultValue={filter.distance}
                   pattern="\d"
                   onChange={(e) => setNewDistance(Number(e.target.value))}
                   className="border-[1px] border-solid border-[#808080]  w-[3em]  ml-[0.5em] text-center self-start"
                 />
-                <select
-                  defaultValue={filter.measurement}
-                  className="border-[1px] border-solid border-[#808080] ml-[0.5em] w-fit "
-                  onChange={(e) => setMeasureAndDistance(e.target.value)}
-                >
-                  <option value="m">m</option>
-                  <option value="km">km</option>
-                </select>
+                <span className="pl-1">Meter</span>
               </div>
             </div>
             <div className="flex flex-row">
@@ -197,7 +171,7 @@ export const FilterItem = observer((props: FilterItemProps) => {
           <div className="flex flex-row">
             <span className="font-bold mr-12 w-[5em]">Entfernung:</span>
             <span>{filter.distance}</span>
-            <span className="pl-1">{filter.measurement}</span>
+            <span className="pl-1">Meter</span>
           </div>
           <div className="flex flex-row">
             <span className="font-bold  mr-12 w-[5em]">Polarität:</span>

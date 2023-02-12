@@ -2,7 +2,6 @@ import { observer } from "mobx-react";
 import { Dispatch, SetStateAction, useState } from "react";
 import { createPortal } from "react-dom";
 import { ChooseFilterType } from "./ChooseFilterType";
-import { EditFilter } from "./EditFilter";
 import { ErrorModal } from "./ErrorModal";
 import { Filter } from "./Filters";
 import { FilterSettings } from "./FilterSettings";
@@ -14,7 +13,6 @@ interface FilterModalProps {
   open: boolean;
   /** function to trigger closing of the modal */
   onClose: Dispatch<SetStateAction<boolean>>;
-  editing: boolean;
   filter?: Filter;
 }
 
@@ -47,21 +45,6 @@ export const FilterModal = observer(
 
     if (!open) {
       return null;
-    }
-
-    if (props.editing && props.filter) {
-      return createPortal(
-        <div className="fixed z-[1000] left-0 top-0 w-[100%] h-[100%] overflow-auto bg-[#00000066] block">
-          <EditFilter
-            value={value}
-            open={open}
-            onClose={onClose}
-            setError={showError}
-            filter={props.filter}
-          />
-        </div>,
-        portalDiv
-      );
     }
 
     if (newGroup == null) {

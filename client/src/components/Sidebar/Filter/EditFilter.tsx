@@ -32,6 +32,7 @@ export const EditFilter = observer(
         );
         return;
       }
+      console.log("six");
       rootStore.mapStore.loadMapData();
     }
 
@@ -42,7 +43,6 @@ export const EditFilter = observer(
       rootStore.filterStore.changeSingleFilter(
         props.filter.layername,
         distance,
-        measure,
         wanted
       );
 
