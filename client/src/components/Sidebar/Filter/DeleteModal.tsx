@@ -1,10 +1,10 @@
 import { observer } from "mobx-react";
-import { Dispatch, SetStateAction } from "react";
+import { Dispatch, ReactNode, SetStateAction } from "react";
 import { createPortal } from "react-dom";
 
 interface FilterModalProps {
   /** name of the filter/filtergroup to show modal for */
-  value: string;
+  value: ReactNode;
   /** function to trigger closing of the modal */
   onClose: Dispatch<SetStateAction<boolean>>;
   onDelete: () => void;
@@ -18,22 +18,9 @@ export const DeleteModal = observer(
     const portalDiv = document.getElementById("portal");
 
     const getErrorMessage = () => {
-      if (props.group) {
-        return (
-          <>
-            Möchtest du die Filtergruppe{" "}
-            <span className="font-bold">{value}</span> löschen?
-          </>
-        );
-      } else {
-        return (
-          <>
-            Möchtest du den Filter <span className="font-bold">{value}</span>{" "}
-            löschen?
-          </>
-        );
-      }
+      return value;
     };
+
     if (!portalDiv) {
       return null;
     }

@@ -112,6 +112,8 @@ class MapStore {
   }
 
   changeVisualType() {
+    console.log(this.overlayView);
+    console.log(this.poiView);
     if (this.overlayView && !this.poiView) {
       this.setVisualType(VisualType.OVERLAY);
       this.rootStore.legendStore.showOverlayLegend();
@@ -119,6 +121,7 @@ class MapStore {
       this.setVisualType(VisualType.NORMAL);
       this.rootStore.legendStore.hideOverlayLegend();
     } else if (this.poiView && this.overlayView) {
+      console.log("set both");
       this.setVisualType(VisualType.BOTH);
       this.rootStore.legendStore.showOverlayLegend();
     } else {
@@ -263,7 +266,7 @@ class MapStore {
     }
   }
 
-  loadMapData() {
+  async loadMapData() {
     console.log("loadMap");
     if (this.rootStore.filterStore.activeFilters.size === 0) {
       return;
@@ -283,7 +286,7 @@ class MapStore {
     if (this.map) {
       if (this.visualType === VisualType.BOTH) {
         console.log("both");
-        this.loadOverlayMapData();
+        await this.loadOverlayMapData();
         this.loadPOIMapData();
       } else if (this.visualType === VisualType.OVERLAY) {
         console.log("overlay");

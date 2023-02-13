@@ -151,8 +151,13 @@ export const FilterItem = observer((props: FilterItemProps) => {
         </li>
         {isDeleting && (
           <DeleteModal
-            value={filter.tagName}
-            onClose={() => setIsDeleting(false)}
+            value={
+              <>
+                Möchtest du den Filter{" "}
+                <span className="font-bold">{filter.tagName}</span> löschen?
+              </>
+            }
+            onClose={setIsDeleting}
             onDelete={() => onFilterRemoved()}
           />
         )}
@@ -193,8 +198,13 @@ export const FilterItem = observer((props: FilterItemProps) => {
       </li>
       {isDeleting && (
         <DeleteModal
-          value={filter.tagName}
-          onClose={() => setIsDeleting(false)}
+          value={
+            <>
+              Möchtest du den Filter{" "}
+              <span className="font-bold">{filter.tagName}</span> löschen?
+            </>
+          }
+          onClose={setIsDeleting}
           onDelete={() => onFilterRemoved()}
         />
       )}

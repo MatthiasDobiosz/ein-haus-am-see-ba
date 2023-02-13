@@ -117,7 +117,13 @@ export const FilterGroupItem = observer(
         </div>
         {isDeleting && (
           <DeleteModal
-            value={filtergroup.groupName}
+            value={
+              <>
+                Möchtest du die Filtergruppe{" "}
+                <span className="font-bold">{filtergroup.groupName}</span>{" "}
+                löschen?
+              </>
+            }
             onClose={setIsDeleting}
             onDelete={removeFiltersAndUpdateMap}
             group

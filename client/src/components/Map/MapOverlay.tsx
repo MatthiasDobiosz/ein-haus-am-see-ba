@@ -5,10 +5,6 @@ import { SnackbarType } from "./../../stores/SnackbarStore";
 import rootStore from "../../stores/RootStore";
 import { VisualType } from "../../stores/MapStore";
 import { observer } from "mobx-react";
-import { fetchHouseDataFromPostGIS } from "../../network/networkUtils";
-import { getViewportPolygon } from "./mapUtils";
-import { Feature, Point } from "geojson";
-import { CustomMarker } from "./CustomMarker";
 import { AiOutlineMenu } from "react-icons/ai";
 import { SidebarContext } from "../Sidebar/SidebarContext";
 
@@ -30,8 +26,6 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
     new LngLat(12.101624, 49.013432)
   );
   const [currentMapZoom, setCurrentMapZoom] = useState(12);
-  const [showHouses, setShowHouses] = useState(false);
-  const [houses, setHouses] = useState<Feature<Point, any>[]>([]);
   const minRequiredZoomLevel = 7;
   const map = rootStore.mapStore.map;
   const visualType = rootStore.mapStore.visualType;
@@ -49,16 +43,6 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
     }
   };*/
 
-  async function fetchHouses() {
-    if (map) {
-      const bounds = getViewportPolygon(map, 0);
-      const data = await fetchHouseDataFromPostGIS(bounds);
-      if (data?.features) {
-        setHouses(data?.features);
-      }
-    }
-  }
-
   const handleSidebarOpen = () => {
     setSidebarState(!isSidebarOpen);
   };
@@ -67,11 +51,6 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
     if (map) {
       // Uses the Haversine Formula to calculate difference between tow latLng coords in meters
       const distance = currentMapCenter.distanceTo(map.getCenter());
-
-      console.log(currentMapZoom);
-      if (currentMapZoom > 17) {
-        fetchHouses();
-      }
 
       //! overlay needs to be updated all the time unfortunately as long as i can't find a way
       //! to draw the canvas bigger than the screen and also retain correct pixel corrdinates :(
@@ -82,7 +61,7 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
           // if below the treshold only update overlay
           rootStore.mapStore.addAreaOverlay();
         } else {
-          // if greater than the treshold load new data from the internet as well
+          // if greater than the treshold load new data from the db as well
           rootStore.mapStore.loadMapData();
         }
       } else if (visualType === VisualType.OVERLAY) {
@@ -92,7 +71,7 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
           // if below the treshold only update overlay
           rootStore.mapStore.addAreaOverlay();
         } else {
-          // if greater than the treshold load new data from the internet as well
+          // if greater than the treshold load new data from the db as well
           rootStore.mapStore.loadMapData();
         }
       } else if (visualType === VisualType.NORMAL) {
@@ -109,12 +88,6 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
     if (map) {
       const newZoom = map.getZoom();
 
-      if (newZoom > 17) {
-        setShowHouses(true);
-        fetchHouses();
-      } else {
-        setShowHouses(false);
-      }
       if (visualType === VisualType.BOTH) {
         rootStore.filterStore.recalculateScreenCoords();
 
@@ -180,7 +153,7 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
       }`}
     >
       <button
-        className={`absolute p-3  ml-[0.5em] mt-[0.5em] text-[1.4em] text-[#fff] z-50 top-0 left-[13em] inline-flex flex-row bg-[#fa6400] font-semibold justify-center w-auto border-solid border-[1px] border-[#ffffffcc] hover:bg-[#fb8332] rounded-[10%] ${
+        className={`absolute p-[0.55rem]  ml-[0.5em] mt-[0.5em] text-[1.3em] text-[#fff] z-50 top-0 left-[15em] inline-flex flex-row bg-[#fa6400] font-semibold justify-center w-auto border-solid border-[1px] border-[#ffffffcc] hover:bg-[#fb8332] rounded-[5%] ${
           isSidebarOpen ? "opacity-0 menu-inv" : ""
         }`}
         onClick={() => handleSidebarOpen()}
@@ -224,10 +197,6 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
         >
           <NavigationControl position={"top-right"} visualizePitch={true} />
           <AttributionControl position={"bottom-right"} />
-          {showHouses &&
-            houses.map((house, i) => {
-              return <CustomMarker house={house} key={i} />;
-            })}
         </Map>
         <canvas id="texture_canvas">
           Your browser does not seem to support HTML5 canvas.
