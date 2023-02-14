@@ -1,6 +1,10 @@
 import mapboxgl, { LngLat } from "mapbox-gl";
 import { useState } from "react";
-import Map, { AttributionControl, NavigationControl } from "react-map-gl";
+import Map, {
+  AttributionControl,
+  NavigationControl,
+  ScaleControl,
+} from "react-map-gl";
 import { SnackbarType } from "./../../stores/SnackbarStore";
 import rootStore from "../../stores/RootStore";
 import { VisualType } from "../../stores/MapStore";
@@ -134,10 +138,12 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
           mapStyle="mapbox://styles/mapbox/streets-v11?optimize=true"
           dragPan={{ linearity: 0.3, maxSpeed: 1400, deceleration: 3000 }}
           dragRotate={false}
+          touchZoomRotate={false}
           //onMove={(evt) => setViewport(evt.viewState)}
           attributionControl={false}
           minZoom={4}
           maxZoom={20}
+          hash={true}
           trackResize={true}
           antialias={false} // * set to true for antialiasing custom layers but this has a negative impact on performance
           preserveDrawingBuffer={false} // necessary to be able to export the map canvas as an image but has negative performance impact
@@ -150,8 +156,9 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
           }
           onZoomEnd={() => onMapZoomEnd()}
         >
-          <NavigationControl position={"top-right"} visualizePitch={true} />
+          <NavigationControl position={"top-right"} visualizePitch={false} />
           <AttributionControl position={"bottom-right"} />
+          <ScaleControl position={"bottom-left"} />
         </Map>
         <canvas id="texture_canvas">
           Your browser does not seem to support HTML5 canvas.
