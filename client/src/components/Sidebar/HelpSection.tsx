@@ -9,7 +9,7 @@ interface HelperSection {
 const helperSections: HelperSection[] = [
   {
     title: "Was sind Filtergruppen",
-    text: "In einer Filtergruppe können ein oder mehrere Filter einer Kategorien enthalten sein, die individuell erstellt werden. Filtergruppen kombinieren alle enthaltenen Filter. Hat man zum Beispiel eine Filtergruppe, die einen Filter für See mit Umkreis 500 Meter und einen Filter für Restaurant mit Umkreis 200m beinhaltet, dann werden nur Gebiete angezeigt in denen sowohl ein See in 500 Meter Umkreis als auch ein Restaurant in 200 Meter Umkreis sind. Zusätzlich hat jede Gruppe eine 'Relevanz' die bestimmt wie wichtig dir diese Gruppe im Vergleich zu anderen ist.",
+    text: "In einer Filtergruppe können ein oder mehrere Filter einer Kategorien enthalten sein, die individuell erstellt werden. Filtergruppen kombinieren alle enthaltenen Filter. Hat man zum Beispiel eine Filtergruppe, die einen Filter für See mit Umkreis 500 Meter und einen Filter für Restaurant mit Umkreis 200m beinhaltet, dann werden nur Gebiete angezeigt in denen sowohl ein See in 500 Meter Umkreis als auch ein Restaurant in 200 Meter Umkreis sind. Zusätzlich hat jede Gruppe eine 'Gewichtung' die bestimmt wie wichtig dir diese Gruppe im Vergleich zu anderen ist.",
   },
   {
     title: "Erstellen einer Filtergruppe",

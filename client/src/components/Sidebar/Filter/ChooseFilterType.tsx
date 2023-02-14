@@ -31,25 +31,25 @@ export const ChooseFilterType = observer(
       }
     }
     return (
-      <div className="bg-[#fff] my-[15%] mx-auto p-0 relative rounded-[8px] w-[30vw] modal-content">
+      <div className="bg-[#fff] my-[15%] mx-auto p-0 relative rounded-[0.55em] w-[30vw] modal-content 2xl:text-[1em] xl:text-[0.8em] lg:text-[0.7em] md:text-[0.6em] sm:text-[0.5em]">
         <div className="relative">
-          <h2 className="flex justify-center py-[12px] px-0 bg-[#5cb85c] text-[#fff] text-[1.5em] font-bold rounded-t-[8px] rounded-r-[8px]">
+          <h2 className="flex justify-center py-[0.6em] px-0 bg-[#5cb85c] text-[#fff] text-[1.5em] font-bold rounded-t-[8px] rounded-r-[8px]">
             Filtertyp wählen
           </h2>
           <button
-            className="absolute top-[20%] right-4 text-[24px]"
+            className="absolute top-[20%] right-4 text-[1.7em]"
             onClick={() => props.onClose(true)}
           >
             <AiOutlineClose color="#fff" />
           </button>
         </div>
-        <div className="w-[30vw] mt-[25px] px-[3em] text-center">
+        <div className="w-[30vw] mt-[1.75em] px-[3em] text-center">
           <span className="text-[1.1em]">
             Wähle aus ob du eine neue Filtergruppe erstellen möchtest oder den
             Filter einer vorhandenen Gruppe hinzufügen willst.
           </span>
         </div>
-        <div className="mt-[25px] flex justify-evenly items-center">
+        <div className="mt-[1.75em] flex justify-evenly items-center">
           <button
             type="button"
             className="mb-[1em] p-[0.8em] w-[9vw] text-[1em] cursor-pointer overflow-hidden border-0 outline-none rounded-[4px] bg-[#14bd5a] text-[#f5f5f5] hover:bg-[#11a74f] active:bg-[#11a74f]"

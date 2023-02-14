@@ -104,7 +104,7 @@ export const EditFilter = observer(
             </div>
             <div className="my-[16px]">
               <p className="text-[16px] mr-[12px] my-[16px]">
-                Dieses Kriterium soll:{" "}
+                Objekte vom Typ {value} sollen:{" "}
               </p>
               <label className="block relative pl-[30px] mb-[16px] cursor-pointer text-[14px] radiocontainer">
                 möglichst nah sein

@@ -168,6 +168,52 @@ body {
 }
 /* Add Animation */
 
+.filterbtnout {
+  -webkit-animation: slideright 0.5s;
+  animation: slideright 0.5s;
+}
+
+.filterbtnin {
+  -webkit-animation: slideleft 0.5s;
+  animation: slideleft 0.5s;
+}
+
+@-webkit-keyframes slideright {
+  from {
+    left: 2%;
+  }
+  to {
+    left: 28%;
+  }
+}
+
+@keyframes slideright {
+  from {
+    left: 2%;
+  }
+  to {
+    left: 28%;
+  }
+}
+
+@-webkit-keyframes slideleft {
+  from {
+    left: 28%;
+  }
+  to {
+    left: 2%;
+  }
+}
+
+@keyframes slideleft {
+  from {
+    left: 28%;
+  }
+  to {
+    left: 2%;
+  }
+}
+
 @keyframes moveout {
   from {
     left: -16px;

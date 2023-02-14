@@ -1,21 +1,33 @@
 import { observer } from "mobx-react";
 import { useState } from "react";
 import { AiFillCaretDown, AiFillCaretUp } from "react-icons/ai";
-import { SidebarItem } from "./SidebarItem";
+import { CustomSidebarItem } from "./CustomSidebarItem";
 
-interface SidebarCategoryProps {
+export interface mockFilterGroup {
+  groupName: string;
+  groupRelevance: number;
+  filters: mockFilter[];
+}
+
+export interface mockFilter {
+  tagName: string;
+  distance: number;
+  wanted: boolean;
+}
+
+interface CustomSidebarCategoryProps {
   /** title of a node category */
   title: string;
   /** array of subcategories */
-  items: string[];
+  filtergroups: mockFilterGroup[];
 }
 
 /**
- * SidebarCategory Component that handles the visibility of subcategories
+ * CustomSidebarCategory Component for complex custom categories
  */
-export const SidebarCategory = observer(
-  (props: SidebarCategoryProps): JSX.Element => {
-    const { title, items } = props;
+export const CustomSidebarCategory = observer(
+  (props: CustomSidebarCategoryProps): JSX.Element => {
+    const { title, filtergroups } = props;
     const [isActive, setIsActive] = useState(false);
 
     const handleOpen = () => {
@@ -45,8 +57,8 @@ export const SidebarCategory = observer(
         </button>
         {isActive && (
           <div>
-            {items.map((item) => {
-              return <SidebarItem name={item} key={item} />;
+            {filtergroups.map((filtergroup, i) => {
+              return <CustomSidebarItem filtergroup={filtergroup} key={i} />;
             })}
           </div>
         )}

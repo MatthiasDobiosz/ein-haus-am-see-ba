@@ -96,33 +96,33 @@ export const FilterItem = observer((props: FilterItemProps) => {
   if (isEditing) {
     return (
       <>
-        <li className="flex flex-col relative p-[6px] my-[3px] mx-0 transition-[0.2s] border-[1px] border-solid border-[#d3d3d3] hover:bg-[#f7f2df] 2xl:text-[1.3em] xl:text-[1em] lg:text-[0.8em] md:text-[0.7em] sm:text-[0.6em]">
-          <div className="flex flex-col my-[4px] ml-[5em] mr-[6em] gap-2">
+        <li className="flex flex-col relative p-[6px] my-[3px] mx-auto transition-[0.2s] border-[1px] border-solid border-[#d3d3d3] bg-[#f7f2df] hover:bg-[#f7f2df] 2xl:text-[1.1em] xl:text-[0.9em] lg:text-[0.7em] md:text-[0.6em] sm:text-[0.5em] w-[90%]">
+          <div className="flex flex-col my-[4px] ml-[5em] mr-[3em] gap-2">
             <div className="flex flex-row">
-              <span className="font-bold w-[5em] mr-12">Filtertyp:</span>
+              <span className="font-bold w-[50%]">Filtertyp:</span>
               <span>{filter.tagName}</span>
             </div>
             <div className="flex flex-row">
-              <span className="font-bold mr-12 w-[5em]">Entfernung:</span>
-              <div className="flex">
+              <span className="font-bold w-[50%]">Entfernung:</span>
+              <div className="flex flex-row w-[50%]">
                 <input
                   type="text"
                   defaultValue={filter.distance}
                   pattern="\d"
                   onChange={(e) => setNewDistance(Number(e.target.value))}
-                  className="border-[1px] border-solid border-[#808080]  w-[3em]  ml-[0.5em] text-center self-start"
+                  className="border-[1px] border-solid border-[#808080] w-[50%]  ml-[0.5em] text-center self-start"
                 />
-                <span className="pl-1">Meter</span>
+                <span className="pl-1 w-[50%]">Meter</span>
               </div>
             </div>
             <div className="flex flex-row">
-              <span className="font-bold  mr-12 w-[5em]">Polarität:</span>
+              <span className="font-bold  w-[50%]">Polarität:</span>
               <select
                 defaultValue={newWanted ? "nah" : "fern"}
                 onChange={(e) =>
                   setNewWanted(e.target.value === "nah" ? true : false)
                 }
-                className="border-[1px] border-solid border-[#808080]    ml-[0.5em] w-fit "
+                className="border-[1px] border-solid border-[#808080]  ml-[0.5em] w-fit "
               >
                 <option value="nah">möglichst nah</option>
                 <option value="fern">möglichst fern</option>
@@ -167,20 +167,24 @@ export const FilterItem = observer((props: FilterItemProps) => {
 
   return (
     <>
-      <li className="flex flex-col relative p-[6px] my-[3px] mx-0 transition-[0.2s] border-[1px] border-solid border-[#d3d3d3] hover:bg-[#f7f2df] 2xl:text-[1.3em] xl:text-[1em] lg:text-[0.8em] md:text-[0.7em] sm:text-[0.6em]">
-        <div className="flex flex-col my-[4px] ml-[5em] mr-[6em] gap-2">
+      <li className="flex flex-col relative p-[6px] my-[3px] mx-auto transition-[0.2s] border-[1px] border-solid border-[#d3d3d3] bg-[#f7f2df] hover:bg-[#f7f2df] 2xl:text-[1.1em] xl:text-[0.9em] lg:text-[0.7em] md:text-[0.6em] sm:text-[0.5em] w-[90%]">
+        <div className="flex flex-col my-[4px] ml-[5em] mr-[3em] gap-2">
           <div className="flex flex-row">
-            <span className="font-bold w-[5em] mr-12">Filtertyp:</span>
-            <span>{filter.tagName}</span>
+            <span className="font-bold w-[50%]">Filtertyp:</span>
+            <span className="w-[50%]">{filter.tagName}</span>
           </div>
           <div className="flex flex-row">
-            <span className="font-bold mr-12 w-[5em]">Entfernung:</span>
-            <span>{filter.distance}</span>
-            <span className="pl-1">Meter</span>
+            <span className="font-bold w-[50%]">Entfernung:</span>
+            <div className="w-[50%] ">
+              <span>{filter.distance}</span>
+              <span className="pl-1">Meter</span>
+            </div>
           </div>
           <div className="flex flex-row">
-            <span className="font-bold  mr-12 w-[5em]">Polarität:</span>
-            <span>{filter.wanted ? "möglichst nah" : "möglichst fern"}</span>
+            <span className="font-bold w-[50%]">Polarität:</span>
+            <span className="w-[50%]">
+              {filter.wanted ? "möglichst nah" : "möglichst fern"}
+            </span>
           </div>
         </div>
         <button

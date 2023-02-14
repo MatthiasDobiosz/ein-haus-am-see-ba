@@ -79,11 +79,11 @@ class MapStore {
           placeholder: "Ort suchen",
           countries: "de",
           collapsed: true,
-          flyTo: {},
         }),
-        "top-left"
+        "top-right"
       );
 
+      // only update map on moveend if it originated from a flying event (Geocoder)
       this.map.on("moveend", ({ originalEvent }) => {
         if (!originalEvent) {
           this.loadMapData();

@@ -1,6 +1,10 @@
 import mapboxgl, { LngLat } from "mapbox-gl";
 import { useContext, useState } from "react";
-import Map, { AttributionControl, NavigationControl } from "react-map-gl";
+import Map, {
+  AttributionControl,
+  NavigationControl,
+  ScaleControl,
+} from "react-map-gl";
 import { SnackbarType } from "./../../stores/SnackbarStore";
 import rootStore from "../../stores/RootStore";
 import { VisualType } from "../../stores/MapStore";
@@ -26,6 +30,7 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
     new LngLat(12.101624, 49.013432)
   );
   const [currentMapZoom, setCurrentMapZoom] = useState(12);
+  const [hoveredOnce, setHoveredOnce] = useState(false);
   const minRequiredZoomLevel = 7;
   const map = rootStore.mapStore.map;
   const visualType = rootStore.mapStore.visualType;
@@ -45,6 +50,9 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
 
   const handleSidebarOpen = () => {
     setSidebarState(!isSidebarOpen);
+    if (!hoveredOnce) {
+      setHoveredOnce(true);
+    }
   };
 
   const onMapDragEnd = () => {
@@ -147,24 +155,25 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
   }
 
   return (
-    <div
-      className={`h-[100vh] flex justify-start items-center transition-width ease-in-out duration-500 relative ${
-        isSidebarOpen ? "w-[72vw]" : "w-[100vw]"
-      }`}
-    >
+    <div className="h-[100%] flex justify-start items-center transition-width ease-in-out duration-500 relative  w-[100%]">
       <button
-        className={`absolute p-[0.55rem]  ml-[0.5em] mt-[0.5em] text-[1.3em] text-[#fff] z-50 top-0 left-[15em] inline-flex flex-row bg-[#fa6400] font-semibold justify-center w-auto border-solid border-[1px] border-[#ffffffcc] hover:bg-[#fb8332] rounded-[5%] ${
-          isSidebarOpen ? "opacity-0 menu-inv" : ""
+        className={`absolute p-[0.55rem]  ml-[0.5em] mt-[0.5em] text-[1.3em] text-[#fff] z-50 top-0 left-[15em] inline-flex flex-row bg-[#fa6400] font-semibold justify-center w-auto border-solid border-[1px] border-[#ffffffcc] hover:bg-[#fb8332] rounded-[5%]  ${
+          isSidebarOpen
+            ? "left-[28%] filterbtnout"
+            : !isSidebarOpen && hoveredOnce
+            ? "left-[2%] filterbtnin"
+            : "left-[2%]"
         }`}
         onClick={() => handleSidebarOpen()}
       >
         <AiOutlineMenu /> <span className="pl-2">Filter</span>
       </button>
-      <div className={`h-[100%] ${isSidebarOpen ? "w-[72vw]" : "w-[100vw]"}`}>
+      <div className="h-[100%] w-[100%]">
         <Map
           ref={(ref) => ref && rootStore.mapStore.setMap(ref.getMap())}
           mapboxAccessToken={process.env.MAPBOX_TOKEN}
           reuseMaps={true}
+          hash={true}
           initialViewState={{
             longitude: 12.101624,
             latitude: 49.013432,
@@ -173,12 +182,13 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
             pitch: 0,
           }}
           style={{
-            width: `${isSidebarOpen ? "72vw" : "100vw"}`,
+            width: "100%",
             height: "100%",
           }}
           mapStyle="mapbox://styles/mapbox/streets-v11?optimize=true"
           dragPan={{ linearity: 0.3, maxSpeed: 1400, deceleration: 3000 }}
           dragRotate={false}
+          touchZoomRotate={false}
           //onMove={(evt) => setViewport(evt.viewState)}
           attributionControl={false}
           minZoom={4}
@@ -195,8 +205,9 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
           }
           onZoomEnd={() => onMapZoomEnd()}
         >
-          <NavigationControl position={"top-right"} visualizePitch={true} />
           <AttributionControl position={"bottom-right"} />
+          <NavigationControl position={"top-right"} visualizePitch={false} />
+          <ScaleControl position="bottom-left" />
         </Map>
         <canvas id="texture_canvas">
           Your browser does not seem to support HTML5 canvas.

@@ -58,7 +58,7 @@ export const FilterModal = observer(
 
     return createPortal(
       <>
-        <div className="fixed z-[1000] left-0 top-0 w-[100%] h-[100%] overflow-auto bg-[#00000066] block">
+        <div className="fixed z-[1000] left-0 top-0 w-[100%] h-[100%] overflow-auto bg-[#00000066] block 2xl:text-[1em] xl:text-[0.8em] lg:text-[0.7em] md:text-[0.6em] sm:text-[0.5em]">
           <FilterSettings
             value={value}
             open={open}

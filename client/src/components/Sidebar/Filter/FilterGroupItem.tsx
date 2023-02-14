@@ -49,9 +49,9 @@ export const FilterGroupItem = observer(
 
     function changeGroupRelevance(value: string) {
       let relevance = 0.2;
-      if (value === "optional") {
+      if (value === "wenig") {
         relevance = FilterRelevance.notVeryImportant;
-      } else if (value === "wichtig") {
+      } else if (value === "normal") {
         relevance = FilterRelevance.important;
       } else {
         relevance = FilterRelevance.veryImportant;
@@ -74,7 +74,7 @@ export const FilterGroupItem = observer(
 
     return (
       <>
-        <div className="flex flex-col mt-[1em] ml-2 mr-2 align-middle justify-center border-2 bg-[#fff] border-none relative">
+        <div className="flex flex-col mt-[1em] ml-2 mr-2 align-middle justify-center border-[1px] border-[#e9e3e3] bg-[lavender] rounded-[2%] relative">
           <div className="mt-3 mb-3">
             <div className="flex flex-row justify-center">
               <p className="2xl:text-[1.3em] xl:text-[1em] lg:text-[0.8em] md:text-[0.7em] sm:text-[0.6em] font-bold">
@@ -83,15 +83,21 @@ export const FilterGroupItem = observer(
             </div>
             <div className="flex flex-row justify-center pt-2">
               <div className="flex flex-row 2xl:text-[1.1em] xl:text-[0.8em] lg:text-[0.7em] md:text-[0.6em] sm:text-[0.5em] mt-1">
-                <span className="mr-2">Gruppenrelevanz: </span>
+                <span className="mr-2">Gruppengewichtung: </span>
                 <select
-                  defaultValue={filtergroup.groupRelevance}
+                  defaultValue={
+                    filtergroup.groupRelevance === 0.2
+                      ? "wenig"
+                      : filtergroup.groupRelevance === 0.5
+                      ? "normal"
+                      : "viel"
+                  }
                   onChange={(e) => changeGroupRelevance(e.target.value)}
-                  className="border-[1px] border-solid border-[#000000] h-[2vh]"
+                  className="border-[1px] border-solid border-[#000000] h-[2.5vh]"
                 >
-                  <option value="optional">optional</option>
-                  <option value="wichtig">wichtig</option>
-                  <option value="sehr wichtig">sehr wichtig</option>
+                  <option value="wenig">wenig</option>
+                  <option value="normal">normal</option>
+                  <option value="viel">viel</option>
                 </select>
               </div>
             </div>

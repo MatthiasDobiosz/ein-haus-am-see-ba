@@ -23,9 +23,7 @@ export const FilterSettings = observer(
     const { value, open, onClose } = props;
     const [distance, setDistance] = useState(500);
     const [measure, setMeasure] = useState("m");
-    const [relevance, setRelevance] = useState(
-      FilterRelevance.notVeryImportant
-    );
+    const [relevance, setRelevance] = useState(FilterRelevance.important);
     const [wanted, setWanted] = useState(true);
     const [groupname, setGroupname] = useState("");
 
@@ -139,16 +137,16 @@ export const FilterSettings = observer(
           }, 800);
         } else {
           props.setError(
-            `Filter of type ${value} already exists within Group!`
+            `Ein Filter vom Typ ${value} existiert bereits in der Gruppe!`
           );
         }
       }
     };
 
     const setRelevanceValue = (value: string) => {
-      if (value === "optional") {
+      if (value === "wenig") {
         setRelevance(FilterRelevance.notVeryImportant);
-      } else if (value === "wichtig") {
+      } else if (value === "normal") {
         setRelevance(FilterRelevance.important);
       } else {
         setRelevance(FilterRelevance.veryImportant);
@@ -170,44 +168,43 @@ export const FilterSettings = observer(
     return (
       <div className="bg-[#fff] my-[5%] mx-auto p-0 relative rounded-[8px] w-[40vw] modal-content">
         <div className="relative">
-          <h2 className="flex justify-center py-[12px] px-0 bg-[#5cb85c] text-[#fff] text-[1.5em] font-bold rounded-t-[8px] rounded-r-[8px]">
+          <h2 className="flex justify-center py-[0.8em] px-0 bg-[#5cb85c] text-[#fff] text-[1.5em] font-bold rounded-t-[0.55em] rounded-r-[0.55em]">
             {value}
           </h2>
           <button
-            className="absolute top-[20%] right-4 text-[24px]"
+            className="absolute top-[20%] right-4 text-[2em]"
             onClick={() => props.onClose(true)}
           >
             <AiOutlineClose color="#fff" />
           </button>
         </div>
-        <div className="pt-[16px] pb-[2px] px-[16px] flex justify-center">
-          <form>
-            <div className="flex items-center">
+        <div className="pt-[1.1em] pb-[0.2em] px-[1.1em] w-[100%]">
+          <form className="flex flex-col justify-center items-center w-[100%] gap-[2.5em]">
+            <div className="flex flex-row justify-around w-[70%] items-center mt-4">
               {props.newGroup ? (
                 <>
-                  <p className="my-[16px] text-[16px] pr-[12px] w-[12em]">
+                  <p className=" text-[1.2em]  w-[50%]">
                     Name der Filtergruppe:
                   </p>
                   <input
                     type="text"
                     defaultValue=""
                     onChange={(e) => setGroupname(e.target.value)}
-                    className="p-[6px] mr-[8px] w-[8vw] h-[3vh] border-[1px] border-solid border-[#808080] rounded-[2px]"
+                    className="p-[0.45em] w-[50%] h-[3vh] border-[1px] border-solid border-[#808080] rounded-[2px]"
                     required
+                    maxLength={30}
                   />
                 </>
               ) : (
                 <>
-                  <p className="my-[16px] text-[16px] pr-[12px] w-[12em]">
-                    Zugehörige Gruppe:
-                  </p>
+                  <p className="text-[1.2em] w-[50%]">Zugehörige Gruppe:</p>
                   <select
                     defaultValue={""}
                     onChange={(e) => {
                       console.log(e.target.value);
                       setGroupname(e.target.value);
                     }}
-                    className="border-[1px] h-[3vh] border-solid border-[#000000]"
+                    className="border-[1px] w-[50%] h-[3vh] border-solid border-[#000000]"
                   >
                     <option value="">Wähle eine Gruppe aus</option>
                     {rootStore.filterStore.allFilterGroups.map((group) => {
@@ -221,73 +218,73 @@ export const FilterSettings = observer(
                 </>
               )}
             </div>
-            <div className="flex items-center">
-              <p className="my-[16px] text-[16px] pr-[12px] w-[12em] text-center">
-                Umkreis:{" "}
-              </p>
-              <input
-                type="text"
-                defaultValue="500"
-                pattern="\d"
-                onChange={(e) => setAllowedDistance(Number(e.target.value))}
-                className="p-[6px] mr-[8px] w-[4em] h-[3vh] border-[1px] border-solid border-[#808080] rounded-[2px]"
-                required
-              />
-              <span>Meter</span>
-            </div>
-            <div className="hidden">
-              Die Entfernung kann leider im Moment höchstens 700 m sein!
-            </div>
             {props.newGroup && (
-              <div className="flex items-center">
-                <p className="my-[16px] text-[16px] pr-[12px] w-[12em] text-center">
-                  Relevanz
-                </p>
-                <div>
+              <div className="flex flex-row justify-around w-[70%] items-center">
+                <p className=" text-[1.2em] w-[50%]">Gruppengewichtung:</p>
+                <div className="w-[50%]">
                   <select
-                    defaultValue={"optional"}
+                    defaultValue={"normal"}
                     onChange={(e) => setRelevanceValue(e.target.value)}
-                    className="border-[1px] border-solid border-[#000000] h-[3vh]"
+                    className="border-[1px] border-solid border-[#000000] h-[3vh] w-[50%] text-center"
                   >
-                    <option value="optional">optional</option>
-                    <option value="wichtig">wichtig</option>
-                    <option value="sehr wichtig">sehr wichtig</option>
+                    <option value="wenig">wenig</option>
+                    <option value="normal">normal</option>
+                    <option value="viel">viel</option>
                   </select>
                 </div>
               </div>
             )}
-            <div className="my-[16px] ml-[6em]">
-              <p className="text-[16px] mr-[12px] my-[16px]">
-                Dieses Kriterium soll:{" "}
+            <div className="flex flex-row justify-around w-[70%] items-center">
+              <p className=" text-[1.2em] w-[50%]">Umkreis: </p>
+              <div className="w-[50%] align-middle">
+                <input
+                  type="text"
+                  defaultValue="500"
+                  pattern="\d"
+                  onChange={(e) => setAllowedDistance(Number(e.target.value))}
+                  className="mr-[0.55em] w-[4em] h-[3vh] border-[1px] border-solid border-[#808080] rounded-[2px] text-center"
+                  required
+                />
+                <span>Meter</span>
+              </div>
+            </div>
+            <div className="hidden">
+              Die Entfernung kann leider im Moment höchstens 700 m sein!
+            </div>
+            <div className="flex flex-row justify-around w-[70%] items-center">
+              <p className="text-[1.2em] w-[50%]">
+                Objekte dieser Kategorie sollen:
               </p>
-              <label className="block relative pl-[30px] mb-[16px] cursor-pointer text-[14px] radiocontainer">
-                möglichst nah sein
-                <input
-                  type="radio"
-                  defaultChecked={true}
-                  name="polarity"
-                  defaultValue="true"
-                  className="absolute opacity-0 cursor-pointer"
-                  onChange={() => setWanted(true)}
-                />
-                <span className="absolute top-0 left-0 h-[18px] w-[18px] bg-[#eee] rounded-[50%] checkmark"></span>
-              </label>
-              <label className="block relative pl-[30px] mb-[16px] cursor-pointer text-[14px] radiocontainer">
-                möglichst weit entfernt sein
-                <input
-                  type="radio"
-                  defaultChecked={false}
-                  name="polarity"
-                  defaultValue="false"
-                  className="absolute opacity-0 cursor-pointer"
-                  onChange={() => setWanted(false)}
-                />
-                <span className="absolute top-0 left-0 h-[18px] w-[18px] bg-[#eee] rounded-[50%] checkmark"></span>
-              </label>
+              <div className="w-[50%]">
+                <label className="block relative pl-[2em] mb-[1.1em] cursor-pointer text-[1em] radiocontainer">
+                  möglichst nah sein
+                  <input
+                    type="radio"
+                    defaultChecked={true}
+                    name="polarity"
+                    defaultValue="true"
+                    className="absolute opacity-0 cursor-pointer"
+                    onChange={() => setWanted(true)}
+                  />
+                  <span className="absolute top-0 left-0 h-[1.2em] w-[1.2em] bg-[#eee] rounded-[50%] checkmark"></span>
+                </label>
+                <label className="block relative pl-[2em] mb-[1.1em] cursor-pointer text-[1em] radiocontainer">
+                  möglichst weit entfernt sein
+                  <input
+                    type="radio"
+                    defaultChecked={false}
+                    name="polarity"
+                    defaultValue="false"
+                    className="absolute opacity-0 cursor-pointer"
+                    onChange={() => setWanted(false)}
+                  />
+                  <span className="absolute top-0 left-0 h-[1.2em] w-[1.2em] bg-[#eee] rounded-[50%] checkmark"></span>
+                </label>
+              </div>
             </div>
           </form>
         </div>
-        <div className="mt-[25px] flex justify-evenly items-center">
+        <div className="mt-[1.7em] flex justify-evenly items-center">
           <button
             type="button"
             className="mb-[1em] p-[0.8em] w-[10vw] cursor-pointer overflow-hidden border-0 outline-none rounded-[4px] bg-[#e8e8e8] text-[#000000] hover:bg-[#e2dede] active:bg-[#e2dede]"
