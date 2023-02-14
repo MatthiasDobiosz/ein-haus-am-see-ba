@@ -1,6 +1,10 @@
 import mapboxgl, { LngLat } from "mapbox-gl";
 import { useState } from "react";
-import Map, { AttributionControl, NavigationControl } from "react-map-gl";
+import Map, {
+  AttributionControl,
+  NavigationControl,
+  ScaleControl,
+} from "react-map-gl";
 import { initialZoomLevel } from "./mapboxConfig";
 import { SnackbarType } from "./../../stores/SnackbarStore";
 import rootStore from "../../stores/RootStore";
@@ -135,6 +139,8 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
           mapStyle="mapbox://styles/mapbox/streets-v11?optimize=true"
           dragPan={{ linearity: 0.3, maxSpeed: 1400, deceleration: 3000 }}
           dragRotate={false}
+          touchZoomRotate={false}
+          hash={true}
           //onMove={(evt) => setViewport(evt.viewState)}
           attributionControl={false}
           minZoom={4}
@@ -151,8 +157,9 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
           }
           onZoomEnd={() => onMapZoomEnd()}
         >
-          <NavigationControl position={"top-right"} visualizePitch={true} />
+          <NavigationControl position={"top-right"} visualizePitch={false} />
           <AttributionControl position={"bottom-right"} />
+          <ScaleControl position="bottom-left" />
         </Map>
         <canvas id="texture_canvas">
           Your browser does not seem to support HTML5 canvas.
