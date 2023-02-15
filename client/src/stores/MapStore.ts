@@ -132,7 +132,6 @@ class MapStore {
           //Benchmark.stopMeasure("Fetching data from osm");
 
           if (data) {
-            console.log(data);
             //const filterLayer = this.preprocessGeoData(data, tag);
 
             // get the filterlayer for this tag that has already been created at this point
