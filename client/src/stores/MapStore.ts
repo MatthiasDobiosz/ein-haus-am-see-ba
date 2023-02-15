@@ -11,6 +11,7 @@ import { getViewportPolygon } from "../components/Map/mapUtils";
 import { SnackbarType } from "./SnackbarStore";
 import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
 import mapboxgl from "mapbox-gl";
+import { PerformanceMeasurer } from "../PerformanceMeasurer";
 
 export const enum VisualType {
   NORMAL,
@@ -23,6 +24,7 @@ class MapStore {
   map: MapboxMap | null;
   visualType: VisualType;
   mapLayerManager: MapLayerManager | null;
+  performanceMeasurer: PerformanceMeasurer | null;
   overlayView: boolean;
   poiView: boolean;
   rootStore: RootStore;
@@ -31,6 +33,7 @@ class MapStore {
     this.map = null;
     this.visualType = VisualType.OVERLAY;
     this.mapLayerManager = null;
+    this.performanceMeasurer = null;
     this.overlayView = true;
     this.poiView = false;
     this.rootStore = rootStore;
@@ -46,6 +49,7 @@ class MapStore {
       overlayView: observable,
       poiView: observable,
       mapLayerManager: false,
+      performanceMeasurer: false,
       loadOverlayMapData: false,
       loadPOIMapData: false,
       loadMapData: false,
@@ -90,6 +94,12 @@ class MapStore {
         }
       });
     }
+
+    /*
+    if (this.performanceMeasurer === null) {
+      this.performanceMeasurer = new PerformanceMeasurer(this.map);
+      this.performanceMeasurer.startMeasuring();
+    } */
   }
 
   setVisualType(visualType: VisualType) {
@@ -143,10 +153,11 @@ class MapStore {
   async loadOverlayMapData(): Promise<void> {
     if (this.map) {
       const bounds = getViewportPolygon(this.map, 500);
-      const activeFilters = this.rootStore.filterStore.getAllActiveLayers();
+      const activeFilters: Filter[] =
+        this.rootStore.filterStore.getAllActiveLayers();
       console.log(activeFilters.length);
       const allResults = await Promise.allSettled(
-        activeFilters.map(async (filter) => {
+        activeFilters.map(async (filter: Filter) => {
           const query = osmTagCollection.getQueryForCategoryPostGIS(
             filter.tagName
           );
@@ -184,9 +195,8 @@ class MapStore {
         );
       }
       this.showAreasOnMap();
-      console.log("done");
+
       const inactiveFilters = this.rootStore.filterStore.getAllInactiveLayers();
-      console.log(inactiveFilters.length);
 
       const inactiveResults = await Promise.allSettled(
         inactiveFilters.map(async (filter) => {
@@ -275,19 +285,18 @@ class MapStore {
     // give feedback to the user
     // FIXME: Do that in component to get snackbarContext
     //showSnackbar("Daten werden geladen...", SnackbarType.INFO, undefined, true);
-    if (this.visualType === VisualType.NONE) {
+    if (this.visualType !== VisualType.NONE) {
       this.rootStore.snackbarStore.displayHandler(
         "Daten werden geladen...",
-        undefined,
+        10000,
         SnackbarType.INFO
       );
     }
 
     if (this.map) {
       if (this.visualType === VisualType.BOTH) {
-        console.log("both");
         await this.loadOverlayMapData();
-        this.loadPOIMapData();
+        await this.loadPOIMapData();
       } else if (this.visualType === VisualType.OVERLAY) {
         console.log("overlay");
         this.loadOverlayMapData();
@@ -445,7 +454,10 @@ class MapStore {
 
   //FIXME: Hier statt tagName dann einzigartigen Namen übergeben
   showDataOnMap(data: any, tagName: string): void {
-    if (this.map?.getSource("overlaySource")) {
+    if (
+      this.map?.getSource("overlaySource") &&
+      !(this.visualType === VisualType.BOTH)
+    ) {
       this.mapLayerManager?.removeCanvasSource("overlaySource");
     }
     this.mapLayerManager?.removeAllLayersForSource(tagName);

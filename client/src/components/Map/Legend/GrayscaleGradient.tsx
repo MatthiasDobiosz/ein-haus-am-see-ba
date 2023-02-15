@@ -15,9 +15,10 @@ export const GrayscaleGradient = (props: GrayscaleGradientProps) => {
       <defs>
         <linearGradient
           id="linearGradient5212"
-          x1="25"
-          y1="180"
-          x2="25"
+          x1="180"
+          y1="0"
+          x2="0"
+          y2="0"
           gradientUnits="userSpaceOnUse"
         >
           <stop stopColor="#000" offset="0" />
@@ -27,8 +28,8 @@ export const GrayscaleGradient = (props: GrayscaleGradientProps) => {
       <rect
         x="0"
         y="0"
-        width="40"
-        height="180"
+        width={props.width}
+        height={props.height}
         fill="url(#linearGradient5212)"
         stroke="none"
       />

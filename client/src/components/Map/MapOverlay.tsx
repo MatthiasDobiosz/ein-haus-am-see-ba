@@ -159,10 +159,10 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
       <button
         className={`absolute p-[0.55rem]  ml-[0.5em] mt-[0.5em] text-[1.3em] text-[#fff] z-50 top-0 left-[15em] inline-flex flex-row bg-[#fa6400] font-semibold justify-center w-auto border-solid border-[1px] border-[#ffffffcc] hover:bg-[#fb8332] rounded-[5%]  ${
           isSidebarOpen
-            ? "left-[28%] filterbtnout"
+            ? "left-[28%] filterbtnout opacity-0"
             : !isSidebarOpen && hoveredOnce
             ? "left-[2%] filterbtnin"
-            : "left-[2%]"
+            : "left-[2%] opacity-1"
         }`}
         onClick={() => handleSidebarOpen()}
       >

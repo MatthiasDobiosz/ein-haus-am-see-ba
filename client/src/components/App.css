@@ -181,18 +181,22 @@ body {
 @-webkit-keyframes slideright {
   from {
     left: 2%;
+    opacity: 1;
   }
   to {
     left: 28%;
+    opacity: 0;
   }
 }
 
 @keyframes slideright {
   from {
     left: 2%;
+    opacity: 1;
   }
   to {
     left: 28%;
+    opacity: 0;
   }
 }
 

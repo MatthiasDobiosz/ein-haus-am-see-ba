@@ -13,16 +13,20 @@ export const OverlayLegend = observer(
     }
     return (
       <div
-        className={`absolute bottom-[10px] right-[-10px] text-[0.8em] bg-[#ffffffcc] mr-[20px] overflow-auto rounded-[3px] p-[10px] shadow-sm leading-[18px] h-[150px] mb-[50px] w-[5em] ${
-          props.left ? "mr-[18em]" : "mr-[20px]"
-        }`}
+        className={`absolute bottom-[10px]  text-[0.8em] bg-[#85bce0] mr-[1em] overflow-auto rounded-[3px] p-[1em] shadow-sm leading-[18px] h-[auto] mb-[50px] w-[auto]`}
       >
-        <div className="flex flex-col text-center">
-          <span>Gut</span>
-          <div className="mt-2 ml-2">
-            <GrayscaleGradient width="20" height="80" />
+        <div className="flex flex-col p-[0.4em]">
+          <span className="self-center font-bold text-[1.2em]">
+            {" "}
+            Übereinstimmung{" "}
+          </span>
+          <div className="mt-2 self-center">
+            <GrayscaleGradient width="120" height="30" />
           </div>
-          <span>Schlecht</span>
+          <div className="flex flex-row justify-between text-[1em] w-[90%] self-center mt-1">
+            <span>Hoch</span>
+            <span>Wenig</span>
+          </div>
         </div>
       </div>
     );

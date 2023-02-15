@@ -166,9 +166,9 @@ export const FilterSettings = observer(
     }
 
     return (
-      <div className="bg-[#fff] my-[5%] mx-auto p-0 relative rounded-[8px] w-[40vw] modal-content">
+      <div className="bg-[#fff] my-[10%] mx-auto p-0 relative rounded-[8px] w-[35vw] modal-content">
         <div className="relative">
-          <h2 className="flex justify-center py-[0.8em] px-0 bg-[#5cb85c] text-[#fff] text-[1.5em] font-bold rounded-t-[0.55em] rounded-r-[0.55em]">
+          <h2 className="flex justify-center py-[0.8em] px-0 bg-[#5cb85c] text-[#fff] text-[1.5em] font-bold rounded-t-[0.4em] rounded-r-[0.3em]">
             {value}
           </h2>
           <button
@@ -178,9 +178,9 @@ export const FilterSettings = observer(
             <AiOutlineClose color="#fff" />
           </button>
         </div>
-        <div className="pt-[1.1em] pb-[0.2em] px-[1.1em] w-[100%]">
-          <form className="flex flex-col justify-center items-center w-[100%] gap-[2.5em]">
-            <div className="flex flex-row justify-around w-[70%] items-center mt-4">
+        <div className="pt-[1.1em] pb-[0.2em]  w-[100%]">
+          <form className="flex flex-col justify-center items-center w-[100%] gap-[3em]">
+            <div className="flex flex-row justify-around w-[80%] items-center mt-4">
               {props.newGroup ? (
                 <>
                   <p className=" text-[1.2em]  w-[50%]">
@@ -204,7 +204,7 @@ export const FilterSettings = observer(
                       console.log(e.target.value);
                       setGroupname(e.target.value);
                     }}
-                    className="border-[1px] w-[50%] h-[3vh] border-solid border-[#000000]"
+                    className="border-[1px] w-[50%] h-[3vh] border-solid border-[#000000] text-center"
                   >
                     <option value="">Wähle eine Gruppe aus</option>
                     {rootStore.filterStore.allFilterGroups.map((group) => {
@@ -219,7 +219,7 @@ export const FilterSettings = observer(
               )}
             </div>
             {props.newGroup && (
-              <div className="flex flex-row justify-around w-[70%] items-center">
+              <div className="flex flex-row justify-around w-[80%] items-center">
                 <p className=" text-[1.2em] w-[50%]">Gruppengewichtung:</p>
                 <div className="w-[50%]">
                   <select
@@ -234,7 +234,7 @@ export const FilterSettings = observer(
                 </div>
               </div>
             )}
-            <div className="flex flex-row justify-around w-[70%] items-center">
+            <div className="flex flex-row justify-around w-[80%] items-center">
               <p className=" text-[1.2em] w-[50%]">Umkreis: </p>
               <div className="w-[50%] align-middle">
                 <input
@@ -251,7 +251,7 @@ export const FilterSettings = observer(
             <div className="hidden">
               Die Entfernung kann leider im Moment höchstens 700 m sein!
             </div>
-            <div className="flex flex-row justify-around w-[70%] items-center">
+            <div className="flex flex-row justify-around w-[80%] items-center">
               <p className="text-[1.2em] w-[50%]">
                 Objekte dieser Kategorie sollen:
               </p>

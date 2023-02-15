@@ -131,19 +131,19 @@ export const FilterItem = observer((props: FilterItemProps) => {
           </div>
 
           <button
-            className="absolute top-2 right-10"
+            className="absolute top-2 right-10 text-[1.2em]"
             onClick={() => handleEditFilter()}
           >
             <AiOutlineCheck color="#21ABE6" />
           </button>
           <button
-            className="absolute top-2 right-4"
+            className="absolute top-2 right-4 text-[1.2em]"
             onClick={() => setIsEditing(false)}
           >
             <AiOutlineClose />
           </button>
           <button
-            className="absolute top-12 right-4"
+            className="absolute top-12 right-4 text-[1.2em]"
             onClick={() => setIsDeleting(true)}
           >
             <BsTrash color={"#EE4B2B"} />
@@ -188,13 +188,13 @@ export const FilterItem = observer((props: FilterItemProps) => {
           </div>
         </div>
         <button
-          className="absolute top-2 right-4"
+          className="absolute top-2 right-4 text-[1.2em]"
           onClick={() => setIsEditing(true)}
         >
           <BsPencil color="#21ABE6" />
         </button>
         <button
-          className="absolute top-12 right-4"
+          className="absolute top-12 right-4 text-[1.2em]"
           onClick={() => setIsDeleting(true)}
         >
           <BsTrash color={"#EE4B2B"} />

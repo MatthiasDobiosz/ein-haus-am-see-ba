@@ -30,8 +30,8 @@ export const Sidebar = observer((props: SidebarProps): JSX.Element => {
 
   return (
     <div
-      className={`absolute h-[100vh] transition-width ease-in-out duration-500 overflow-y-auto left-0 z-[200] flex flex-row 2xl:text-[1em] xl:text-[0.8em] lg:text-[0.7em] md:text-[0.6em] sm:text-[0.5em] ${
-        isSidebarOpen ? "w-[28%]" : "w-[0%]"
+      className={`absolute h-[100vh] transition-width ease-in-out duration-500 overflow-y-auto left-0 z-[200] flex flex-row 2xl:text-[1em] xl:text-[0.9em] lg:text-[0.8em] md:text-[0.7em] sm:text-[0.6em] ${
+        isSidebarOpen ? "w-[30%]" : "w-[0%]"
       }`}
     >
       <div
