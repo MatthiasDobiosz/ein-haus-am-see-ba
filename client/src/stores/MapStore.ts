@@ -118,7 +118,7 @@ class MapStore {
           );
           //console.log(data);
           if (data) {
-            console.log(data);
+            //console.log(data);
 
             if (this.visualType === VisualType.NORMAL) {
               this.showDataOnMap(data, tag);

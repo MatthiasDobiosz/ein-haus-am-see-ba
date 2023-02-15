@@ -53,7 +53,7 @@ export function getViewportBoundsString(
   map: MapboxMap,
   additionalDistance?: number
 ): string {
-  console.log(map?.getZoom());
+  //console.log(map?.getZoom());
 
   const currBounds = map.getBounds();
   let southLat = currBounds.getSouth();
