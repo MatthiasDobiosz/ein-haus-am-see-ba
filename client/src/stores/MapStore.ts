@@ -109,7 +109,6 @@ class MapStore {
       if (visualType === VisualType.NONE) {
         this.mapLayerManager?.removeAllDataFromMap();
       } else if (this.rootStore.filterStore.filtergroupsActive()) {
-        console.log("setvisual");
         this.loadMapData();
       } else {
         this.rootStore.snackbarStore.displayHandler(
@@ -122,8 +121,6 @@ class MapStore {
   }
 
   changeVisualType() {
-    console.log(this.overlayView);
-    console.log(this.poiView);
     if (this.overlayView && !this.poiView) {
       this.setVisualType(VisualType.OVERLAY);
       this.rootStore.legendStore.showOverlayLegend();
@@ -131,7 +128,6 @@ class MapStore {
       this.setVisualType(VisualType.NORMAL);
       this.rootStore.legendStore.hideOverlayLegend();
     } else if (this.poiView && this.overlayView) {
-      console.log("set both");
       this.setVisualType(VisualType.BOTH);
       this.rootStore.legendStore.showOverlayLegend();
     } else {
@@ -155,7 +151,6 @@ class MapStore {
       const bounds = getViewportPolygon(this.map, 500);
       const activeFilters: Filter[] =
         this.rootStore.filterStore.getAllActiveLayers();
-      console.log(activeFilters.length);
       const allResults = await Promise.allSettled(
         activeFilters.map(async (filter: Filter) => {
           const query = osmTagCollection.getQueryForCategoryPostGIS(
@@ -172,7 +167,6 @@ class MapStore {
           );
           //console.log(data);
           if (data) {
-            console.log(data);
             this.preprocessGeoData(data, filter.layername);
           }
         })
@@ -251,7 +245,6 @@ class MapStore {
           );
           //console.log(data);
           if (data) {
-            console.log(data);
             this.showDataOnMap(data, tag);
           }
         })
@@ -277,7 +270,6 @@ class MapStore {
   }
 
   async loadMapData() {
-    console.log("loadMap");
     if (this.rootStore.filterStore.activeFilters.size === 0) {
       return;
     }
@@ -298,7 +290,6 @@ class MapStore {
         await this.loadOverlayMapData();
         await this.loadPOIMapData();
       } else if (this.visualType === VisualType.OVERLAY) {
-        console.log("overlay");
         this.loadOverlayMapData();
       } else if (this.visualType === VisualType.NORMAL) {
         this.loadPOIMapData();
@@ -383,7 +374,6 @@ class MapStore {
       //console.log("removeGeojson");
       //only remove source if removed tag was the only one of this kind
       if (this.rootStore.filterStore.filtergroupsActive()) {
-        console.log("idk");
         this.loadMapData();
       } else {
         filterGroup.filters.forEach((filter) => {
@@ -406,7 +396,6 @@ class MapStore {
     });
     if (this.visualType === VisualType.BOTH) {
       this.mapLayerManager?.removeCanvasSource("overlaySource");
-      console.log(filters.length);
       //only remove source if removed tag was the only one of this kind
       filters.forEach((filter) => {
         if (

@@ -36,7 +36,6 @@ export const FilterSettings = observer(
         );
         return;
       }
-      console.log("eight");
       rootStore.mapStore.loadMapData();
     }
 
@@ -200,10 +199,7 @@ export const FilterSettings = observer(
                   <p className="text-[1.2em] w-[50%]">Zugehörige Gruppe:</p>
                   <select
                     defaultValue={""}
-                    onChange={(e) => {
-                      console.log(e.target.value);
-                      setGroupname(e.target.value);
-                    }}
+                    onChange={(e) => setGroupname(e.target.value)}
                     className="border-[1px] w-[50%] h-[3vh] border-solid border-[#000000] text-center"
                   >
                     <option value="">Wähle eine Gruppe aus</option>

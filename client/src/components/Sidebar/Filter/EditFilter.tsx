@@ -32,7 +32,6 @@ export const EditFilter = observer(
         );
         return;
       }
-      console.log("six");
       rootStore.mapStore.loadMapData();
     }
 

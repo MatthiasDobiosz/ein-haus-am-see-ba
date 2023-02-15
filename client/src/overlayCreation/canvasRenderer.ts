@@ -140,7 +140,6 @@ class CanvasRenderer {
       // save the blurred image for this layer
       this.allTextures.push(blurredImage);
     } else {
-      console.log("else");
       const images: HTMLImageElement[] = [];
       for (let i = 0; i < mapLayer.length; i++) {
         if (mapLayer[i].wanted) {

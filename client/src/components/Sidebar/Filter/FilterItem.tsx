@@ -66,7 +66,6 @@ export const FilterItem = observer((props: FilterItemProps) => {
       );
       return;
     }
-    console.log("seven");
     rootStore.mapStore.loadMapData();
   }
 

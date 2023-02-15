@@ -10,7 +10,6 @@ export async function fetchHouseDataFromPostGIS(
     });
 
     const url = "/getHouses?" + params.toString();
-    console.log(url);
     const response = await axios.get(url, { timeout: 20000 });
     return response.data as FeatureCollection<Point, any>;
   } catch (error) {

@@ -66,7 +66,6 @@ class FilterStore {
           groupRelevance: relevance,
           active: true,
         });
-        console.log("Successfully added new Group");
         return true;
       } else {
         return false;
@@ -82,7 +81,6 @@ class FilterStore {
           filterGroup.filters = this.allFilterLayers.filter(
             (filter) => filter.group === groupName
           );
-          console.log("succesfully added to existing group");
           return true;
         } else {
           return false;
@@ -157,7 +155,6 @@ class FilterStore {
         });
       }
     }
-    console.log(this.allFilterGroups);
   }
 
   updateGroups(): void {
