@@ -3,7 +3,10 @@ import { RootStore } from "./RootStore";
 import { MapboxMap } from "react-map-gl";
 import MapLayerManager from "./../mapLayerMangager";
 import osmTagCollection from "../osmTagCollection";
-import { fetchDataFromPostGISBuffer } from "../network/networkUtils";
+import {
+  fetchCityBoundary,
+  fetchDataFromPostGISBuffer,
+} from "../network/networkUtils";
 import { Filter, FilterGroup } from "../components/Sidebar/Filter/Filters";
 import { FeatureCollection, MultiPolygon, Polygon } from "geojson";
 import { createOverlay } from "../overlayCreation/canvasRenderer";
@@ -27,6 +30,7 @@ class MapStore {
   performanceMeasurer: PerformanceMeasurer | null;
   overlayView: boolean;
   poiView: boolean;
+  boundaryView: boolean;
   rootStore: RootStore;
 
   constructor(rootStore: RootStore) {
@@ -36,6 +40,7 @@ class MapStore {
     this.performanceMeasurer = null;
     this.overlayView = true;
     this.poiView = false;
+    this.boundaryView = false;
     this.rootStore = rootStore;
 
     makeObservable(this, {
@@ -48,6 +53,7 @@ class MapStore {
       setPoiView: action,
       overlayView: observable,
       poiView: observable,
+      boundaryView: observable,
       mapLayerManager: false,
       performanceMeasurer: false,
       loadOverlayMapData: false,
@@ -62,6 +68,7 @@ class MapStore {
       resetMapData: false,
       preprocessGeoData: false,
       addAreaOverlay: false,
+      toggleCityBoundary: false,
       rootStore: false,
     });
   }
@@ -521,6 +528,16 @@ class MapStore {
     */
 
     return layer;
+  }
+
+  async toggleCityBoundary() {
+    this.boundaryView = !this.boundaryView;
+    const data = await fetchCityBoundary();
+    if (this.boundaryView) {
+      this.mapLayerManager?.drawCityBoundaries(data);
+    } else {
+      this.mapLayerManager?.removeCityBoundaries();
+    }
   }
 
   addAreaOverlay(): void {

@@ -19,7 +19,7 @@ const pool = new Pool({
   user: "postgres",
   port: 5432,
   password: "syn27X!L",
-  database: "osm_categories",
+  database: "osm_om",
   max: 100,
   connectionTimeoutMillis: 0,
   idleTimeoutMillis: 0,
@@ -276,6 +276,18 @@ export default class OsmRouter {
         });
         // let roadFeatures: GeoJsonProperties[];
       }
+    });
+
+    this.osmRouter.get("/getCityBoundary", (req: Request, res: Response) => {
+      const boundaryQuery = ServerUtils.buildBoundaryQuery();
+      pool
+        .query(boundaryQuery)
+        .then((resp) => {
+          const boundary = resp.rows[0];
+          boundary.type = "Feature";
+          res.status(StatusCodes.OK).send(boundary);
+        })
+        .catch((e) => console.error(e));
     });
 
     /*

@@ -48,6 +48,10 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
     }
   };*/
 
+  const showCityBoundary = () => {
+    rootStore.mapStore.toggleCityBoundary();
+  };
+
   const handleSidebarOpen = () => {
     setSidebarState(!isSidebarOpen);
     if (!hoveredOnce) {
@@ -208,6 +212,12 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
           <AttributionControl position={"bottom-right"} />
           <NavigationControl position={"top-right"} visualizePitch={false} />
           <ScaleControl position="bottom-left" />
+          <button
+            className="absolute bottom-8 right-4 bg-purple p-1"
+            onClick={() => showCityBoundary()}
+          >
+            Zeige Gebiet
+          </button>
         </Map>
         <canvas id="texture_canvas">
           Your browser does not seem to support HTML5 canvas.
