@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [react(), EnvironmentPlugin(["MAPBOX_TOKEN"])],
   server: {
     host: true,
-    port: 5175,
+    port: 5173,
     proxy: {
       "/postGISBuffer": {
         target: "http://localhost:3200",
