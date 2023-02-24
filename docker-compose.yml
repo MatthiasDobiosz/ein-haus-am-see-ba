@@ -2,7 +2,7 @@ version: "3.8"
 services:
   # Create frontend container
   web: # Name of our service
-    build: ./ # path to dockerfile
+    image: matthido/einhausamseeopti:latest # path to dockerfile
     ports: # Port binding to host from docker container
       - "5173:5173"
       - "3200:3200"
