@@ -9,17 +9,17 @@ export default defineConfig({
     host: true,
     proxy: {
       "/postGISBuffer": {
-        target: "http://localhost:3200",
+        target: "http://localhost:3201",
         changeOrigin: true,
         secure: false,
       },
       "/postGISNoBuffer": {
-        target: "http://localhost:3200",
+        target: "http://localhost:3201",
         changeOrigin: true,
         secure: false,
       },
       "/getCityBoundary": {
-        target: "http://localhost:3200",
+        target: "http://localhost:3201",
         changeOrigin: true,
         secure: false,
       },

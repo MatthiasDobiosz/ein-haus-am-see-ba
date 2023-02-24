@@ -8,7 +8,7 @@ suite
     defer: true,
     fn: async function (deferred) {
       const data = await axios.get(
-        "http://localhost:3200/postGIS?bounds=11.93691490881318+49.06334045685992%2C12.266333091186453+49.06334045685992%2C12.266333091186453+48.963473458586435%2C11.93691490881318+48.963473458586435%2C11.93691490881318+49.06334045685992&conditions=%5B%22subclass%20%3D%20'river'%22%5D"
+        "http://localhost:3201/postGIS?bounds=11.93691490881318+49.06334045685992%2C12.266333091186453+49.06334045685992%2C12.266333091186453+48.963473458586435%2C11.93691490881318+48.963473458586435%2C11.93691490881318+49.06334045685992&conditions=%5B%22subclass%20%3D%20'river'%22%5D"
       );
       deferred.resolve();
     },
@@ -20,7 +20,7 @@ suite
     defer: true,
     fn: async function (deferred) {
       const data = await axios.get(
-        "http://localhost:3200/osmRequestCache?bounds=48.95897687001247%2C11.93005221880167%2C49.06783704542032%2C12.273195781197964&osmQuery=nwr%5B%22waterway%22%3D%22river%22%5D%3B"
+        "http://localhost:3201/osmRequestCache?bounds=48.95897687001247%2C11.93005221880167%2C49.06783704542032%2C12.273195781197964&osmQuery=nwr%5B%22waterway%22%3D%22river%22%5D%3B"
       );
       deferred.resolve();
     },
