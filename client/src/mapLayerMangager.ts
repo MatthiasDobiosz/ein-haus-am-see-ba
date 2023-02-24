@@ -68,6 +68,48 @@ class MapLayerManager {
     return this.hiddenLayers;
   }
 
+  drawCityBoundaries(geojsonData: Feature<Geometry, GeoJsonProperties>): void {
+    console.log("add");
+    const sourceOptions: mapboxgl.GeoJSONSourceOptions = {
+      buffer: 50, // higher means fewer rendering artifacts near tile edges and decreased performance (max: 512)
+      tolerance: 1.25, // higher means simpler geometries and increased performance
+      data: geojsonData, // url to geojson or inline geojson
+    };
+
+    console.log(geojsonData);
+
+    this.mapStore.map?.addSource("bamberg", {
+      type: "geojson",
+      ...sourceOptions,
+    });
+
+    const lineLayer: AnyLayer = {
+      id: "bamberg-l1",
+      type: "line",
+      source: "bamberg",
+      minzoom: this.minZoom,
+      maxzoom: this.maxZoom,
+      filter: ["match", ["geometry-type"], lineType, true, false],
+      paint: {
+        "line-color": "#000",
+        "line-width": 7,
+      },
+    };
+
+    this.mapStore.map?.addLayer(lineLayer, "waterway-label");
+  }
+
+  removeCityBoundaries(): void {
+    this.mapStore.map?.getStyle().layers.forEach((layer) => {
+      if (layer.id.includes("bamberg")) {
+        //console.log("deleting layer:" + JSON.stringify(layer));
+
+        this.removeGeojsonLayerFromMap(layer.id);
+      }
+    });
+    this.mapStore.map?.removeSource("bamberg");
+  }
+
   /**
    * ####################################
    * Methods related to mapbox sources (see https://docs.mapbox.com/mapbox-gl-js/style-spec/sources/)
@@ -418,7 +460,7 @@ class MapLayerManager {
     const allSources = this.mapStore.map?.getStyle().sources;
     for (const source in allSources) {
       //! "composite" is the default vector layer of mapbox-streets; don't delete this!
-      if (source !== "composite") {
+      if (source !== "composite" && source !== "bamberg") {
         if (source === "overlaySource") {
           this.removeCanvasSource(source);
         } else {

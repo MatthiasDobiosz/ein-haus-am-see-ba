@@ -3,7 +3,10 @@ import { RootStore } from "./RootStore";
 import { MapboxMap } from "react-map-gl";
 import MapLayerManager from "./../mapLayerMangager";
 import osmTagCollection from "../osmTagCollection";
-import { fetchDataFromPostGISBuffer } from "../network/networkUtils";
+import {
+  fetchCityBoundary,
+  fetchDataFromPostGISBuffer,
+} from "../network/networkUtils";
 import { Filter } from "../components/Sidebar/Filter/Filters";
 import { FeatureCollection, MultiPolygon, Polygon } from "geojson";
 import { createOverlay } from "../overlayCreation/canvasRenderer";
@@ -22,12 +25,14 @@ class MapStore {
   map: MapboxMap | null;
   visualType: VisualType;
   mapLayerManager: MapLayerManager | null;
+  boundaryView: boolean;
   rootStore: RootStore;
 
   constructor(rootStore: RootStore) {
     this.map = null;
     this.visualType = VisualType.OVERLAY;
     this.mapLayerManager = null;
+    this.boundaryView = false;
     this.rootStore = rootStore;
 
     makeObservable(this, {
@@ -36,6 +41,7 @@ class MapStore {
       setMap: action,
       setVisualType: action,
       mapLayerManager: false,
+      boundaryView: observable,
       loadMapData: false,
       showAreasOnMap: false,
       showPOILocations: false,
@@ -44,6 +50,7 @@ class MapStore {
       resetMapData: false,
       preprocessGeoData: false,
       addAreaOverlay: false,
+      toggleCityBoundary: false,
       rootStore: false,
     });
   }
@@ -208,6 +215,16 @@ class MapStore {
     //show the source data on the map
 
     this.mapLayerManager?.addLayersForSource(tagName);
+  }
+
+  async toggleCityBoundary() {
+    this.boundaryView = !this.boundaryView;
+    const data = await fetchCityBoundary();
+    if (this.boundaryView) {
+      this.mapLayerManager?.drawCityBoundaries(data);
+    } else {
+      this.mapLayerManager?.removeCityBoundaries();
+    }
   }
 
   //! most of the data preprocessing could (and probably should) already happen on the server!

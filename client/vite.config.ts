@@ -7,6 +7,7 @@ export default defineConfig({
   plugins: [react(), EnvironmentPlugin(["MAPBOX_TOKEN"])],
   server: {
     host: true,
+    port: 5174,
     proxy: {
       "/postGISBuffer": {
         target: "http://localhost:3200",
@@ -14,6 +15,11 @@ export default defineConfig({
         secure: false,
       },
       "/postGISNoBuffer": {
+        target: "http://localhost:3200",
+        changeOrigin: true,
+        secure: false,
+      },
+      "/getCityBoundary": {
         target: "http://localhost:3200",
         changeOrigin: true,
         secure: false,

@@ -1,5 +1,12 @@
 import axios from "./axiosInterceptor";
-import { FeatureCollection, MultiPolygon, Polygon } from "geojson";
+import {
+  Feature,
+  FeatureCollection,
+  GeoJsonProperties,
+  Geometry,
+  MultiPolygon,
+  Polygon,
+} from "geojson";
 
 export async function fetchDataFromPostGISBuffer(
   mapBounds: string,
@@ -34,4 +41,11 @@ export async function fetchDataFromPostGISBuffer(
     console.error(error);
     return null;
   }
+}
+
+export async function fetchCityBoundary(): Promise<
+  Feature<Geometry, GeoJsonProperties>
+> {
+  const response = await axios.get("/getCityBoundary", { timeout: 20000 });
+  return response.data as Feature<Geometry, GeoJsonProperties>;
 }

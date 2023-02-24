@@ -41,6 +41,18 @@ export default class OsmRouter {
    * Init the express router and setup routes.
    */
   setupRoutes(): void {
+    this.osmRouter.get("/getCityBoundary", (req: Request, res: Response) => {
+      const boundaryQuery = ServerUtils.buildBoundaryQuery();
+      pool
+        .query(boundaryQuery)
+        .then((resp) => {
+          const boundary = resp.rows[0];
+          boundary.type = "Feature";
+          res.status(StatusCodes.OK).send(boundary);
+        })
+        .catch((e) => console.error(e));
+    });
+
     this.osmRouter.get("/postGISBuffer", (req: Request, res: Response) => {
       const bounds = req.query.bounds?.toString();
       const query = req.query.osmQuery?.toString();
