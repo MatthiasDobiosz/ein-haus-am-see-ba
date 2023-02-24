@@ -27,7 +27,7 @@ COPY --from=build /ein-haus-am-see-ba/dist /ein-haus-am-see-ba/dist
 
 RUN yarn install --frozen-lockfile --production
 
-EXPOSE 5173 3200 
+EXPOSE 5173 3202 
 
 WORKDIR /ein-haus-am-see-ba
 

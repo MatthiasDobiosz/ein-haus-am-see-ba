@@ -10,22 +10,22 @@ export default defineConfig({
     port: 5173,
     proxy: {
       "/postGISBuffer": {
-        target: "http://localhost:3200",
+        target: "http://localhost:3202",
         changeOrigin: true,
         secure: false,
       },
       "/postGISNoBuffer": {
-        target: "http://localhost:3200",
+        target: "http://localhost:3202",
         changeOrigin: true,
         secure: false,
       },
       "/getHouses": {
-        target: "http://localhost:3200",
+        target: "http://localhost:3202",
         changeOrigin: true,
         secure: false,
       },
       "/getCityBoundary": {
-        target: "http://localhost:3200",
+        target: "http://localhost:3202",
         changeOrigin: true,
         secure: false,
       },
