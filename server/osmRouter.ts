@@ -3,6 +3,18 @@ import express, { NextFunction, Request, Response, Router } from "express";
 import { StatusCodes } from "http-status-codes";
 import querystring from "querystring";
 import * as ServerUtils from "./serverUtils.js";
+import pgk from "pg";
+const { Pool } = pgk;
+
+const pool = new Pool({
+  host: "db",
+  user: "postgresdocker",
+  password: "docker",
+  database: "osm_docker",
+  max: 100,
+  connectionTimeoutMillis: 0,
+  idleTimeoutMillis: 0,
+});
 
 export default class OsmRouter {
   private readonly osmRouter: Router;
@@ -22,6 +34,18 @@ export default class OsmRouter {
    * Init the express router and setup routes.
    */
   setupRoutes(): void {
+    this.osmRouter.get("/getCityBoundary", (req: Request, res: Response) => {
+      const boundaryQuery = ServerUtils.buildBoundaryQuery();
+      pool
+        .query(boundaryQuery)
+        .then((resp) => {
+          const boundary = resp.rows[0];
+          boundary.type = "Feature";
+          res.status(StatusCodes.OK).send(boundary);
+        })
+        .catch((e) => console.error(e));
+    });
+
     /**
      * * Forwards the query and the bounds to the overpass api and returns and caches the result.
      * * Also checks the redis cache first before sending requerst to overpass api to prevent unnecessary requests.

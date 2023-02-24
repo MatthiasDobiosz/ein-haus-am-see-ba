@@ -46,6 +46,10 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
     }
   };*/
 
+  const showCityBoundary = () => {
+    rootStore.mapStore.toggleCityBoundary();
+  };
+
   const onMapDragEnd = () => {
     if (map) {
       // Uses the Haversine Formula to calculate difference between tow latLng coords in meters
@@ -160,6 +164,12 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
           <NavigationControl position={"top-right"} visualizePitch={false} />
           <AttributionControl position={"bottom-right"} />
           <ScaleControl position="bottom-left" />
+          <button
+            className="absolute bottom-8 right-4 bg-purple p-1"
+            onClick={() => showCityBoundary()}
+          >
+            Zeige Gebiet
+          </button>
         </Map>
         <canvas id="texture_canvas">
           Your browser does not seem to support HTML5 canvas.

@@ -138,6 +138,13 @@ export function convertMulti(
   return featuresWithin;
 }
 
+export function buildBoundaryQuery(): string {
+  const querystring =
+    `SELECT ST_AsGeoJSON(ST_ForceRHR(st_transform(geom,4326)))::json as geometry, relation_id as id, jsonb_build_object('name', name) as properties` +
+    ` FROM relations WHERE name = 'Bamberg' `;
+  return querystring;
+}
+
 export function getDataWithinBoundingBox(
   allData: Feature<Geometry, any>[],
   bounds: string
