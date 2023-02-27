@@ -144,14 +144,6 @@ export const FilterSettings = observer(
       }
     };
 
-    const setAllowedDistance = (value: number) => {
-      if (value <= 2000) {
-        setDistance(value);
-      } else {
-        props.setError("Es sind maximal 2000m Umkreis möglich");
-      }
-    };
-
     if (!open) {
       return null;
     }
@@ -226,12 +218,14 @@ export const FilterSettings = observer(
               <p className=" text-[1.2em] w-[50%]">Umkreis: </p>
               <div className="w-[50%] align-middle">
                 <input
-                  type="text"
+                  type="number"
                   defaultValue="500"
                   pattern="\d"
-                  onChange={(e) => setAllowedDistance(Number(e.target.value))}
+                  onChange={(e) => setDistance(Number(e.target.value))}
                   className="mr-[0.55em] w-[4em] h-[3vh] border-[1px] border-solid border-[#808080] rounded-[2px] text-center"
                   required
+                  max="5000"
+                  min="1"
                 />
                 <span>Meter</span>
               </div>
