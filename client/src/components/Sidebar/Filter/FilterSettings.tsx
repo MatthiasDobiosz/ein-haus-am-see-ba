@@ -123,9 +123,13 @@ export const FilterSettings = observer(
             performOsmQuery();
           }, 800);
         } else {
-          props.setError(
-            `Ein Filter vom Typ ${value} existiert bereits in der Gruppe!`
-          );
+          if (groupname === "") {
+            props.setError("Wähle bitte eine zugehörige Gruppe aus");
+          } else {
+            props.setError(
+              `Ein Filter vom Typ ${value} existiert bereits in der Gruppe!`
+            );
+          }
         }
       }
     };
