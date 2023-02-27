@@ -80,12 +80,6 @@ export const FilterSettings = observer(
           // rootStore.filterStore.addFilter(newFilter);
 
           if (filterWasAdded) {
-            rootStore.snackbarStore.displayHandler(
-              "Filter wurde erfolgreich hinzugefügt!",
-              1000,
-              SnackbarType.SUCCESS
-            );
-
             //closes Modal
             onClose(false);
 
@@ -121,12 +115,6 @@ export const FilterSettings = observer(
         );
         // rootStore.filterStore.addFilter(newFilter);
         if (filterWasAdded) {
-          rootStore.snackbarStore.displayHandler(
-            "Filter wurde erfolgreich hinzugefügt!",
-            1000,
-            SnackbarType.SUCCESS
-          );
-
           //closes Modal
           onClose(false);
 

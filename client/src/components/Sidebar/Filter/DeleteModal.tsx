@@ -31,7 +31,7 @@ export const DeleteModal = observer(
           <h2 className="flex justify-center py-[12px] px-0 bg-red text-[#fff] text-[1.5em] font-bold rounded-t-[8px] rounded-r-[8px]">
             {props.group ? "Filtergruppe " : "Filter "} Löschen
           </h2>
-          <div className="mt-[25px] flex justify-evenly items-center">
+          <div className="mt-[25px] flex items-center justify-evenly text-center">
             <p>{getErrorMessage()}</p>
           </div>
           <div className="mt-[25px] flex justify-evenly items-center">

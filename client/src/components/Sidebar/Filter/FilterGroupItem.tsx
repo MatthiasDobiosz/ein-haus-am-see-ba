@@ -77,12 +77,12 @@ export const FilterGroupItem = observer(
         <div className="flex flex-col mt-[1em] ml-2 mr-2 align-middle justify-center border-[1px] border-[#e9e3e3] bg-[lavender] rounded-[2%] relative">
           <div className="mt-3 mb-3">
             <div className="flex flex-row justify-center">
-              <p className="2xl:text-[1.3em] xl:text-[1em] lg:text-[0.8em] md:text-[0.7em] sm:text-[0.6em] font-bold">
+              <p className="2xl:text-[1.3em] text-[1em] font-bold">
                 {filtergroup.groupName}
               </p>
             </div>
             <div className="flex flex-row justify-center pt-2">
-              <div className="flex flex-row 2xl:text-[1.1em] xl:text-[0.8em] lg:text-[0.7em] md:text-[0.6em] sm:text-[0.5em] mt-1">
+              <div className="flex flex-row text-[1.1em] mt-1">
                 <span className="mr-2">Gruppengewichtung: </span>
                 <select
                   defaultValue={

@@ -45,12 +45,6 @@ export const EditFilter = observer(
         wanted
       );
 
-      rootStore.snackbarStore.displayHandler(
-        "Filter wurde erfolgreich hinzugefügt!",
-        1000,
-        SnackbarType.SUCCESS
-      );
-
       //closes Modal
       onClose(false);
 

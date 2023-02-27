@@ -95,7 +95,7 @@ export const FilterItem = observer((props: FilterItemProps) => {
   if (isEditing) {
     return (
       <>
-        <li className="flex flex-col relative p-[6px] my-[3px] mx-auto transition-[0.2s] border-[1px] border-solid border-[#d3d3d3] bg-[#f7f2df] hover:bg-[#f7f2df] 2xl:text-[1.1em] xl:text-[0.9em] lg:text-[0.7em] md:text-[0.6em] sm:text-[0.5em] w-[90%]">
+        <li className="flex flex-col relative p-[6px] my-[3px] mx-auto transition-[0.2s] border-[1px] border-solid border-[#d3d3d3] bg-[#f7f2df] hover:bg-[#f7f2df] text-[1em] w-[90%]">
           <div className="flex flex-col my-[4px] ml-[5em] mr-[3em] gap-2">
             <div className="flex flex-row">
               <span className="font-bold w-[50%]">Filtertyp:</span>
@@ -166,7 +166,7 @@ export const FilterItem = observer((props: FilterItemProps) => {
 
   return (
     <>
-      <li className="flex flex-col relative p-[6px] my-[3px] mx-auto transition-[0.2s] border-[1px] border-solid border-[#d3d3d3] bg-[#f7f2df] hover:bg-[#f7f2df] 2xl:text-[1.1em] xl:text-[0.9em] lg:text-[0.7em] md:text-[0.6em] sm:text-[0.5em] w-[90%]">
+      <li className="flex flex-col relative p-[6px] my-[3px] mx-auto transition-[0.2s] border-[1px] border-solid border-[#d3d3d3] bg-[#f7f2df] hover:bg-[#f7f2df] text-[1em] w-[90%]">
         <div className="flex flex-col my-[4px] ml-[5em] mr-[3em] gap-2">
           <div className="flex flex-row">
             <span className="font-bold w-[50%]">Filtertyp:</span>

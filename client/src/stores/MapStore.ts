@@ -178,9 +178,6 @@ class MapStore {
           }
         })
       );
-
-      this.rootStore.snackbarStore.closeHandler();
-
       let success = true;
       for (const res of allResults) {
         if (res.status === "rejected") {
@@ -257,8 +254,6 @@ class MapStore {
         })
       );
 
-      this.rootStore.snackbarStore.closeHandler();
-
       let success = true;
       for (const res of allResults) {
         if (res.status === "rejected") {
@@ -287,7 +282,7 @@ class MapStore {
     if (this.visualType !== VisualType.NONE) {
       this.rootStore.snackbarStore.displayHandler(
         "Daten werden geladen...",
-        10000,
+        undefined,
         SnackbarType.INFO
       );
     }
@@ -296,10 +291,14 @@ class MapStore {
       if (this.visualType === VisualType.BOTH) {
         await this.loadOverlayMapData();
         await this.loadPOIMapData();
+        this.rootStore.snackbarStore.closeHandler();
       } else if (this.visualType === VisualType.OVERLAY) {
-        this.loadOverlayMapData();
+        await this.loadOverlayMapData();
+        console.log("close");
+        this.rootStore.snackbarStore.closeHandler();
       } else if (this.visualType === VisualType.NORMAL) {
-        this.loadPOIMapData();
+        await this.loadPOIMapData();
+        this.rootStore.snackbarStore.closeHandler();
       }
     }
   }

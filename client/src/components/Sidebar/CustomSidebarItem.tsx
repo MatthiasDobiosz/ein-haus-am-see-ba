@@ -65,12 +65,6 @@ export const CustomSidebarItem = observer(
         }
       }
 
-      rootStore.snackbarStore.displayHandler(
-        "Filtergruppe wurde erfolgreich hinzugefügt!",
-        1000,
-        SnackbarType.SUCCESS
-      );
-
       // load map data automatically after 800ms (timeout so the snackbars wont overlap)
       /*setTimeout(() => {
         performOsmQuery();
