@@ -23,6 +23,7 @@ class FilterStore {
       allFilterLayers: observable,
       activeFilters: observable,
       addNewFilterToGroup: action,
+      getMaxDistance: action,
       addFilter: action,
       removeFilter: action,
       removeFilterFromGroup: action,
@@ -155,6 +156,16 @@ class FilterStore {
         });
       }
     }
+  }
+
+  getMaxDistance(): number {
+    let minDistance = 500;
+    for (let i = 0; i < this.allFilterLayers.length; i++) {
+      if (this.allFilterLayers[i].distance > minDistance) {
+        minDistance = this.allFilterLayers[i].distance;
+      }
+    }
+    return minDistance;
   }
 
   updateGroups(): void {
