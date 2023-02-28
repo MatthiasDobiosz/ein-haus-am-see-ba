@@ -1,6 +1,12 @@
 import axios from "./axiosInterceptor";
 import osmtogeojson from "osmtogeojson";
-import { FeatureCollection, GeometryObject } from "geojson";
+import {
+  Feature,
+  FeatureCollection,
+  Geometry,
+  GeometryObject,
+  GeoJsonProperties,
+} from "geojson";
 
 export async function uploadLogs(logs: any): Promise<void> {
   try {
@@ -59,6 +65,13 @@ export async function fetchOsmDataFromClientVersion(
     //console.error(error);
     return null;
   }
+}
+
+export async function fetchCityBoundary(): Promise<
+  Feature<Geometry, GeoJsonProperties>
+> {
+  const response = await axios.get("/getCityBoundary", { timeout: 20000 });
+  return response.data as Feature<Geometry, GeoJsonProperties>;
 }
 
 export async function fetchOsmDataFromServer(

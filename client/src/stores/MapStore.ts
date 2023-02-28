@@ -3,7 +3,10 @@ import { RootStore } from "./RootStore";
 import { MapboxMap } from "react-map-gl";
 import MapLayerManager from "./../mapLayerMangager";
 import osmTagCollection from "../osmTagCollection";
-import { fetchOsmDataFromServer } from "../network/networkUtils";
+import {
+  fetchCityBoundary,
+  fetchOsmDataFromServer,
+} from "../network/networkUtils";
 import { Filter } from "../components/Sidebar/Filter/Filters";
 import { Feature, FeatureCollection, Geometry } from "geojson";
 import truncate from "@turf/truncate";
@@ -24,12 +27,14 @@ class MapStore {
   map: MapboxMap | null;
   visualType: VisualType;
   mapLayerManager: MapLayerManager | null;
+  boundaryView: boolean;
   rootStore: RootStore;
 
   constructor(rootStore: RootStore) {
     this.map = null;
     this.visualType = VisualType.OVERLAY;
     this.mapLayerManager = null;
+    this.boundaryView = false;
     this.rootStore = rootStore;
 
     makeObservable(this, {
@@ -46,6 +51,8 @@ class MapStore {
       resetMapData: false,
       preprocessGeoData: false,
       addAreaOverlay: false,
+      boundaryView: observable,
+      toggleCityBoundary: false,
       rootStore: false,
     });
   }
@@ -322,6 +329,16 @@ class MapStore {
     */
 
     return layer;
+  }
+
+  async toggleCityBoundary() {
+    this.boundaryView = !this.boundaryView;
+    const data = await fetchCityBoundary();
+    if (this.boundaryView) {
+      this.mapLayerManager?.drawCityBoundaries(data);
+    } else {
+      this.mapLayerManager?.removeCityBoundaries();
+    }
   }
 
   addAreaOverlay(): void {
