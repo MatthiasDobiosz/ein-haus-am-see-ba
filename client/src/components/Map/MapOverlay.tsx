@@ -16,8 +16,8 @@ interface MapOverlayProps {
 }
 
 // tresholds to prevent reloading when small movements are made (performance optimization)
-const zoomTreshold = 0.7; // zoom level difference -> update if a map zoom event changed more than this
-const moveTreshold = 1000; // map center difference in meters
+const zoomTreshold = 0.2; // zoom level difference -> update if a map zoom event changed more than this
+const moveTreshold = 10; // map center difference in meters
 
 /**
  * Component that returns Mapbox Map with specified settings
