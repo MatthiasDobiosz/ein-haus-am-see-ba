@@ -100,6 +100,7 @@ class MapStore {
           this.loadMapData();
         }
       });
+      this.toggleCityBoundary();
     }
 
     /*
