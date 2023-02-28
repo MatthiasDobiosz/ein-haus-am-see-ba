@@ -78,6 +78,7 @@ class MapStore {
         }),
         "top-left"
       );
+      this.toggleCityBoundary();
     }
   }
 
