@@ -78,15 +78,15 @@ class MapLayerManager {
 
     console.log(geojsonData);
 
-    this.mapStore.map?.addSource("ingolstadt", {
+    this.mapStore.map?.addSource("bamberg", {
       type: "geojson",
       ...sourceOptions,
     });
 
     const lineLayer: AnyLayer = {
-      id: "ingolstadt-l1",
+      id: "bamberg-l1",
       type: "line",
-      source: "ingolstadt",
+      source: "bamberg",
       minzoom: this.minZoom,
       maxzoom: this.maxZoom,
       filter: ["match", ["geometry-type"], lineType, true, false],
@@ -101,13 +101,13 @@ class MapLayerManager {
 
   removeCityBoundaries(): void {
     this.mapStore.map?.getStyle().layers.forEach((layer) => {
-      if (layer.id.includes("ingolstadt")) {
+      if (layer.id.includes("bamberg")) {
         //console.log("deleting layer:" + JSON.stringify(layer));
 
         this.removeGeojsonLayerFromMap(layer.id);
       }
     });
-    this.mapStore.map?.removeSource("ingolstadt");
+    this.mapStore.map?.removeSource("bamberg");
   }
 
   /**
@@ -460,7 +460,7 @@ class MapLayerManager {
     const allSources = this.mapStore.map?.getStyle().sources;
     for (const source in allSources) {
       //! "composite" is the default vector layer of mapbox-streets; don't delete this!
-      if (source !== "composite" && source !== "ingolstadt") {
+      if (source !== "composite" && source !== "bamberg") {
         if (source === "overlaySource") {
           this.removeCanvasSource(source);
         } else {
