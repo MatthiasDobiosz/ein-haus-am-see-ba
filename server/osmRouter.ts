@@ -15,10 +15,11 @@ import truncate from "@turf/truncate";
 const { Pool } = pgk;
 
 const pool = new Pool({
-  host: "db",
-  user: "postgresdocker",
-  password: "docker",
-  database: "osm_docker",
+  host: "localhost",
+  user: "postgres",
+  port: 5432,
+  password: "syn27X!L",
+  database: "osm_om",
   max: 100,
   connectionTimeoutMillis: 0,
   idleTimeoutMillis: 0,

@@ -1,5 +1,5 @@
 import mapboxgl, { LngLat } from "mapbox-gl";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import Map, {
   AttributionControl,
   NavigationControl,
@@ -11,6 +11,7 @@ import { VisualType } from "../../stores/MapStore";
 import { observer } from "mobx-react";
 import { AiOutlineMenu } from "react-icons/ai";
 import { SidebarContext } from "../Sidebar/SidebarContext";
+import { useStopwatch } from "react-timer-hook";
 
 interface MapOverlayProps {
   /* dynamically change width depending on sidebarState */
@@ -20,7 +21,6 @@ interface MapOverlayProps {
 // tresholds to prevent reloading when small movements are made (performance optimization)
 const zoomTreshold = 0.2; // zoom level difference -> update if a map zoom event changed more than this
 const moveTreshold = 10; // map center difference in meters
-
 /**
  * Component that returns Mapbox Map with specified settings
  */
@@ -34,6 +34,13 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
   const minRequiredZoomLevel = 7;
   const map = rootStore.mapStore.map;
   const visualType = rootStore.mapStore.visualType;
+  const timeout = useRef<NodeJS.Timeout>();
+
+  // Clean up timeout
+  useEffect(() => {
+    return () => clearTimeout(timeout.current);
+  }, []);
+
   /*
   const setViewPortOnThreshold = (viewState: ViewState) => {
     if (
@@ -60,6 +67,8 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
   };
 
   const onMapDragEnd = () => {
+    console.log("clear");
+    clearTimeout(timeout.current);
     if (map) {
       // Uses the Haversine Formula to calculate difference between tow latLng coords in meters
       const distance = currentMapCenter.distanceTo(map.getCenter());
@@ -84,7 +93,9 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
           rootStore.mapStore.addAreaOverlay();
         } else {
           // if greater than the treshold load new data from the db as well
-          rootStore.mapStore.loadMapData();
+          timeout.current = setTimeout(() => {
+            rootStore.mapStore.loadMapData();
+          }, 1000);
         }
       } else if (visualType === VisualType.NORMAL) {
         if (distance < moveTreshold) {
@@ -97,6 +108,7 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
   };
 
   const onMapZoomEnd = () => {
+    clearTimeout(timeout.current);
     if (map) {
       const newZoom = map.getZoom();
 
@@ -125,15 +137,18 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
 
           rootStore.snackbarStore.displayHandler(
             "Die aktuelle Zoomstufe ist zu niedrig, um Daten zu aktualisieren!",
-            2000,
+            1000,
             SnackbarType.WARNING
           );
           return;
         } else if (Math.abs(newZoom - currentMapZoom) <= zoomTreshold) {
           rootStore.mapStore.addAreaOverlay();
           return;
+        } else {
+          timeout.current = setTimeout(() => {
+            rootStore.mapStore.loadMapData();
+          }, 2000);
         }
-        rootStore.mapStore.loadMapData();
       } else if (visualType === VisualType.NORMAL) {
         if (newZoom <= minRequiredZoomLevel) {
           rootStore.snackbarStore.displayHandler(
