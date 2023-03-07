@@ -5,6 +5,7 @@ import MapLayerManager from "./../mapLayerMangager";
 import osmTagCollection from "../osmTagCollection";
 import {
   fetchDataFromPostGISBuffer,
+  fetchDataFromPostGISCombined,
   fetchDataFromPostGISIndex,
   fetchDataFromPostGISSingle,
   fetchOsmDataFromServer,
@@ -131,6 +132,8 @@ class MapStore {
       this.dbType = DBType.POSTGISBUFFER;
     } else if (this.dbType === DBType.POSTGISBUFFER) {
       this.dbType = DBType.OVERPASS;
+    } else if (this.dbType === DBType.OVERPASS) {
+      this.dbType = DBType.COMBINED;
     } else {
       this.dbType = DBType.POSTGISSINGLE;
     }
@@ -442,7 +445,7 @@ class MapStore {
           );
         }
         this.showAreasOnMap();
-      } else {
+      } else if (this.dbType === DBType.POSTGISBUFFER) {
         startPerformanceMeasure("LoadingAllFilters");
         const bounds = getViewportPolygon(this.map, 500);
         const activeTags = Array.from(this.rootStore.filterStore.activeFilters);
@@ -454,6 +457,58 @@ class MapStore {
             const bufferValue =
               this.rootStore.filterStore.getFilterLayerBuffer(tag) || 0;
             const data = await fetchDataFromPostGISBuffer(
+              bounds,
+              query,
+              bufferValue,
+              this.visualType === VisualType.OVERLAY,
+              tag === firstTag,
+              tag === lastTag
+            );
+            //console.log(data);
+            if (data) {
+              console.log(data);
+
+              if (this.visualType === VisualType.NORMAL) {
+                this.showDataOnMap(data, tag);
+              } else {
+                startPerformanceMeasure("LoadingSingleFilter");
+                this.preprocessGeoDataNew(data, tag);
+                endPerformanceMeasure("LoadingSingleFilter");
+              }
+            }
+          })
+        );
+
+        endPerformanceMeasure("LoadingAllFilters");
+        this.rootStore.snackbarStore.closeHandler();
+
+        let success = true;
+        for (const res of allResults) {
+          if (res.status === "rejected") {
+            success = false;
+            break;
+          }
+        }
+        if (!success) {
+          this.rootStore.snackbarStore.displayHandler(
+            "Nicht alle Daten konnten erfolgreich geladen werden",
+            1500,
+            SnackbarType.ERROR
+          );
+        }
+        this.showAreasOnMap();
+      } else {
+        startPerformanceMeasure("LoadingAllFilters");
+        const bounds = getViewportPolygon(this.map, 500);
+        const activeTags = Array.from(this.rootStore.filterStore.activeFilters);
+        const firstTag = activeTags[0];
+        const lastTag = activeTags[activeTags.length - 1];
+        const allResults = await Promise.allSettled(
+          activeTags.map(async (tag) => {
+            const query = osmTagCollection.getQueryForCategoryPostGIS(tag);
+            const bufferValue =
+              this.rootStore.filterStore.getFilterLayerBuffer(tag) || 0;
+            const data = await fetchDataFromPostGISCombined(
               bounds,
               query,
               bufferValue,
@@ -749,7 +804,8 @@ import { buffer } from '@turf/buffer';
           this.rootStore.filterStore.allFilterLayers,
           this.map,
           this,
-          this.rootStore.legendStore
+          this.rootStore.legendStore,
+          this.dbType === DBType.COMBINED
         );
       }
     } else {

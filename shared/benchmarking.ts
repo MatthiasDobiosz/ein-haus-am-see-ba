@@ -17,6 +17,7 @@ export const enum DBType {
   POSTGISINDEX = "(Index-gist)",
   POSTGISBUFFER = "(index-buffer)",
   OVERPASS = "(Overpass)",
+  COMBINED = "(Combined)",
 }
 
 export const enum MeasurementNames {
@@ -50,6 +51,8 @@ export const toggleDbTypeForBenchmark = () => {
     dbType = DBType.POSTGISBUFFER;
   } else if (dbType === DBType.POSTGISBUFFER) {
     dbType = DBType.OVERPASS;
+  } else if (dbType === DBType.OVERPASS) {
+    dbType = DBType.COMBINED;
   } else {
     dbType = DBType.POSTGISSINGLE;
   }

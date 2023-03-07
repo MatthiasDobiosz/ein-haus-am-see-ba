@@ -233,3 +233,54 @@ export async function fetchDataFromPostGISBuffer(
     return null;
   }
 }
+
+export async function fetchDataFromPostGISCombined(
+  mapBounds: string,
+  condition: string,
+  bufferValue: number,
+  overlay: boolean,
+  first?: boolean,
+  last?: boolean
+): Promise<FeatureCollection<Polygon | MultiPolygon, any> | null> {
+  try {
+    let url = "";
+    if (overlay) {
+      const params = new URLSearchParams({
+        bounds: mapBounds,
+        osmQuery: condition,
+        bufferValue: bufferValue.toString(),
+      });
+
+      url = "/postGISCombined?" + params.toString();
+    } else {
+      const params = new URLSearchParams({
+        bounds: mapBounds,
+        osmQuery: condition,
+        bufferValue: bufferValue.toString(),
+      });
+
+      url = "/postGISCombinedSingle?" + params.toString();
+    }
+
+    if (first) {
+      url += "&first=true";
+    }
+    if (last) {
+      url += "&last=true";
+    }
+
+    // set a timeout of 7 seconds
+    if (first) {
+      startPerformanceMeasure("RequestClient");
+    }
+    const response = await axios.get(url, { timeout: 20000 });
+    //console.log(response);
+    if (last) {
+      endPerformanceMeasure("RequestClient");
+    }
+    return response.data as FeatureCollection<Polygon | MultiPolygon, any>;
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+}

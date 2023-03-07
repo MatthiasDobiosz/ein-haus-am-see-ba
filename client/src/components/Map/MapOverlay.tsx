@@ -6,7 +6,6 @@ import { SnackbarType } from "./../../stores/SnackbarStore";
 import rootStore from "../../stores/RootStore";
 import { VisualType } from "../../stores/MapStore";
 import { observer } from "mobx-react";
-import { Geocoder } from "./Geocoder";
 
 interface MapOverlayProps {
   /* dynamically change width depending on sidebarState */

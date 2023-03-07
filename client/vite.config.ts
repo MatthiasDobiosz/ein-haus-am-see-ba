@@ -50,6 +50,16 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
+      "/postGISCombined": {
+        target: "http://localhost:3200",
+        changeOrigin: true,
+        secure: false,
+      },
+      "/postGISCombinedSingle": {
+        target: "http://localhost:3200",
+        changeOrigin: true,
+        secure: false,
+      },
       "/backendLogs": {
         target: "http://localhost:3200",
         changeOrigin: true,

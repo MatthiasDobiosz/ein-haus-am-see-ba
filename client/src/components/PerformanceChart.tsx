@@ -52,6 +52,7 @@ export const PerformanceChart = observer((): JSX.Element => {
   const [postGISIndexData, setPostGISIndexData] = useState<number[]>([]);
   const [postGISBufferData, setPostGISBufferData] = useState<number[]>([]);
   const [overpassData, setOverpassData] = useState<number[]>([]);
+  const [combinedFiltersData, setCombinedFiltersData] = useState<number[]>([]);
 
   const chartRef = useRef<Chart | null>(null);
 
@@ -120,15 +121,24 @@ export const PerformanceChart = observer((): JSX.Element => {
       filteredMeasure.name = filteredMeasure.name.replace(DBType.OVERPASS, "");
     });
 
+    let combinedFiltersMeasures = allMeasures.filter((measure) => {
+      return measure.name.includes(DBType.COMBINED);
+    });
+    combinedFiltersMeasures.forEach((filteredMeasure) => {
+      filteredMeasure.name = filteredMeasure.name.replace(DBType.COMBINED, "");
+    });
+
     postGISSingleMeasures = addLoadingTime(postGISSingleMeasures);
     postGISIndexMeasures = addLoadingTime(postGISIndexMeasures);
     postGISBufferMeasures = addLoadingTime(postGISBufferMeasures);
     overpassMeasures = addLoadingTime(overpassMeasures);
+    combinedFiltersMeasures = addLoadingTime(combinedFiltersMeasures);
 
     const PostGISSinglePoints: number[] = [];
     const PostGISIndexPoints: number[] = [];
     const PostGISBufferPoints: number[] = [];
     const OverpassPoints: number[] = [];
+    const combinedFiltersPoints: number[] = [];
     const matchedLabels: string[] = [];
 
     for (let i = 0; i < possibleBenchmarks.length; i++) {
@@ -174,6 +184,18 @@ export const PerformanceChart = observer((): JSX.Element => {
         OverpassPoints.push(-10);
       }
 
+      const combinedFiltersIndex = combinedFiltersMeasures.findIndex(
+        (measure) => measure.name === possibleBenchmarks[i]
+      );
+      if (combinedFiltersIndex > -1) {
+        matched = true;
+        combinedFiltersPoints.push(
+          combinedFiltersMeasures[combinedFiltersIndex].duration
+        );
+      } else {
+        combinedFiltersPoints.push(-10);
+      }
+
       if (matched) {
         matchedLabels.push(possibleBenchmarks[i]);
       } else {
@@ -181,6 +203,7 @@ export const PerformanceChart = observer((): JSX.Element => {
         PostGISIndexPoints.pop();
         PostGISBufferPoints.pop();
         OverpassPoints.pop();
+        combinedFiltersPoints.pop();
       }
     }
 
@@ -188,6 +211,7 @@ export const PerformanceChart = observer((): JSX.Element => {
     setPostGISIndexData(PostGISIndexPoints);
     setPostGISBufferData(PostGISBufferPoints);
     setOverpassData(OverpassPoints);
+    setCombinedFiltersData(combinedFiltersPoints);
     setLabels(matchedLabels);
   }
 
@@ -270,6 +294,12 @@ export const PerformanceChart = observer((): JSX.Element => {
         data: overpassData,
         borderColor: "rgb(58, 134, 255)",
         backgroundColor: "rgba(58, 134, 255, 0.5)",
+      },
+      {
+        label: "Combined",
+        data: combinedFiltersData,
+        borderColor: "rgb(251, 86, 7)",
+        backgroundColor: "rgba(251, 86, 7, 0.5)",
       },
     ],
   };
