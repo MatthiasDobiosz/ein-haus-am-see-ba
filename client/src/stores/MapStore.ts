@@ -112,7 +112,10 @@ class MapStore {
     );
 
     if (this.map) {
-      const bounds = getViewportBoundsString(this.map, 500);
+      const bounds = getViewportBoundsString(
+        this.map,
+        this.rootStore.filterStore.getMaxDistance()
+      );
       const activeTags = Array.from(this.rootStore.filterStore.activeFilters);
       const allResults = await Promise.allSettled(
         activeTags.map(async (tag) => {

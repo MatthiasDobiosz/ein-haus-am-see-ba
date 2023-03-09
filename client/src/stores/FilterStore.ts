@@ -22,6 +22,7 @@ class FilterStore {
       removeFilter: action,
       getFilterLayer: false,
       getFilterLayerBuffer: false,
+      getMaxDistance: action,
       clearAllFilters: action,
       recalculateScreenCoords: false,
       calculatePointCoordsForFeatures: false,
@@ -137,6 +138,16 @@ class FilterStore {
       // @ts-expect-error: possbily null but worked before
       layer.points.push(pointData);
     }
+  }
+
+  getMaxDistance(): number {
+    let minDistance = 500;
+    for (let i = 0; i < this.allFilterLayers.length; i++) {
+      if (this.allFilterLayers[i].distance > minDistance) {
+        minDistance = this.allFilterLayers[i].distance;
+      }
+    }
+    return minDistance;
   }
 }
 
