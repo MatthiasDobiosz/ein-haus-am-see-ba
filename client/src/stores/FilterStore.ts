@@ -18,6 +18,7 @@ class FilterStore {
     makeObservable(this, {
       allFilterLayers: observable,
       activeFilters: observable,
+      getMaxDistance: action,
       addFilter: action,
       removeFilter: action,
       getFilterLayer: false,
@@ -144,6 +145,16 @@ class FilterStore {
       console.error("Geometry is not a Polygon or Multipolygon");
     }
     // layer.Points.push(flattened);
+  }
+
+  getMaxDistance(): number {
+    let minDistance = 500;
+    for (let i = 0; i < this.allFilterLayers.length; i++) {
+      if (this.allFilterLayers[i].distance > minDistance) {
+        minDistance = this.allFilterLayers[i].distance;
+      }
+    }
+    return minDistance;
   }
 }
 

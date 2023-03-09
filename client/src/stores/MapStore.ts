@@ -110,7 +110,10 @@ class MapStore {
     );
 
     if (this.map) {
-      const bounds = getViewportPolygon(this.map, 500);
+      const bounds = getViewportPolygon(
+        this.map,
+        this.rootStore.filterStore.getMaxDistance()
+      );
       const activeTags = Array.from(this.rootStore.filterStore.activeFilters);
       const allResults = await Promise.allSettled(
         activeTags.map(async (tag) => {
