@@ -11,7 +11,6 @@ import { VisualType } from "../../stores/MapStore";
 import { observer } from "mobx-react";
 import { AiOutlineMenu } from "react-icons/ai";
 import { SidebarContext } from "../Sidebar/SidebarContext";
-import { useStopwatch } from "react-timer-hook";
 
 interface MapOverlayProps {
   /* dynamically change width depending on sidebarState */
