@@ -55,7 +55,7 @@ class MapStore {
     this.visualType = VisualType.OVERLAY;
     this.mapLayerManager = null;
     this.rootStore = rootStore;
-    this.dbType = DBType.POSTGISSINGLE;
+    this.dbType = DBType.POSTGISBUFFER;
     this.performanceViewActive = false;
     this.isFlying = false;
 
@@ -126,16 +126,12 @@ class MapStore {
   }
 
   toggleDbType() {
-    if (this.dbType === DBType.POSTGISSINGLE) {
-      this.dbType = DBType.POSTGISINDEX;
-    } else if (this.dbType === DBType.POSTGISINDEX) {
-      this.dbType = DBType.POSTGISBUFFER;
-    } else if (this.dbType === DBType.POSTGISBUFFER) {
+    if (this.dbType === DBType.POSTGISBUFFER) {
       this.dbType = DBType.OVERPASS;
     } else if (this.dbType === DBType.OVERPASS) {
       this.dbType = DBType.COMBINED;
     } else {
-      this.dbType = DBType.POSTGISSINGLE;
+      this.dbType = DBType.POSTGISBUFFER;
     }
   }
 

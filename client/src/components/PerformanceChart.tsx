@@ -13,6 +13,7 @@ import {
   Chart,
 } from "chart.js";
 import { Bar } from "react-chartjs-2";
+import "chartjs-plugin-datalabels";
 
 ChartJS.register(
   CategoryScale,
@@ -272,19 +273,7 @@ export const PerformanceChart = observer((): JSX.Element => {
     labels: labels,
     datasets: [
       {
-        label: "PostGIS (Union Query)",
-        data: postGISSingleData,
-        borderColor: "rgb(251, 86, 7)",
-        backgroundColor: "rgba(251, 86, 7, 0.5)",
-      },
-      {
-        label: "PostGIS (Gist-Index)",
-        data: postGISIndexData,
-        borderColor: "rgb(255, 0, 110)",
-        backgroundColor: "rgba(255, 0, 110, 0.5)",
-      },
-      {
-        label: "PostGIS (Buffer)",
+        label: "PostGIS",
         data: postGISBufferData,
         borderColor: "rgb(131, 56, 236)",
         backgroundColor: "rgba(131, 56, 236, 0.5)",
@@ -296,7 +285,7 @@ export const PerformanceChart = observer((): JSX.Element => {
         backgroundColor: "rgba(58, 134, 255, 0.5)",
       },
       {
-        label: "Combined",
+        label: "Usability",
         data: combinedFiltersData,
         borderColor: "rgb(251, 86, 7)",
         backgroundColor: "rgba(251, 86, 7, 0.5)",

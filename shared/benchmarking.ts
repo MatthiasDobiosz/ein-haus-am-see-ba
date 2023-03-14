@@ -41,20 +41,16 @@ export const enum MeasurementNames {
   AddBuffer = "AddBuffer",
 }
 
-let dbType = DBType.POSTGISSINGLE;
+let dbType = DBType.POSTGISBUFFER;
 let measuring = true;
 
 export const toggleDbTypeForBenchmark = () => {
-  if (dbType === DBType.POSTGISSINGLE) {
-    dbType = DBType.POSTGISINDEX;
-  } else if (dbType === DBType.POSTGISINDEX) {
-    dbType = DBType.POSTGISBUFFER;
-  } else if (dbType === DBType.POSTGISBUFFER) {
+  if (dbType === DBType.POSTGISBUFFER) {
     dbType = DBType.OVERPASS;
   } else if (dbType === DBType.OVERPASS) {
     dbType = DBType.COMBINED;
   } else {
-    dbType = DBType.POSTGISSINGLE;
+    dbType = DBType.POSTGISBUFFER;
   }
 };
 
