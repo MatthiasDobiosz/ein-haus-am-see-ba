@@ -19,16 +19,6 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
-      "/getHouses": {
-        target: "http://localhost:3202",
-        changeOrigin: true,
-        secure: false,
-      },
-      "/getCityBoundary": {
-        target: "http://localhost:3202",
-        changeOrigin: true,
-        secure: false,
-      },
     },
   },
 });

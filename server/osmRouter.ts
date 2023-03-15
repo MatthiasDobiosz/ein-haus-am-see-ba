@@ -10,14 +10,15 @@ import {
   MultiPolygon,
 } from "geojson";
 import truncate from "@turf/truncate";
+import { Config } from "../shared/config.js";
 
 const { Pool } = pgk;
 
 const pool = new Pool({
   host: "localhost",
   user: "postgres",
-  port: 5432,
-  password: "syn27X!L",
+  port: Config.POSTGIS_PORT,
+  password: Config.POSTGIS_PASSWORD,
   database: "osm_om",
   max: 100,
   connectionTimeoutMillis: 0,

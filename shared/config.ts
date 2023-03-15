@@ -3,8 +3,8 @@
  */
 export const Config = {
   SERVER_PORT: 3202,
-  REDIS_PORT: 6379,
-  OVERPASS_PORT: 49153,
+  POSTGIS_PORT: 5432,
+  POSTGIS_PASSWORD: "syn27X!L",
   CSS_HIDDEN: "hidden",
   CSS_BTN_DISABLED: "button-disabled",
 } as const;
