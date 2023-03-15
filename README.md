@@ -46,10 +46,9 @@ If you have a Database set up, you can create and specify the config-File as see
 
 To the build the project you need to install yarn
 
-- yarn
-  ```sh
-  npm install yarn@latest -g
-  ```
+```sh
+npm install yarn@latest -g
+```
 
 After that you can install and start the application:
 
@@ -62,7 +61,7 @@ After Starting, the website should open automatically in your browser under http
 
 ## Demo
 
-[![Watch the video](images/Demo_pic.PNG)](images/screen-capture.mov)
+![Demo](./images/Demo.gif)
 
 ## License
 
