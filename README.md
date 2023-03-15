@@ -32,14 +32,14 @@ To use this application, a PostGIS Database needs to be available at a specified
 
 1. Install PostGreSQL with a PostGIS extension locally
 2. Install Osm2pgsql (https://osm2pgsql.org/doc/install.html)
-3. Use the commandline to load the data by using the [Lua-File](https://github.com/MatthiasDobiosz/ein-haus-am-see-ba/dbSetup/einhausamsee.lua) and a OpenStreetMap-datafile, for example one by [Geofabrik](https://download.geofabrik.de/).
+3. Use the commandline to load the data by using the [Lua-File](https://github.com/MatthiasDobiosz/ein-haus-am-see-ba/blob/main/dbSetup/einhausamsee.lua) and a OpenStreetMap-datafile, for example one by [Geofabrik](https://download.geofabrik.de/).
 
 Command:
 
 **Path\to\osm2pgsql** -c --slim --drop -d **YourDatabaseName** -U **YourUsername** -W -H **YourDatabaseIP** -O flex -S **Path\to\Luafile** **Path\to\OsmDataFile**
 
 
-If you have a Database set up, you can create and specify the config-File as seen [here](https://github.com/MatthiasDobiosz/ein-haus-am-see-ba/shared/config.example.ts) with your port and password.
+If you have a Database set up, you can create and specify the config-File as seen [here](https://github.com/MatthiasDobiosz/ein-haus-am-see-ba/blob/main/shared/config.example.ts) with your port and password.
 
 ## Build Project
 
