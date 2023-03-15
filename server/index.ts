@@ -1,13 +1,16 @@
-import express, { Express, Request, Response } from "express";
+/* eslint-env node */
 
-const port = 3200;
+import { Config } from "../shared/config.js";
+import Server from "./server.js";
+//import open from "open";
 
-const app: Express = express();
+function init(): void {
+  const serverPort = Config.SERVER_PORT; // port to use for the express server and for serving static files
+  const server = new Server(serverPort);
+  server.start();
 
-app.get("/test", (req: Request, res: Response) => {
-  res.send({ message: "hello" });
-});
+  // open the website automatically
+  //open(`http://localhost:${serverPort}`);
+}
 
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
-});
+init();

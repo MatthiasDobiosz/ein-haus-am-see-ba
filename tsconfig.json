@@ -2,6 +2,7 @@
   "compilerOptions": {
     "rootDir": ".",
     "target": "ESNext",
+    "types": ["vite/client"],
     "useDefineForClassFields": true,
     "lib": ["DOM", "DOM.Iterable", "ESNext"],
     "outDir": "./dist",
@@ -19,11 +20,13 @@
     "noEmit": false,
     "jsx": "react-jsx"
   },
+
   "include": [
-    "./client/src/*.tsx",
-    "./server/*.ts",
-    "client/src/App.tsx",
-    "server/index.tsx"
+    "./client/src/**/*.tsx",
+    "./client/src/**/*.ts",
+    "./server/**/*.ts",
+    "./shared/**/*.ts",
+    "shared/axiosInter.js"
   ],
   "references": [{ "path": "./client/tsconfig.node.json" }]
 }

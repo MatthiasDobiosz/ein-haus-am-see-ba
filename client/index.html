@@ -1,12 +1,26 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
   <head>
     <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="author" content="Matthias Dobiosz" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Ein Haus Am See</title>
+    <link rel="icon" href="./src/assets/favicon.ico" />
+    <link
+      href="https://api.tiles.mapbox.com/mapbox-gl-js/v2.11.0/mapbox-gl.css"
+      rel="stylesheet"
+    />
+    <!-- Mapbox Geocoder style -->
+    <link
+      href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css"
+      rel="stylesheet"
+      type="text/css"
+    />
   </head>
-  <body>
+  <body class="flex flex-col min-h-[100vh] overflow-hidden">
     <div id="root"></div>
+    <div id="portal"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
