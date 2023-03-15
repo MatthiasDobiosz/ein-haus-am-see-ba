@@ -8,11 +8,11 @@ This application uses data provided by OpenStreetMap to help users find ideal pl
 
 ## Built with
 
-- [React.js]("https://reactjs.org/")
-- [OpenStreetMap]("https://www.openstreetmap.org/")
-- [MapBox]("https://www.mapbox.com/")
-- [MobX]("https://mobx.js.org/README.html")
-- [WebGL]("https://get.webgl.org/")
+- [React.js](https://reactjs.org/)
+- [OpenStreetMap](https://www.openstreetmap.org/)
+- [MapBox](https://www.mapbox.com/)
+- [MobX](https://mobx.js.org/README.html)
+- [WebGL](https://get.webgl.org/)
 
 ## Branches
 
@@ -32,22 +32,21 @@ To use this application, a PostGIS Database needs to be available at a specified
 
 1. Install PostGreSQL with a PostGIS extension locally
 2. Install Osm2pgsql (https://osm2pgsql.org/doc/install.html)
-3. Use the commandline to load the data by using the [Lua-File]("https://github.com/MatthiasDobiosz/ein-haus-am-see-ba/dbSetup/einhausamsee.lua") and a OpenStreetMap-datafile.
+3. Use the commandline to load the data by using the [Lua-File](https://github.com/MatthiasDobiosz/ein-haus-am-see-ba/dbSetup/einhausamsee.lua) and a OpenStreetMap-datafile, for example one by [Geofabrik](https://download.geofabrik.de/).
 
 Command:
 
-```
 **Path\to\osm2pgsql** -c --slim --drop -d **YourDatabaseName** -U **YourUsername** -W -H **YourDatabaseIP** -O flex -S **Path\to\Luafile** **Path\to\OsmDataFile**
-```
 
-If you have a Database set up, you can create and specify the config-File as seen [here]("https://github.com/MatthiasDobiosz/ein-haus-am-see-ba/shared/config.example.ts") with your port and password.
+
+If you have a Database set up, you can create and specify the config-File as seen [here](https://github.com/MatthiasDobiosz/ein-haus-am-see-ba/shared/config.example.ts) with your port and password.
 
 ## Build Project
 
 To the build the project you need to install yarn
 
 ```sh
-npm install yarn@latest -g
+npm install yarn -g
 ```
 
 After that you can install and start the application:
@@ -61,7 +60,7 @@ After Starting, the website should open automatically in your browser under http
 
 ## Demo
 
-![Demo](./images/Demo.gif)
+![Demo](images/Demo.gif)
 
 ## License
 
