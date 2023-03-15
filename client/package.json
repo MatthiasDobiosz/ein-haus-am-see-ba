@@ -18,7 +18,7 @@
     "@turf/truncate": "^6.0.1",
     "@vitejs/plugin-react": "^2.2.0",
     "autoprefixer": "^10.4.13",
-    "axios": "0.19.2",
+    "axios": "0.21.2",
     "mapbox-gl": "^2.11.0",
     "mobx": "^6.7.0",
     "mobx-react": "^7.6.0",
