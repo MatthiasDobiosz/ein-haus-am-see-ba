@@ -21,6 +21,7 @@ Its important to note that there were multiple versions created in the design of
 - The Master Branch contains the final version
 - the Branch dev-old contains the Re-Implementation of the initial application
 - The Branch dev-optimization contains a Mixed version, where the UI and functions are the same as initially but with optimized processes
+- The Branch dev-benchmarking contains the version that was used to compare the systems and has some built in benchmark functionalities
 
 # Getting Started
 
