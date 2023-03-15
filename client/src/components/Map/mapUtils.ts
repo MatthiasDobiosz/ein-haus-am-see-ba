@@ -1,12 +1,3 @@
-import type {
-  Feature,
-  FeatureCollection,
-  GeoJsonProperties,
-  GeometryObject,
-  LineString,
-  Point,
-  Polygon,
-} from "geojson";
 import { LngLatLike, MapboxMap, PointLike } from "react-map-gl";
 import bbox from "@turf/bbox";
 import { addBufferToFeature } from "./turfUtils";
@@ -45,38 +36,8 @@ export function getViewportBounds(map: MapboxMap): number[][] {
 }
 
 /**
- * Get the current bounding box, in order:
- * southern-most latitude, western-most longitude, northern-most latitude, eastern-most longitude.
- * @return string representation of the bounds in the above order
- */
-export function getViewportBoundsString(
-  map: MapboxMap,
-  additionalDistance?: number
-): string {
-  const currBounds = map.getBounds();
-  let southLat = currBounds.getSouth();
-  let westLng = currBounds.getWest();
-  let northLat = currBounds.getNorth();
-  let eastLng = currBounds.getEast();
-
-  if (additionalDistance) {
-    const bufferedBBox = bbox(
-      addBufferToFeature(
-        bboxPolygon([westLng, southLat, eastLng, northLat]),
-        additionalDistance
-      )
-    );
-
-    southLat = bufferedBBox[1];
-    westLng = bufferedBBox[0];
-    northLat = bufferedBBox[3];
-    eastLng = bufferedBBox[2];
-  }
-  return `${southLat},${westLng},${northLat},${eastLng}`;
-}
-
-/**
- * Get the current bounding box as an array
+ * Get the current bounding box as a string
+ * can add additional distance via the parameter
  */
 export function getViewportPolygon(
   map: MapboxMap,
@@ -126,6 +87,7 @@ export function getViewportPolygon(
     north;
   return boundsString;
 }
+
 /**
  * Util-Function to convert LngLat coordinates to pixel coordinates on the screen.
  */
@@ -144,80 +106,4 @@ export function convertToLatLngCoord(
   coord: LngLatLike
 ): PointLike {
   return map.project(coord);
-}
-
-export function flattenMultiGeometry(
-  data: FeatureCollection<GeometryObject>
-): (
-  | Feature<Point, GeoJsonProperties>
-  | Feature<LineString, GeoJsonProperties>
-  | Feature<Polygon, GeoJsonProperties>
-)[] {
-  const currentPoints: Set<Feature<Point, GeoJsonProperties>> = new Set();
-  const currentWays: Set<Feature<LineString, GeoJsonProperties>> = new Set();
-  const currentPolygons: Set<Feature<Polygon, GeoJsonProperties>> = new Set();
-
-  for (let index = 0; index < data.features.length; index++) {
-    const element = data.features[index];
-
-    switch (element.geometry.type) {
-      case "Point":
-        currentPoints.add(element as Feature<Point, GeoJsonProperties>);
-        break;
-
-      case "MultiPoint":
-        for (const coordinate of element.geometry.coordinates) {
-          const point = {
-            geometry: { type: "Point", coordinates: coordinate },
-            properties: { ...element.properties },
-            type: "Feature",
-          } as Feature<Point, GeoJsonProperties>;
-
-          currentPoints.add(point);
-        }
-        break;
-
-      case "LineString": {
-        currentWays.add(element as Feature<LineString, GeoJsonProperties>);
-        break;
-      }
-      case "MultiLineString":
-        for (const coordinate of element.geometry.coordinates) {
-          const way = {
-            geometry: { type: "LineString", coordinates: coordinate },
-            properties: { ...element.properties },
-            type: "Feature",
-          } as Feature<LineString, GeoJsonProperties>;
-
-          currentWays.add(way);
-        }
-        break;
-
-      case "Polygon": {
-        currentPolygons.add(element as Feature<Polygon, GeoJsonProperties>);
-        break;
-      }
-      case "MultiPolygon":
-        for (const coordinate of element.geometry.coordinates) {
-          // construct a new polygon for every coordinate array in the multipolygon
-          const polygon = {
-            geometry: { type: "Polygon", coordinates: coordinate },
-            properties: { ...element.properties },
-            type: "Feature",
-          } as Feature<Polygon, GeoJsonProperties>;
-
-          currentPolygons.add(polygon);
-        }
-        break;
-      case "GeometryCollection":
-        break;
-
-      default:
-        throw new Error("Unknown geojson geometry type in data!");
-    }
-  }
-
-  const allFeatures = [...currentPoints, ...currentWays, ...currentPolygons];
-  //console.log("allFeatures: ", allFeatures);
-  return allFeatures;
 }

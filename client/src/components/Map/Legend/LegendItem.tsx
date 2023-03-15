@@ -5,9 +5,15 @@ interface LegendItemProps {
   legendItem: LegendObject;
 }
 
+/**
+ * Single Legend Item Component
+ */
 export const LegendItem = observer((props: LegendItemProps): JSX.Element => {
   const { layerName, color } = props.legendItem;
 
+  /**
+   * gets Id of specific layer/category
+   */
   const getId = () => {
     const firstWordIndex = layerName.indexOf(" ");
     if (firstWordIndex !== -1) {

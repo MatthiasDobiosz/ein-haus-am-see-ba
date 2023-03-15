@@ -9,6 +9,9 @@ export interface LegendObject {
   color: string;
 }
 
+/**
+ * LegendStore class that handles the state of the POI-Legend
+ */
 class LegendStore {
   isLegendActive: boolean;
   isOverlayLegendActive: boolean;

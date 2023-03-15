@@ -12,6 +12,9 @@ export const enum SnackbarType {
   DEFAULT = "darkviolet",
 }
 
+/**
+ * SnackbarStore-Class that handles the state of the snackbar in the whole application
+ */
 class SnackbarStore {
   message: string;
   snackbarColor: SnackbarType;

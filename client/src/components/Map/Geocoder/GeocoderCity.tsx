@@ -2,6 +2,11 @@ import { observer } from "mobx-react";
 import { City } from "./Geocoder";
 import { HiMagnifyingGlass } from "react-icons/hi2";
 
+/**
+ * GeocoderCity component that represents a single search result
+ * ! is also not used in the current implementation
+ */
+
 interface GeocoderCityProps {
   city: City;
   onSelect: () => void;

@@ -3,6 +3,9 @@ import { useState } from "react";
 import rootStore from "../../stores/RootStore";
 import { DeleteModal } from "./Filter/DeleteModal";
 
+/**
+ * Component that contains the 2 Buttons for the different view options and button to delete all Filters
+ */
 export const ViewSettings = observer(() => {
   const [resetMapModal, setResetMapModal] = useState(false);
 

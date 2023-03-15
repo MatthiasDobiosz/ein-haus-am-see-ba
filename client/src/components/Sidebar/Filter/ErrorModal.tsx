@@ -6,6 +6,9 @@ interface ChooseFilterTypeProps {
   closeError: Dispatch<SetStateAction<boolean>>;
 }
 
+/**
+ * Simple component to display error message
+ */
 export const ErrorModal = observer(
   (props: ChooseFilterTypeProps): JSX.Element => {
     return (

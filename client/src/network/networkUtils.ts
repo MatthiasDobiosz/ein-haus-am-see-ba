@@ -1,39 +1,15 @@
 import axios from "./axiosInterceptor";
-import {
-  Feature,
-  FeatureCollection,
-  GeoJsonProperties,
-  Geometry,
-  MultiPolygon,
-  Point,
-  Polygon,
-} from "geojson";
+import { FeatureCollection, MultiPolygon, Polygon } from "geojson";
 
-export async function fetchHouseDataFromPostGIS(
-  mapBounds: string
-): Promise<FeatureCollection<Point, any> | null> {
-  try {
-    const params = new URLSearchParams({
-      bounds: mapBounds,
-    });
-
-    const url = "/getHouses?" + params.toString();
-    const response = await axios.get(url, { timeout: 20000 });
-    return response.data as FeatureCollection<Point, any>;
-  } catch (error) {
-    console.error(error);
-    return null;
-  }
-}
-
-export async function fetchCityBoundary(): Promise<
-  Feature<Geometry, GeoJsonProperties>
-> {
-  const response = await axios.get("/getCityBoundary", { timeout: 20000 });
-  return response.data as Feature<Geometry, GeoJsonProperties>;
-}
-
-export async function fetchDataFromPostGISBuffer(
+/**
+ *
+ * @param mapBounds - map bounds that specify the area that should be retrieved
+ * @param condition - specifies the kind of objects that should be retrieved
+ * @param bufferValue - the distance/buffer of the polygons
+ * @param overlay - boolean to check if overlay or POI-View is active
+ * @returns
+ */
+export async function fetchDataFromPostGIS(
   mapBounds: string,
   condition: string,
   bufferValue: number,
@@ -48,6 +24,7 @@ export async function fetchDataFromPostGISBuffer(
         bufferValue: bufferValue.toString(),
       });
 
+      // if buffered values should be retrieved for Overlay
       url = "/postGISBuffer?" + params.toString();
       console.log(url);
     } else {
@@ -57,6 +34,7 @@ export async function fetchDataFromPostGISBuffer(
         bufferValue: bufferValue.toString(),
       });
 
+      // if non-buffered values should be retrieved for POI-View
       url = "/postGISNoBuffer?" + params.toString();
     }
 

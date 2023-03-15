@@ -3,9 +3,10 @@ import { SidebarContext } from "./SidebarContext";
 import { useContext, useState } from "react";
 import { observer } from "mobx-react";
 import { SidebarPanelFilters } from "./SidebarPanelFilters";
-import { Filters } from "./Filter/Filters";
+import { FilterGroups } from "./Filter/FilterGroups";
 import { HelpSection } from "./HelpSection";
 
+// Panel States
 export enum ViewPanels {
   MainPanel = "MainPanel",
   FilterPanel = "FilterPanel",
@@ -80,9 +81,9 @@ export const Sidebar = observer((props: SidebarProps): JSX.Element => {
           </h2>
         </div>
         {isSidebarOpen && activePanel === ViewPanels.MainPanel ? (
-          <SidebarPanelFilters toggleSidebar={toggleSidebar} />
+          <SidebarPanelFilters />
         ) : isSidebarOpen && activePanel === ViewPanels.FilterPanel ? (
-          <Filters />
+          <FilterGroups />
         ) : isSidebarOpen && activePanel === ViewPanels.HelpPanel ? (
           <HelpSection />
         ) : (

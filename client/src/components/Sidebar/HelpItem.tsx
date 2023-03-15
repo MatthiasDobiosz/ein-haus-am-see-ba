@@ -7,6 +7,9 @@ interface HelpItemProps {
   text: string;
 }
 
+/**
+ * HelpItem Component for "Help"-Panel
+ */
 export const HelpItem = observer((props: HelpItemProps) => {
   const { title, text } = props;
   const [isActive, setIsActive] = useState(false);

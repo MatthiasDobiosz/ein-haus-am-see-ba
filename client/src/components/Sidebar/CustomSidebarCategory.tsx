@@ -3,12 +3,14 @@ import { useState } from "react";
 import { AiFillCaretDown, AiFillCaretUp } from "react-icons/ai";
 import { CustomSidebarItem } from "./CustomSidebarItem";
 
+// mocked Filtergroup to add "Beispiel-Filtergruppen"
 export interface mockFilterGroup {
   groupName: string;
   groupRelevance: number;
   filters: mockFilter[];
 }
 
+// mocked Filter
 export interface mockFilter {
   tagName: string;
   distance: number;

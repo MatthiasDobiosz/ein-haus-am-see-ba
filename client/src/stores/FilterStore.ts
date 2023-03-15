@@ -1,11 +1,15 @@
 import { Feature, GeoJsonProperties, MultiPolygon, Polygon } from "geojson";
 import { LngLatLike } from "react-map-gl";
 import { action, makeObservable, observable } from "mobx";
-import { Filter } from "../components/Sidebar/Filter/Filters";
+import { Filter } from "../components/Sidebar/Filter/FilterGroups";
 import { RootStore } from "./RootStore";
-import { FilterGroup } from "./../components/Sidebar/Filter/Filters";
+import { FilterGroup } from "../components/Sidebar/Filter/FilterGroups";
 
+/**
+ * FilterStore - Class that handles all the states of the current filters
+ */
 class FilterStore {
+  // all filter groups
   allFilterGroups: FilterGroup[];
   // all active filter layer objects
   allFilterLayers: Filter[];
@@ -37,7 +41,6 @@ class FilterStore {
       recalculateScreenCoords: false,
       calculatePointCoordsForFeatures: false,
       convertPolygonCoordsToPixelCoords: action,
-      convertPolygonCoordsToPixelCoordsNew: action,
       getUniqueLayerName: false,
       validateGroupName: false,
       getAllActiveLayers: false,
@@ -50,6 +53,7 @@ class FilterStore {
     });
   }
 
+  // Function to add a new Filter to a group or create a new one
   addNewFilterToGroup = (
     filter: Filter,
     newGroup: boolean,
@@ -60,7 +64,6 @@ class FilterStore {
       if (this.addFilter(filter, groupName)) {
         this.allFilterGroups.push({
           groupName: groupName,
-          groupID: this.allFilterGroups.length + 1,
           filters: this.allFilterLayers.filter(
             (filter) => filter.group === groupName
           ),
@@ -127,7 +130,7 @@ class FilterStore {
     }
   };
 
-  // function to remove single filter from context array
+  // function to remove single filter from current state
   removeFilter(layerName: string): void {
     this.allFilterLayers = this.allFilterLayers.filter(
       (prevFilterLayer) => !(prevFilterLayer.layername === layerName)
@@ -139,6 +142,7 @@ class FilterStore {
     this.updateGroups();
   }
 
+  // removes a single filter from a filter group
   removeFilterFromGroup(layerName: string): void {
     const correspondingFilterGroup = this.getFilterGroup(layerName);
     if (correspondingFilterGroup) {
@@ -158,6 +162,7 @@ class FilterStore {
     }
   }
 
+  // gets MaxDistance that is required to check all relevant objects
   getMaxDistance(): number {
     let minDistance = 500;
     for (let i = 0; i < this.allFilterLayers.length; i++) {
@@ -168,6 +173,7 @@ class FilterStore {
     return minDistance;
   }
 
+  // updates groups
   updateGroups(): void {
     this.allFilterGroups.forEach((group) => {
       group.filters = this.allFilterLayers.filter(
@@ -179,6 +185,7 @@ class FilterStore {
     });
   }
 
+  // sets group to active
   toggleFiltergroupActive(groupname: string) {
     this.allFilterGroups.forEach((group) => {
       if (group.groupName === groupname) {
@@ -187,6 +194,7 @@ class FilterStore {
     });
   }
 
+  // gets the filtergroup a filter belongs to
   getFilterGroup(layerName: string): FilterGroup | null {
     const filterGroup = this.allFilterGroups.find((group) => {
       return group.filters.find((filter) => {
@@ -199,6 +207,7 @@ class FilterStore {
     return null;
   }
 
+  // checks if filtergroup is active at the moment
   filtergroupsActive(): boolean {
     const filterGroup = this.allFilterGroups.find((group) => {
       return group.active === true;
@@ -210,6 +219,7 @@ class FilterStore {
     }
   }
 
+  // get Filter layer
   getFilterLayer(name: string): Filter | null {
     const filter = this.allFilterLayers.find((filterLayer) => {
       return filterLayer.layername === name;
@@ -220,7 +230,6 @@ class FilterStore {
     return null;
   }
 
-  //FIXME: Hier muss dann über die Gruppen gefiltert werden um richtigen Buffer zu kriegen
   getFilterLayerBuffer(name: string): number | null {
     const filter = this.allFilterLayers.find((filterLayer) => {
       return filterLayer.layername === name;
@@ -231,6 +240,7 @@ class FilterStore {
     return null;
   }
 
+  // clears all filters from state
   clearAllFilters(): void {
     this.allFilterGroups = [];
     this.allFilterLayers = [];
@@ -258,56 +268,14 @@ class FilterStore {
     }
   }
 
+  /**
+   * Function that projects all polygons retrieved from db on the mapbox map
+   */
   convertPolygonCoordsToPixelCoords(
     polygon: Feature<Polygon | MultiPolygon, GeoJsonProperties>,
     layer: Filter
   ): void {
     const coords = polygon.geometry.coordinates;
-    // check if this is a multidimensional array (i.e. a multipolygon or a normal one)
-    if (coords.length > 1) {
-      //console.log("Multipolygon: ", coords);
-
-      //const flattened: mapboxgl.Point[] = [];
-      for (const coordPart of coords) {
-        layer.points.push(
-          //@ts-expect-error idk
-          coordPart.map((coord: number[]) => {
-            try {
-              return this.rootStore.mapStore.map?.project(coord as LngLatLike);
-            } catch (error) {
-              console.log("Error in projecting coord: ", error);
-              return null;
-            }
-          })
-        );
-        //flattened.push(coordPart.map((coord: number[]) => mapboxUtils.convertToPixelCoord(coord)));
-      }
-      // layer.Points.push(flattened);
-    } else {
-      //@ts-expect-error idk
-      const pointData = coords[0].map((coord: number[]) => {
-        try {
-          return this.rootStore.mapStore.map?.project(coord as LngLatLike);
-        } catch (error) {
-          console.log("Error in projecting coord: ", error);
-          return null;
-        }
-      });
-
-      // @ts-expect-error: possbily null but worked before
-      layer.points.push(pointData);
-    }
-  }
-
-  convertPolygonCoordsToPixelCoordsNew(
-    polygon: Feature<Polygon | MultiPolygon, GeoJsonProperties>,
-    layer: Filter
-  ): void {
-    const coords = polygon.geometry.coordinates;
-    // check if this is a multidimensional array (i.e. a multipolygon or a normal one)
-
-    //console.log("Multipolygon: ", coords);
-    //const flattened: mapboxgl.Point[] = [];
     if (polygon.geometry.type === "MultiPolygon") {
       for (const simplePolygon of coords) {
         for (const coordPart of simplePolygon) {
@@ -347,10 +315,12 @@ class FilterStore {
     // layer.Points.push(flattened);
   }
 
+  // each filter Layer needs a unique name since multiple filters of same type can exist
   getUniqueLayerName(filterName: string, groupName: string): string {
     return filterName + " - " + groupName;
   }
 
+  // checks if group name already exists
   validateGroupName(groupName: string): boolean {
     const existingGroup = this.allFilterGroups.find((group) => {
       return group.groupName === groupName;
@@ -361,6 +331,7 @@ class FilterStore {
     return true;
   }
 
+  // retrieves all currently active layers
   getAllActiveLayers(): Filter[] {
     const activeFilters: Filter[] = [];
     this.allFilterGroups.forEach((group) => {
@@ -371,6 +342,7 @@ class FilterStore {
     return activeFilters;
   }
 
+  // retrieves all currently inactive layers
   getAllInactiveLayers(): Filter[] {
     const inactiveFilters: Filter[] = [];
     this.allFilterGroups.forEach((group) => {
@@ -381,6 +353,7 @@ class FilterStore {
     return inactiveFilters;
   }
 
+  // checks which categories are active for POI-View
   getAllActiveTags(): string[] {
     const tags: string[] = [];
 
@@ -395,6 +368,7 @@ class FilterStore {
     return tags;
   }
 
+  // gets group relevance by a given filter
   getRelevanceValue(filter: Filter): number | null {
     const filterGroup = this.allFilterGroups.find((group) => {
       return group.groupName === filter.group;
@@ -405,6 +379,7 @@ class FilterStore {
     return null;
   }
 
+  // edit the values of a single filter
   changeSingleFilter(
     layername: string,
     distance: number,
@@ -419,6 +394,7 @@ class FilterStore {
     this.updateGroups();
   }
 
+  // edit the relevance of the whole group
   changeGroupRelevance(groupName: string, relevance: number) {
     const group = this.allFilterGroups.find((group) => {
       return group?.groupName === groupName;

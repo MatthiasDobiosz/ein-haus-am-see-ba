@@ -1,9 +1,15 @@
+import { observer } from "mobx-react";
+
 interface GrayscaleGradientProps {
   width: string;
   height: string;
 }
 
-export const GrayscaleGradient = (props: GrayscaleGradientProps) => {
+/**
+ * GrayscaleGradient-component for the legend
+ */
+
+export const GrayscaleGradient = observer((props: GrayscaleGradientProps) => {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -35,4 +41,4 @@ export const GrayscaleGradient = (props: GrayscaleGradientProps) => {
       />
     </svg>
   );
-};
+});

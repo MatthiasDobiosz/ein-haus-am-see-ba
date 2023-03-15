@@ -11,7 +11,7 @@ interface MainSectionProps {
 }
 
 /**
- * MainSection component that render Map, Sidebar and conditional Snackbar
+ * MainSection component that renders Map, Sidebar and conditional Snackbar and Legends
  */
 export const MainSection = observer((props: MainSectionProps) => {
   const { isSidebarOpen } = props;
@@ -19,7 +19,7 @@ export const MainSection = observer((props: MainSectionProps) => {
   return (
     <div className="h-[100vh] w-[100vw] flex justify-end items-center">
       <Sidebar isSidebarOpen={isSidebarOpen} />
-      <MapOverlay isSidebarOpen={isSidebarOpen} />
+      <MapOverlay />
       {rootStore.snackbarStore.isDisplayed && <Snackbar />}
       {rootStore.legendStore.isOverlayLegendActive && (
         <OverlayLegend left={rootStore.legendStore.isLegendActive} />

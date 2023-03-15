@@ -2,7 +2,7 @@ import { observer } from "mobx-react";
 import rootStore from "../../stores/RootStore";
 import { SnackbarType } from "../../stores/SnackbarStore";
 import { mockFilterGroup } from "./CustomSidebarCategory";
-import { Filter } from "./Filter/Filters";
+import { Filter } from "./Filter/FilterGroups";
 
 interface CustomSidebarItemProps {
   /** name of single sidebar-Subcategory */
@@ -10,7 +10,7 @@ interface CustomSidebarItemProps {
 }
 
 /**
- * CustomSidebarItem Component that renders a single subcategory
+ * CustomSidebarItem Component that renders a single example subcategory
  */
 export const CustomSidebarItem = observer(
   (props: CustomSidebarItemProps): JSX.Element => {
@@ -29,8 +29,6 @@ export const CustomSidebarItem = observer(
     }
 
     const addCustomFilterGroup = () => {
-      // FIXME: layername muss einzigartig sein, überprüfen wie viele Filter mit dem Name schon existieren
-
       //Check if groupname already exists
       if (!rootStore.filterStore.validateGroupName(filtergroup.groupName)) {
         //FIXME: display error
@@ -64,11 +62,6 @@ export const CustomSidebarItem = observer(
           }, 800);
         }
       }
-
-      // load map data automatically after 800ms (timeout so the snackbars wont overlap)
-      /*setTimeout(() => {
-        performOsmQuery();
-      }, 800);*/
     };
 
     return (

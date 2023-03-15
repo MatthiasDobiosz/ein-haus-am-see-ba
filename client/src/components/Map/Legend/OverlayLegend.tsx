@@ -6,6 +6,9 @@ interface OverlayLegendProps {
   left: boolean;
 }
 
+/**
+ * OverlayLegend-Component that wraps the gradient
+ */
 export const OverlayLegend = observer(
   (props: OverlayLegendProps): JSX.Element => {
     if (rootStore.filterStore.getAllActiveLayers().length === 0) {

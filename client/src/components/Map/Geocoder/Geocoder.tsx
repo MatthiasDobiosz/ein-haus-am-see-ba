@@ -4,6 +4,12 @@ import axios from "../../../network/axiosInterceptor";
 import { HiMagnifyingGlass } from "react-icons/hi2";
 import { GeocoderCity } from "./GeocoderCity";
 
+/**
+ * This is a custom Geocoder component to fetch the data from the postGIS-Database
+ * ! Works in some part but requires datatable in the DB with correct geotdata
+ * ! Is not used in the current implementation
+ */
+
 export interface City {
   name: string;
   geometry: { type: string; coordinates: number[] };

@@ -3,6 +3,9 @@ import SnackbarStore from "./SnackbarStore";
 import MapStore from "./MapStore";
 import LegendStore from "./LegendStore";
 
+/**
+ * Parent RootStore class that enables communication between the different stores
+ */
 export class RootStore {
   snackbarStore: SnackbarStore;
   filterStore: FilterStore;

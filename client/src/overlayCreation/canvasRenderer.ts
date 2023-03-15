@@ -1,7 +1,7 @@
 import { MapboxMap } from "react-map-gl";
 import * as twgl from "twgl.js";
 import { metersInPixel } from "../components/Map/mapUtils";
-import { Filter, FilterGroup } from "../components/Sidebar/Filter/Filters";
+import { Filter, FilterGroup } from "../components/Sidebar/Filter/FilterGroups";
 import {
   applyGaussianBlur,
   setupGaussianBlurFilter,
@@ -72,7 +72,7 @@ class CanvasRenderer {
 
   /**
    * Draws all polygons for the given filter on a canvas and applies a blur effect.
-   * @param mapLayer the current filter layer, e.g. one for park, restaurant, etc.
+   * @param mapLayer all filters of the specified Filtergroup
    */
   async renderPolygons(mapLayer: Filter[], relevance: number): Promise<any> {
     // clear the canvas
@@ -84,6 +84,8 @@ class CanvasRenderer {
     );
     this.weights.push(relevance);
     this.calculateBlurSize(mapLayer[0].distance);
+
+    // if only 1 filter is in the group there is no need to merge them
     if (mapLayer.length === 1) {
       // calculate the blur size for this layer based on the distance the user specified
 
@@ -140,6 +142,7 @@ class CanvasRenderer {
       // save the blurred image for this layer
       this.allTextures.push(blurredImage);
     } else {
+      // creates an image for every filter
       const images: HTMLImageElement[] = [];
       for (let i = 0; i < mapLayer.length; i++) {
         if (mapLayer[i].wanted) {
@@ -168,15 +171,7 @@ class CanvasRenderer {
           this.ctx.fillStyle = "rgba(0.0, 0.0, 0.0, 1.0)";
         }
 
-        /*
-      //* for benchmarking:
-      let renderPolyBenchmarks = 0;
-      let blurBenchmarks = 0;
-      const avgBlur = [];
-      */
-
         for (const polygon of mapLayer[i].points) {
-          //let start = performance.now();
           const startPoint = polygon[0];
           if (!startPoint) {
             continue;
@@ -194,19 +189,6 @@ class CanvasRenderer {
           this.ctx.closePath();
 
           this.ctx.fill("evenodd");
-
-          /*
-        //! this code is used to measure performance for every polygon blur for benchmarking!
-        let end = performance.now();
-        renderPolyBenchmarks += end - start;
-  
-        start = performance.now();
-        await this.applyGaussianBlur();
-        end = performance.now();
-        const diff = end - start;
-        blurBenchmarks += diff;
-        avgBlur.push(diff);
-        */
         }
         const layerImage = await readImageFromCanvas(this.overlayCanvas);
         images.push(layerImage);
@@ -218,6 +200,7 @@ class CanvasRenderer {
         this.overlayCanvas.width,
         this.overlayCanvas.height
       );
+      // merges the images
       this.applyColorMerge(images);
       await this.applyGaussianBlur();
       const blurredImage = await readImageFromCanvas(this.overlayCanvas);
@@ -226,8 +209,6 @@ class CanvasRenderer {
     }
   }
 
-  //TODO: find a better function to bring the pixelDistance in relation to the blur size
-  //TODO: -> should probably rise quite slow (upper bound may not even be necessary then?)
   calculateBlurSize(layerDistance: number): void {
     const pixelDist = metersInPixel(
       layerDistance,
@@ -468,7 +449,6 @@ export async function createOverlay(
     return renderer.renderPolygons(group.filters, group.groupRelevance);
   });
   await Promise.all(allRenderProcesses);
-  //console.log("Current number of saved textures in canvasRenderer: ", renderer.allTextures.length);
 
   const resultCanvas = renderer.createOverlay(renderer.allTextures);
 

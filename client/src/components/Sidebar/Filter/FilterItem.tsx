@@ -2,7 +2,7 @@ import { observer } from "mobx-react";
 import { useState } from "react";
 import rootStore from "../../../stores/RootStore";
 import { SnackbarType } from "../../../stores/SnackbarStore";
-import { Filter } from "./Filters";
+import { Filter } from "./FilterGroups";
 import { BsPencil, BsTrash } from "react-icons/bs";
 import { AiOutlineCheck, AiOutlineClose } from "react-icons/ai";
 import { DeleteModal } from "./DeleteModal";
@@ -12,38 +12,13 @@ interface FilterItemProps {
   filter: Filter;
 }
 
-const allFilterTypes = [
-  "Bar",
-  "Restaurant",
-  "Cafe",
-  "Universität und Hochschule",
-  "Schule",
-  "Supermarkt",
-  "Einkaufszentrum",
-  "Parkplatz",
-  "Bushaltestelle",
-  "Bahnhof",
-  "Autobahn",
-  "Parks und Grünflächen",
-  "Wald",
-  "Fluss",
-  "Kindergarten",
-  "Krankenhaus",
-  "Klinik",
-  "Apotheke",
-  "Kino",
-  "Theater",
-  "See",
-];
-//FIXME: wird evtl. durch Gruppe ersetzt
-
 /**
- * FilterItem Component that shows a single filter
+ * FilterItem Component that shows a single filter within a group
  */
 export const FilterItem = observer((props: FilterItemProps) => {
   const { filter } = props;
   const [isEditing, setIsEditing] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteFilter, setDeleteFilter] = useState(false);
   const [newDistance, setNewDistance] = useState(filter.distance);
   const [newWanted, setNewWanted] = useState(filter.wanted);
 
@@ -57,6 +32,7 @@ export const FilterItem = observer((props: FilterItemProps) => {
     );
   };
 
+  // loads data fro single filter
   async function performOsmQuery(): Promise<void> {
     if (rootStore.filterStore.activeFilters.size === 0) {
       rootStore.snackbarStore.displayHandler(
@@ -92,6 +68,7 @@ export const FilterItem = observer((props: FilterItemProps) => {
     }, 800);
   };
 
+  // show editable filter
   if (isEditing) {
     return (
       <>
@@ -111,7 +88,7 @@ export const FilterItem = observer((props: FilterItemProps) => {
                   onChange={(e) => setNewDistance(Number(e.target.value))}
                   className="border-[1px] border-solid border-[#808080] w-[50%]  ml-[0.5em] text-center self-start"
                 />
-                <span className="pl-1 w-[50%]">Meter</span>
+                <span className="pl-1 w-[50%]">Meters</span>
               </div>
             </div>
             <div className="flex flex-row">
@@ -143,12 +120,12 @@ export const FilterItem = observer((props: FilterItemProps) => {
           </button>
           <button
             className="absolute top-12 right-4 text-[1.2em]"
-            onClick={() => setIsDeleting(true)}
+            onClick={() => setDeleteFilter(true)}
           >
             <BsTrash color={"#EE4B2B"} />
           </button>
         </li>
-        {isDeleting && (
+        {deleteFilter && (
           <DeleteModal
             value={
               <>
@@ -156,7 +133,7 @@ export const FilterItem = observer((props: FilterItemProps) => {
                 <span className="font-bold">{filter.tagName}</span> löschen?
               </>
             }
-            onClose={setIsDeleting}
+            onClose={setDeleteFilter}
             onDelete={() => onFilterRemoved()}
           />
         )}
@@ -164,6 +141,7 @@ export const FilterItem = observer((props: FilterItemProps) => {
     );
   }
 
+  // show unchangeable filter
   return (
     <>
       <li className="flex flex-col relative p-[6px] my-[3px] mx-auto transition-[0.2s] border-[1px] border-solid border-[#d3d3d3] bg-[#f7f2df] hover:bg-[#f7f2df] text-[1em] w-[90%]">
@@ -194,12 +172,12 @@ export const FilterItem = observer((props: FilterItemProps) => {
         </button>
         <button
           className="absolute top-12 right-4 text-[1.2em]"
-          onClick={() => setIsDeleting(true)}
+          onClick={() => setDeleteFilter(true)}
         >
           <BsTrash color={"#EE4B2B"} />
         </button>
       </li>
-      {isDeleting && (
+      {deleteFilter && (
         <DeleteModal
           value={
             <>
@@ -207,7 +185,7 @@ export const FilterItem = observer((props: FilterItemProps) => {
               <span className="font-bold">{filter.tagName}</span> löschen?
             </>
           }
-          onClose={setIsDeleting}
+          onClose={setDeleteFilter}
           onDelete={() => onFilterRemoved()}
         />
       )}

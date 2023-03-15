@@ -3,11 +3,8 @@ import { RootStore } from "./RootStore";
 import { MapboxMap } from "react-map-gl";
 import MapLayerManager from "./../mapLayerMangager";
 import osmTagCollection from "../osmTagCollection";
-import {
-  fetchCityBoundary,
-  fetchDataFromPostGISBuffer,
-} from "../network/networkUtils";
-import { Filter, FilterGroup } from "../components/Sidebar/Filter/Filters";
+import { fetchDataFromPostGIS } from "../network/networkUtils";
+import { Filter, FilterGroup } from "../components/Sidebar/Filter/FilterGroups";
 import { FeatureCollection, MultiPolygon, Polygon } from "geojson";
 import { createOverlay } from "../overlayCreation/canvasRenderer";
 import { getViewportPolygon } from "../components/Map/mapUtils";
@@ -17,12 +14,15 @@ import mapboxgl from "mapbox-gl";
 import { PerformanceMeasurer } from "../PerformanceMeasurer";
 
 export const enum VisualType {
-  NORMAL,
-  OVERLAY,
-  BOTH,
-  NONE,
+  NORMAL, // POI-View
+  OVERLAY, // Greyscale overlay
+  BOTH, // both active
+  NONE, // none active
 }
 
+/**
+ * MapStore - Class that handles all states regarding the overall map
+ */
 class MapStore {
   map: MapboxMap | null;
   visualType: VisualType;
@@ -60,7 +60,6 @@ class MapStore {
       loadPOIMapData: false,
       loadMapData: false,
       showAreasOnMap: false,
-      showPOILocations: false,
       showDataOnMap: false,
       removeData: false,
       removeGroupData: false,
@@ -68,11 +67,11 @@ class MapStore {
       resetMapData: false,
       preprocessGeoData: false,
       addAreaOverlay: false,
-      toggleCityBoundary: false,
       rootStore: false,
     });
   }
 
+  // function to set the mapbox map initially and add the geocoder
   setMap(map: MapboxMap) {
     this.map = map;
     if (this.mapLayerManager === null) {
@@ -109,6 +108,7 @@ class MapStore {
     } */
   }
 
+  // function to set the visual type
   setVisualType(visualType: VisualType) {
     if (visualType !== this.visualType) {
       this.visualType = visualType;
@@ -127,6 +127,7 @@ class MapStore {
     }
   }
 
+  // changes overall visual type depending on which views are active
   changeVisualType() {
     if (this.overlayView && !this.poiView) {
       this.setVisualType(VisualType.OVERLAY);
@@ -143,24 +144,29 @@ class MapStore {
     }
   }
 
+  // show overlay view
   setOverlayView(overlayBool: boolean): void {
     this.overlayView = overlayBool;
     this.changeVisualType();
   }
 
+  // show poi view
   setPoiView(poiBool: boolean): void {
     this.poiView = poiBool;
     this.changeVisualType();
   }
 
+  // loads the data for the greyscale overview
   async loadOverlayMapData(): Promise<void> {
     if (this.map) {
+      // gets current mapbounds
       const bounds = getViewportPolygon(
         this.map,
         this.rootStore.filterStore.getMaxDistance()
       );
       const activeFilters: Filter[] =
         this.rootStore.filterStore.getAllActiveLayers();
+      // mapss all active filters
       const allResults = await Promise.allSettled(
         activeFilters.map(async (filter: Filter) => {
           const query = osmTagCollection.getQueryForCategoryPostGIS(
@@ -169,7 +175,7 @@ class MapStore {
           const bufferValue =
             this.rootStore.filterStore.getFilterLayerBuffer(filter.layername) ||
             0;
-          const data = await fetchDataFromPostGISBuffer(
+          const data = await fetchDataFromPostGIS(
             bounds,
             query,
             bufferValue,
@@ -197,6 +203,8 @@ class MapStore {
       }
       this.showAreasOnMap();
 
+      // after all active filters are loaded, load inactive ones in the background
+      // TODO: may need to be adjusted in case of loading times in the background delaying the overall process
       const inactiveFilters = this.rootStore.filterStore.getAllInactiveLayers();
 
       const inactiveResults = await Promise.allSettled(
@@ -207,7 +215,7 @@ class MapStore {
           const bufferValue =
             this.rootStore.filterStore.getFilterLayerBuffer(filter.layername) ||
             0;
-          const data = await fetchDataFromPostGISBuffer(
+          const data = await fetchDataFromPostGIS(
             bounds,
             query,
             bufferValue,
@@ -237,6 +245,7 @@ class MapStore {
     }
   }
 
+  // loads data for POI-View
   async loadPOIMapData(): Promise<void> {
     if (this.map) {
       const bounds = getViewportPolygon(this.map, 500);
@@ -244,12 +253,7 @@ class MapStore {
       const allResults = await Promise.allSettled(
         activeTags.map(async (tag) => {
           const query = osmTagCollection.getQueryForCategoryPostGIS(tag);
-          const data = await fetchDataFromPostGISBuffer(
-            bounds,
-            query,
-            0,
-            false
-          );
+          const data = await fetchDataFromPostGIS(bounds, query, 0, false);
           //console.log(data);
           if (data) {
             this.showDataOnMap(data, tag);
@@ -274,14 +278,12 @@ class MapStore {
     }
   }
 
+  // checks the views that are active and starts loading processes
   async loadMapData() {
     if (this.rootStore.filterStore.activeFilters.size === 0) {
       return;
     }
 
-    // give feedback to the user
-    // FIXME: Do that in component to get snackbarContext
-    //showSnackbar("Daten werden geladen...", SnackbarType.INFO, undefined, true);
     if (this.visualType !== VisualType.NONE) {
       this.rootStore.snackbarStore.displayHandler(
         "Daten werden geladen...",
@@ -319,15 +321,7 @@ class MapStore {
     }
   }
 
-  // FIXME: wird jetzt glaub ich sowieso nicht mehr genutzt
-  showPOILocations(): void {
-    const filterLayers = this.rootStore.filterStore.allFilterLayers;
-    for (let index = 0; index < filterLayers.length; index++) {
-      const layer = filterLayers[index];
-      this.showDataOnMap(layer.originalData, layer.layername);
-    }
-  }
-
+  // removes all the data from the map
   removeData(filter: Filter): void {
     this.rootStore.filterStore.removeFilter(filter.layername);
 
@@ -357,6 +351,7 @@ class MapStore {
     }
   }
 
+  // update Map Data
   updateData(filterGroup: FilterGroup): void {
     if (this.visualType === VisualType.BOTH) {
       this.mapLayerManager?.removeCanvasSource("overlaySource");
@@ -439,7 +434,7 @@ class MapStore {
     }
   }
 
-  //FIXME: Removen der Daten sollte dann eigtl. passen wenn alles andere stimmt
+  // reset and clear map
   resetMapData(): void {
     this.rootStore.filterStore.clearAllFilters();
     this.mapLayerManager?.removeAllDataFromMap();
@@ -450,7 +445,6 @@ class MapStore {
     );
   }
 
-  //FIXME: Hier statt tagName dann einzigartigen Namen übergeben
   showDataOnMap(data: any, tagName: string): void {
     if (
       this.map?.getSource("overlaySource") &&
@@ -473,20 +467,11 @@ class MapStore {
     this.mapLayerManager?.addLayersForSource(tagName);
   }
 
-  //! most of the data preprocessing could (and probably should) already happen on the server!
-  //! (maybe after the data has been fetched and before being saved in Redis)
+  // converts all the polygons to map coordinates
   preprocessGeoData(
     data: FeatureCollection<Polygon | MultiPolygon, any>,
     dataName: string
   ): Filter | null {
-    //* split up multipoints, multilinestrings and multipolygons into normal ones
-    //const flattenedData = mapboxUtils.flattenMultiGeometry(data);
-
-    //Benchmark.startMeasure("truncate geodata");
-
-    // truncate geojson precision to yy4 decimals;
-    // this increases performance and the perfectly exact coords aren't necessary for the area overlay
-    //Benchmark.stopMeasure("truncate geodata");
     const layer = this.rootStore.filterStore.getFilterLayer(dataName);
     if (!layer) {
       return null;
@@ -502,74 +487,15 @@ class MapStore {
 
       //console.log(bufferedPoly.geometry.coordinates);
       layer.features.push(feature);
-      this.rootStore.filterStore.convertPolygonCoordsToPixelCoordsNew(
+      this.rootStore.filterStore.convertPolygonCoordsToPixelCoords(
         feature,
         layer
       );
     }
-
-    /*
-    //! Benchmarking version: two for loops to be able to measure the performance of both separately
-    Benchmark.startMeasure("buffer all Polygons of layer");
-    // add buffer to filterlayer
-    for (let index = 0; index < truncatedData.features.length; index++) {
-      const feature = truncatedData.features[index];
-      const bufferedPoly = addBufferToFeature(feature, layer.Distance, "meters");
-
-      layer.Features.push(bufferedPoly);
-    }
-    Benchmark.stopMeasure("buffer all Polygons of layer");
-
-    Benchmark.startMeasure("convert all Polygons to pixel coords");
-    // convert to pixels
-    for (let index = 0; index < layer.Features.length; index++) {
-      const element = layer.Features[index];
-      mapboxUtils.convertPolygonCoordsToPixelCoords(element, layer);
-    }
-    Benchmark.stopMeasure("convert all Polygons to pixel coords");
-    */
-
     return layer;
   }
 
-  async toggleCityBoundary() {
-    this.boundaryView = !this.boundaryView;
-    const data = await fetchCityBoundary();
-    if (this.boundaryView) {
-      this.mapLayerManager?.drawCityBoundaries(data);
-    } else {
-      this.mapLayerManager?.removeCityBoundaries();
-    }
-  }
-
   addAreaOverlay(): void {
-    /**
-     * FilterManager.allFilterLayers should look like this at this point:
-     *[
-     *  { ### FilterLayer - Park
-     *    points: [
-     *      [{x: 49.1287; y: 12.3591}, ...],
-     *      [{x: 49.1287; y: 12.3591}, ...],
-     *      ...,
-     *    ]
-     *    features: [ {Feature}, {Feature}, ...],
-     *    distance: 500,
-     *    relevance: 0.8,  //="very important"
-     *    name: "Park",import { lineCategories } from './../../../dist/client/src/osmTagCollection';
-import { buffer } from '@turf/buffer';
-import { MapboxGeocoder } from '@mapbox/mapbox-gl-geocoder';
-
-     *    wanted: true,
-     *  },
-     *  { ### FilterLayer - Restaurant
-     *    ...
-     *  },
-     *  ...
-     * ]
-     */
-
-    // check that there is data to create an overlay for the map
-    // FIXME: Hier evtl. check ausbessern
     if (this.rootStore.filterStore.filtergroupsActive()) {
       if (this.map) {
         createOverlay(

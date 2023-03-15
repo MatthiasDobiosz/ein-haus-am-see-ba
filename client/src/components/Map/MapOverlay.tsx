@@ -1,5 +1,5 @@
 import mapboxgl, { LngLat } from "mapbox-gl";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useState } from "react";
 import Map, {
   AttributionControl,
   NavigationControl,
@@ -12,18 +12,13 @@ import { observer } from "mobx-react";
 import { AiOutlineMenu } from "react-icons/ai";
 import { SidebarContext } from "../Sidebar/SidebarContext";
 
-interface MapOverlayProps {
-  /* dynamically change width depending on sidebarState */
-  isSidebarOpen: boolean;
-}
-
 // tresholds to prevent reloading when small movements are made (performance optimization)
 const zoomTreshold = 0.2; // zoom level difference -> update if a map zoom event changed more than this
 const moveTreshold = 10; // map center difference in meters
 /**
  * Component that returns Mapbox Map with specified settings
  */
-export const MapOverlay = observer((props: MapOverlayProps) => {
+export const MapOverlay = observer(() => {
   const { isSidebarOpen, setSidebarState } = useContext(SidebarContext);
   const [currentMapCenter, setCurrentMapCenter] = useState<LngLat>(
     new LngLat(12.101624, 49.013432)
@@ -33,30 +28,13 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
   const minRequiredZoomLevel = 7;
   const map = rootStore.mapStore.map;
   const visualType = rootStore.mapStore.visualType;
-  const timeout = useRef<NodeJS.Timeout>();
+  // const timeout = useRef<NodeJS.Timeout>();
 
   // Clean up timeout
+  /*
   useEffect(() => {
     return () => clearTimeout(timeout.current);
-  }, []);
-
-  /*
-  const setViewPortOnThreshold = (viewState: ViewState) => {
-    if (
-      currentMapCenter?.distanceTo(map ? map.getCenter() : currentMapCenter) >
-      moveTreshold
-    ) {
-      setViewport(viewState);
-      return;
-    }
-    if (Math.abs(viewport.zoom - viewState.zoom) > zoomTreshold) {
-      setViewport(viewState);
-    }
-  };*/
-
-  const showCityBoundary = () => {
-    rootStore.mapStore.toggleCityBoundary();
-  };
+  }, []); */
 
   const handleSidebarOpen = () => {
     setSidebarState(!isSidebarOpen);
@@ -66,8 +44,7 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
   };
 
   const onMapDragEnd = () => {
-    console.log("clear");
-    clearTimeout(timeout.current);
+    //clearTimeout(timeout.current);
     if (map) {
       // Uses the Haversine Formula to calculate difference between tow latLng coords in meters
       const distance = currentMapCenter.distanceTo(map.getCenter());
@@ -91,23 +68,18 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
           // if below the treshold only update overlay
           rootStore.mapStore.addAreaOverlay();
         } else {
-          // if greater than the treshold load new data from the db as well
-          timeout.current = setTimeout(() => {
-            rootStore.mapStore.loadMapData();
-          }, 1000);
+          rootStore.mapStore.loadMapData();
         }
       } else if (visualType === VisualType.NORMAL) {
         if (distance < moveTreshold) {
           return;
         }
-        //console.log("Distance greater than treshold - updating");
         rootStore.mapStore.loadMapData();
       }
     }
   };
 
   const onMapZoomEnd = () => {
-    clearTimeout(timeout.current);
     if (map) {
       const newZoom = map.getZoom();
 
@@ -143,11 +115,8 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
         } else if (Math.abs(newZoom - currentMapZoom) <= zoomTreshold) {
           rootStore.mapStore.addAreaOverlay();
           return;
-        } else {
-          timeout.current = setTimeout(() => {
-            rootStore.mapStore.loadMapData();
-          }, 2000);
         }
+        rootStore.mapStore.loadMapData();
       } else if (visualType === VisualType.NORMAL) {
         if (newZoom <= minRequiredZoomLevel) {
           rootStore.snackbarStore.displayHandler(
@@ -158,16 +127,16 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
           return;
         } else if (Math.abs(newZoom - currentMapZoom) <= zoomTreshold) {
           // don't update data if the zoom level change is below the treshold
+          rootStore.mapStore.addAreaOverlay();
           return;
         }
-        //rootStore.mapStore.loadMapData();
+        rootStore.mapStore.loadMapData();
       }
       setCurrentMapZoom(newZoom);
     }
   };
 
   // make sure that MapboxGl (and WebGL) are supported in the browser
-  // TODO: show custom error component
   if (!mapboxgl.supported()) {
     throw new Error("Your browser does not support Mapbox GL!");
   }
@@ -207,7 +176,7 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
           dragPan={{ linearity: 0.3, maxSpeed: 1400, deceleration: 3000 }}
           dragRotate={false}
           touchZoomRotate={false}
-          //onMove={(evt) => setViewport(evt.viewState)}
+          //onMove={(evt) => setViewport(evt.viewState)} can be used to set new Coordinates manually
           attributionControl={false}
           minZoom={4}
           maxZoom={20}
@@ -226,12 +195,6 @@ export const MapOverlay = observer((props: MapOverlayProps) => {
           <AttributionControl position={"bottom-right"} />
           <NavigationControl position={"top-right"} visualizePitch={false} />
           <ScaleControl position="bottom-left" />
-          <button
-            className="absolute bottom-8 right-4 bg-purple p-1"
-            onClick={() => showCityBoundary()}
-          >
-            Zeige Gebiet
-          </button>
         </Map>
         <canvas id="texture_canvas">
           Your browser does not seem to support HTML5 canvas.

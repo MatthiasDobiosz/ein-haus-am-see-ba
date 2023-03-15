@@ -9,6 +9,9 @@ interface ChooseFilterTypeProps {
   onClose: Dispatch<SetStateAction<boolean>>;
 }
 
+/**
+ * ChooseFilterType component to choose between adding a new filter to an existing group or to show the interface for creating a new one
+ */
 export const ChooseFilterType = observer(
   (props: ChooseFilterTypeProps): JSX.Element => {
     const [canAddToGroup, setCanAddToGroup] = useState(true);

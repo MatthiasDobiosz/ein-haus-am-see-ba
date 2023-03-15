@@ -2,6 +2,10 @@ import Redis from "ioredis";
 import { Config } from "../shared/config.js";
 import JSONCache from "redis-json";
 
+/**
+ * Class for RedisCache
+ * Is currently not enabled
+ */
 class RedisCache {
   private readonly redisClient: Redis.Redis;
   private jsonCache: JSONCache;

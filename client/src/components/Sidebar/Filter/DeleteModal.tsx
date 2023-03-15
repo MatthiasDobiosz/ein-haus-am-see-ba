@@ -7,10 +7,15 @@ interface FilterModalProps {
   value: ReactNode;
   /** function to trigger closing of the modal */
   onClose: Dispatch<SetStateAction<boolean>>;
+  /** triggered function when filter is deleted */
   onDelete: () => void;
+  /** set to true if a whole group is to be deleted */
   group?: boolean;
 }
 
+/**
+ * Delte Modal to delte individual filters or filter groups
+ */
 export const DeleteModal = observer(
   (props: FilterModalProps): JSX.Element | null => {
     const { value, onClose, onDelete } = props;

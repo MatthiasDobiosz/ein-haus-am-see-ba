@@ -1,23 +1,14 @@
 /* eslint-env node */
-import { Feature, Geometry } from "geojson";
+import { Feature } from "geojson";
 import { Polygon } from "geojson";
 import { MultiPolygon } from "geojson";
 
 //const exec = Util.promisify(childProcess.exec);
 
 /**
- * Builds a query for the overpass api to fetch osm data as Json in the given map bounds.
+ * Builds a query to fetch non-buffered data from postGIS
  */
-export function buildOverpassQuery(bounds: string, userQuery: string): string {
-  // output-format json, runtime of max. 25 seconds (needs to be higher for more complex queries) and global bounding box
-  const querySettings = `[out:json][timeout:25][bbox:${bounds}];`;
-  const output = "out geom qt;"; // use "qt" to sort by quadtile index (sorts by location and is faster than sort by id)
-  const query = `${querySettings}(${userQuery});${output}`;
-  //console.log(query);
-  return query;
-}
-
-export function buildPostGISQueryForMulti(
+export function buildPostGISQueryForPoi(
   bounds: string,
   condition: string,
   table: string
@@ -49,6 +40,9 @@ export function buildPostGISQueryForMulti(
   }
 }
 
+/**
+ * Builds a query to fetch buffered data from postGIS
+ */
 export function buildPostGISQueryWithBuffer(
   bounds: string,
   condition: string,
@@ -76,13 +70,6 @@ export function buildPostGISQueryWithBuffer(
       ` FROM ${table} WHERE ${condition} AND ST_Intersects(${table}.geom,st_transform(ST_GeographyFromText('POLYGON((${bounds}))')::geometry,3857))`
     );
   }
-}
-
-export function buildBoundaryQuery(): string {
-  const querystring =
-    `SELECT ST_AsGeoJSON(ST_ForceRHR(st_transform(geom,4326)))::json as geometry, relation_id as id, jsonb_build_object('name', name) as properties` +
-    ` FROM relations WHERE name = 'Bamberg' `;
-  return querystring;
 }
 
 export function buildPostGISQueryForSingle(
@@ -118,80 +105,9 @@ export function buildPostGISQueryForSingle(
   return queryString;
 }
 
-export function convertMulti(
-  allData: Feature<Geometry, any>[]
-): Feature<Geometry, any>[] {
-  const featuresWithin: Feature<Geometry, any>[] = [];
-  for (let i = 0; i < allData.length; i++) {
-    const feature = allData[i];
-    if (feature.geometry.type === "MultiLineString") {
-      for (let y = 0; y < feature.geometry.coordinates.length; y++) {
-        for (let x = 0; x < feature.geometry.coordinates[y].length; x++) {
-          const singleFeature: Feature<Geometry, any> = {
-            type: "Feature",
-            geometry: {
-              type: "LineString",
-              coordinates: feature.geometry.coordinates[y],
-            },
-            properties: {},
-          };
-          featuresWithin.push(singleFeature);
-          break;
-        }
-      }
-    }
-  }
-
-  return featuresWithin;
-}
-
-export function getDataWithinBoundingBox(
-  allData: Feature<Geometry, any>[],
-  bounds: string
-): Feature<Geometry, any>[] {
-  const boundingBox = bounds
-    .split(",")
-    .map((points) => {
-      return points.split(" ");
-    })
-    .map((points) => {
-      return [parseFloat(points[0]), parseFloat(points[1])];
-    });
-
-  const featuresWithin: Feature<Geometry, any>[] = [];
-  for (let i = 0; i < allData.length; i++) {
-    const feature = allData[i];
-    if (feature.geometry.type === "MultiLineString") {
-      for (let y = 0; y < feature.geometry.coordinates.length; y++) {
-        for (let x = 0; x < feature.geometry.coordinates[y].length; x++) {
-          if (
-            isPointInPolygon(
-              feature.geometry.coordinates[y][x][0],
-              feature.geometry.coordinates[y][x][1],
-              boundingBox
-            )
-          ) {
-            const singleFeature: Feature<Geometry, any> = {
-              type: "Feature",
-              geometry: {
-                type: "LineString",
-                coordinates: feature.geometry.coordinates[y],
-              },
-              properties: {},
-            };
-            featuresWithin.push(singleFeature);
-            break;
-          }
-        }
-      }
-    } else {
-      featuresWithin.push(feature);
-    }
-  }
-
-  return featuresWithin;
-}
-
+/**
+ * Checks a relation for features that arent within the current bounding box and removes them
+ */
 export function removeUnseenRelationParts(
   allData: Feature<Polygon | MultiPolygon, any>[],
   bounds: string
@@ -242,6 +158,7 @@ export function removeUnseenRelationParts(
   return featuresWithin;
 }
 
+// util-Function to check if a polygon is within bounds
 function isPolygonWithinBounds(
   feature: Polygon,
   boundingBox: number[][]

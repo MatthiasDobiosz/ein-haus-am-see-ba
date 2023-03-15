@@ -3,6 +3,13 @@ import { observer } from "mobx-react";
 import { useState } from "react";
 import { Marker, Popup } from "react-map-gl";
 
+/**
+ * Custom Marker that shows informational content of a single house
+ * ! Works, but is not used in the current implementation
+ * ! For this to work correctly, there needs to be a database table for houses/apartments
+ * ! You can fetch this data in the overlay and map a marker for each house on close zoom
+ */
+
 interface CustomMarkerProps {
   house: Feature<Point, GeoJsonProperties>;
 }

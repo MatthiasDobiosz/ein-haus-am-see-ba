@@ -1,4 +1,10 @@
 /**
+ * Class for benchmarking
+ * not used in this version
+ * based on benchmarking in: https://github.com/michaelmeckl/BA-Ein-Haus-am-See
+ */
+
+/**
  * Measurement interface
  *
  * @interface Measurement

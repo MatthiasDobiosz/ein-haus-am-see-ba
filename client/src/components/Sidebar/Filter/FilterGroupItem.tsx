@@ -1,6 +1,6 @@
 import { observer } from "mobx-react";
 import { FilterItem } from "./FilterItem";
-import { FilterGroup, FilterRelevance } from "./Filters";
+import { FilterGroup, FilterRelevance } from "./FilterGroups";
 import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
 import { useState } from "react";
 import rootStore from "../../../stores/RootStore";
@@ -15,11 +15,14 @@ interface FilterGroupProps {
 export const FilterGroupItem = observer(
   (props: FilterGroupProps): JSX.Element => {
     const { filtergroup } = props;
-    const [isDeleting, setIsDeleting] = useState(false);
+    // boolean to display delete modal
+    const [deleteFilterGroup, setDeleteFilterGroup] = useState(false);
+    // toggle to disable or enable the view of the filter group
     const [filtergroupActive, setFiltergroupActive] = useState(
       filtergroup.active
     );
 
+    // removes filter from map and store
     function removeFiltersAndUpdateMap() {
       rootStore.mapStore.removeGroupData(filtergroup);
       rootStore.snackbarStore.displayHandler(
@@ -29,12 +32,14 @@ export const FilterGroupItem = observer(
       );
     }
 
+    // sets the view of the filergroup to active
     function toggleFiltergroupActive() {
       setFiltergroupActive(!filtergroupActive);
       rootStore.filterStore.toggleFiltergroupActive(filtergroup.groupName);
       rootStore.mapStore.updateData(filtergroup);
     }
 
+    // loads osm data for filtergroup
     async function performOsmQuery(): Promise<void> {
       if (rootStore.filterStore.activeFilters.size === 0) {
         rootStore.snackbarStore.displayHandler(
@@ -47,6 +52,7 @@ export const FilterGroupItem = observer(
       rootStore.mapStore.loadMapData();
     }
 
+    // edits the group relevance
     function changeGroupRelevance(value: string) {
       let relevance = 0.2;
       if (value === "wenig") {
@@ -108,7 +114,7 @@ export const FilterGroupItem = observer(
               >
                 {filtergroupActive ? <AiFillEyeInvisible /> : <AiFillEye />}
               </button>
-              <button onClick={() => setIsDeleting(true)}>
+              <button onClick={() => setDeleteFilterGroup(true)}>
                 <BsTrash color={"#EE4B2B"} />
               </button>
             </div>
@@ -121,7 +127,7 @@ export const FilterGroupItem = observer(
             })}
           </ul>
         </div>
-        {isDeleting && (
+        {deleteFilterGroup && (
           <DeleteModal
             value={
               <>
@@ -130,7 +136,7 @@ export const FilterGroupItem = observer(
                 löschen?
               </>
             }
-            onClose={setIsDeleting}
+            onClose={setDeleteFilterGroup}
             onDelete={removeFiltersAndUpdateMap}
             group
           />

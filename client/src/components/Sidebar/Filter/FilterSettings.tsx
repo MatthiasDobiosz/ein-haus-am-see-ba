@@ -4,7 +4,7 @@ import { AiOutlineClose } from "react-icons/ai";
 import rootStore from "../../../stores/RootStore";
 import { SnackbarType } from "../../../stores/SnackbarStore";
 
-import { Filter, FilterRelevance } from "./Filters";
+import { Filter, FilterRelevance } from "./FilterGroups";
 
 interface FilterSettingsProps {
   /** name of the category to show modal for */
@@ -13,6 +13,7 @@ interface FilterSettingsProps {
   open: boolean;
   /** function to trigger closing of the modal */
   onClose: Dispatch<SetStateAction<boolean>>;
+  /** specifies if filter should be added to an existing group or creates a new one */
   newGroup: boolean;
   setError: (errorMessage: string) => void;
   goBack: () => void;
@@ -40,11 +41,9 @@ export const FilterSettings = observer(
     }
 
     /**
-     * createse new FilterLayer object based on current chosen values and adds it to the global context
+     * creates new FilterLayer object based on current chosen values and adds it to the global context
      */
     const handleAddFilter = () => {
-      // FIXME: layername muss einzigartig sein, überprüfen wie viele Filter mit dem Name schon existieren
-
       if (props.newGroup) {
         //Check if groupname already exists
         if (!rootStore.filterStore.validateGroupName(groupname)) {
@@ -55,7 +54,6 @@ export const FilterSettings = observer(
               `Eine Gruppe mit dem Namen ${groupname} existiert bereits!`
             );
           }
-          //FIXME: display error
         } else {
           const newFilter: Filter = {
             layername: rootStore.filterStore.getUniqueLayerName(
@@ -90,13 +88,9 @@ export const FilterSettings = observer(
           } else {
             props.setError(`Filter konnte nicht hinzugefügt werden`);
           }
-
-          // load map data automatically after 800ms (timeout so the snackbars wont overlap)
-          /*setTimeout(() => {
-      performOsmQuery();
-    }, 800);*/
         }
       } else {
+        // create new Filter-Object with specified informations
         const newFilter: Filter = {
           layername: rootStore.filterStore.getUniqueLayerName(value, groupname),
           tagName: value,
@@ -108,6 +102,7 @@ export const FilterSettings = observer(
           originalData: null,
           group: groupname,
         };
+        //checks if filter could be added to the group
         const filterWasAdded = rootStore.filterStore.addNewFilterToGroup(
           newFilter,
           props.newGroup,

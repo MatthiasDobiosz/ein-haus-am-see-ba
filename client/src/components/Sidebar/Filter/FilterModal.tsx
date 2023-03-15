@@ -3,7 +3,7 @@ import { Dispatch, SetStateAction, useState } from "react";
 import { createPortal } from "react-dom";
 import { ChooseFilterType } from "./ChooseFilterType";
 import { ErrorModal } from "./ErrorModal";
-import { Filter } from "./Filters";
+import { Filter } from "./FilterGroups";
 import { FilterSettings } from "./FilterSettings";
 
 interface FilterModalProps {
@@ -16,6 +16,9 @@ interface FilterModalProps {
   filter?: Filter;
 }
 
+/**
+ * Modal Component to add a filter as a new group or added to an existing one
+ */
 export const FilterModal = observer(
   (props: FilterModalProps): JSX.Element | null => {
     const { value, open, onClose } = props;
@@ -30,6 +33,7 @@ export const FilterModal = observer(
       setErrorMessage(errorMessage);
     };
 
+    // go back to previous modal
     const goBack = () => {
       setNewGroup(null);
     };
@@ -47,6 +51,7 @@ export const FilterModal = observer(
       return null;
     }
 
+    // if newGroup is set to null show choose-modal
     if (newGroup == null) {
       return createPortal(
         <div className="fixed z-[1000] left-0 top-0 w-[100%] h-[100%] overflow-auto bg-[#00000066] block">

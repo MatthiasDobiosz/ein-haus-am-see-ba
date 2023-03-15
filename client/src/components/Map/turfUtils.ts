@@ -9,8 +9,7 @@ import type {
 
 type turfUnits = "meters" | "kilometers";
 
-// this uses an older turf buffer version (@4.7.3 instead of @5.1.5) because of incorrect measurements
-// in the new version; track issue at https://github.com/Turfjs/turf/issues/1484
+// uses turf-buffer to buffer the bounding box if needed
 export function addBufferToFeature(
   element: Feature<Geometry, GeoJsonProperties>,
   bufferSize = 100,
