@@ -34,6 +34,7 @@ To use this application, a PostGIS Database needs to be available at a specified
 1. Install PostGreSQL with a PostGIS extension locally
 2. Install Osm2pgsql (https://osm2pgsql.org/doc/install.html)
 3. Use the commandline to load the data by using the [Lua-File](https://github.com/MatthiasDobiosz/ein-haus-am-see-ba/blob/main/dbSetup/einhausamsee.lua) and a OpenStreetMap-datafile, for example one by [Geofabrik](https://download.geofabrik.de/).
+4. add a .env file in the client directory with a variable MAPBOX_TOKEN that contains your personal mapbox token
 
 Command:
 
