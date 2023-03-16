@@ -27,14 +27,13 @@ Its important to note that there were multiple versions created in the design of
 
 ## Prerequisites
 
-To use this application, a PostGIS Database needs to be available at a specified Port.
+To use this application, a PostGIS Database needs to be available at a specified Port. Also you need to add a .env file in the client directory with a variable MAPBOX_TOKEN that contains your personal mapbox token
 
 ### Database Setup
 
 1. Install PostGreSQL with a PostGIS extension locally
 2. Install Osm2pgsql (https://osm2pgsql.org/doc/install.html)
 3. Use the commandline to load the data by using the [Lua-File](https://github.com/MatthiasDobiosz/ein-haus-am-see-ba/blob/main/dbSetup/einhausamsee.lua) and a OpenStreetMap-datafile, for example one by [Geofabrik](https://download.geofabrik.de/).
-4. add a .env file in the client directory with a variable MAPBOX_TOKEN that contains your personal mapbox token
 
 Command:
 
@@ -57,6 +56,7 @@ After that you can install and start the application:
 yarn install
 yarn start
 ```
+
 
 After Starting, the website should open automatically in your browser under http://localhost:5173/. Since this Website uses WebGL and there have been some problems when using FireFox, I'd suggest using another browser for it to work correctly. Next you can see a demo on how the website should function.
 
